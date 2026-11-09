@@ -2,6 +2,45 @@
 
 *Checkpoint 1 · 2026-11-09 · Research and campaign preparation are done. **No messages have been sent and no listing has been confirmed with a seller.***
 
+## UPDATE 2026-11-09 03:05 UTC: live stock checked directly (full internet access now enabled)
+
+Opened through each shop's public product data. These are **"Appears active, seller not yet contacted"**: in stock on the site, not yet confirmed by the seller.
+
+| Machine | Seller | Price | In Switzerland | Delivered to Italy (est.) | Note |
+|---|---|---|---|---|---|
+| **MacBook Pro 14" M3 Max 16C/40C, 128 GB / 2 TB**, "Very good" | Revendo (CH) | CHF 3,646 | **≈ €3,910** | ≈ €4,480 (if exported without Swiss VAT, + 22% IT VAT) | Only 128 GB portable found live. Same SKU in "Bargain" grade sold at CHF 3,070. |
+| **Mac Studio M1 Ultra 48C, 128 GB / 4 TB** | mac-store24 (DE) | €4,499 | ≈ €4,090 (if exported without German VAT, + 8.1% CH VAT) | ≈ €4,520 | Only 128 GB Ultra found live. Configurator listing, so they need to confirm a physical unit. |
+| Mac Studio M1 Ultra 48C, 64 GB / 1 TB | mac-store24 | €2,899 | | | Confirm unit |
+| Mac Studio M1 Max, 64 GB / 1 TB | mac-store24 | €2,099 | | | |
+| MacBook Pro 16" M1 Max 32C, 64 GB / 1 TB, CH keyboard | Revendo | CHF 1,986 | ≈ €2,130 | | |
+| MacBook Pro 16" M2 Max 38C, 64 GB / 1 TB | Revendo | CHF 2,550 | ≈ €2,734 | | |
+| MacBook Pro 16" M3 Max 40C, 64 GB / 1 TB | Revendo | CHF 2,708 | ≈ €2,904 | | |
+
+**Gone:**
+- Creative IT M2 Max 96 GB: page removed, and their catalogue has no 64 GB+ Macs.
+- Revendo M1 Ultra 128 GB pages: HTTP 404.
+- Okamac M2 Max 96 GB: no stock shown.
+- BuyDifferent and TrenDevice: nothing at 64 GB+.
+
+**Can't check by direct request:** ricardo, eBay, Subito, refurb.me, Smart Generation and TrenDevice block automated requests (HTTP 403 from their own anti-bot protection). The €1,240 eBay M1 Max lead needs you to open it in a browser, or a message to the seller.
+
+**Key insight: Revendo prices its stock with a formula that hasn't caught up with 2026.** Their public data shows recently sold units at these grade prices:
+
+| Machine | Revendo price by grade | 2026 market |
+|---|---|---|
+| M2 Ultra 192 GB / 1 TB | Bargain CHF 2,663 · Used 3,053 · Very good 3,231 | Roughly $6,000+ |
+| M3 Ultra 96 GB | Used CHF 3,242 | |
+| M2 Ultra 64 GB | Used CHF 2,435 | |
+
+**The single best move is to ask Revendo to reserve their next incoming M2 Ultra 128/192 GB at grid price.** That would be about €3,000-3,900 for 192 GB.
+
+**Updated recommendation:**
+- **Portable now:** Revendo M3 Max 128 GB (try for CHF 3,400).
+- **Desktop now:** mac-store24 M1 Ultra 128 GB (try for €4,100). It decodes about 1.5× faster and suits four agents better.
+- **Best value:** wait 1-4 weeks on a Revendo M2 Ultra 192 GB reservation.
+
+---
+
 ## 0. The headline you need first
 
 **The used high-memory Mac market moved sharply in 2026.** A DRAM shortage, partly driven by people buying Macs to run local AI agents, led Apple to:

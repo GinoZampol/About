@@ -33,16 +33,16 @@ LISTINGS = [
   1240, "EUR", 1.0, 1240, U, VM, D, "Exceptional price if real; verify GPU cores, SSD, kbd, Activation Lock. Seller profile ebay.de/usr/ict-remarketing."],
  ["Revendo", "CH", "https://revendo.ch/en/products/apple-macbook-pro-16-space-grau-m1-max-10-core-cpu-und-32-core-gpu-1-tb-ssd-64-gb-ram-late-2021-us",
   "MacBook Pro 16\" Late 2021", "M1 Max 10C CPU / 32C GPU", 64, "1TB", "Refurbished (grade n/s)", "n/s",
-  1835, "CHF", CHF, eur(1835, CHF), U, VM, D, "'from CHF 1,835'; US keyboard; 1-yr warranty (ext. to 3); CH domestic price incl. 8.1% VAT."],
+  1835, "CHF", CHF, eur(1835, CHF), S, "product URL returns HTTP 404", "2026-11-09 03:05 UTC", "'from CHF 1,835'; US keyboard; 1-yr warranty (ext. to 3); CH domestic price incl. 8.1% VAT."],
  ["Revendo", "CH", "https://revendo.ch/en/products/apple-mac-studio-m1-ultra-20-core-cpu-48-core-gpu-1-tb-ssd-128-gb-ram-10-gigabit-ethernet-early-2022",
-  "Mac Studio 2022", "M1 Ultra 20C CPU / 48C GPU", 128, "1TB", "Refurbished", "n/a", "", "CHF", CHF, "", U, VM, D, "Product page indexed; price/stock not in snippet."],
+  "Mac Studio 2022", "M1 Ultra 20C CPU / 48C GPU", 128, "1TB", "Refurbished", "n/a", "", "CHF", CHF, "", S, "product URL returns HTTP 404", "2026-11-09 03:05 UTC", "Listing removed."],
  ["Revendo", "CH", "https://revendo.ch/en/products/apple-mac-studio-m1-ultra-20-core-cpu-48-core-gpu-2-tb-ssd-128-gb-ram-10-gigabit-ethernet-early-2022",
-  "Mac Studio 2022", "M1 Ultra 20C CPU / 48C GPU", 128, "2TB", "Refurbished", "n/a", "", "CHF", CHF, "", U, VM, D, "Product page indexed; price/stock not in snippet."],
+  "Mac Studio 2022", "M1 Ultra 20C CPU / 48C GPU", 128, "2TB", "Refurbished", "n/a", "", "CHF", CHF, "", S, "product URL returns HTTP 404", "2026-11-09 03:05 UTC", "Listing removed."],
  ["Creative IT", "IE", "https://creative-it.ie/product/apple-macbook-pro-16-2023-m2-max-96gb-1tb-38c-gpu-space-gray/",
   "MacBook Pro 16\" 2023", "M2 Max 12C CPU / 38C GPU", 96, "1TB", "Certified refurbished; 12+ mo warranty; 30-day returns", "n/s",
-  2519, "EUR", 1.0, 2519, U, VM, D, "Was EUR 2,799. UK keyboard. Intra-EU: Irish VAT incl. (or margin scheme) - no extra import VAT to IT; to CH add 8.1% import VAT."],
+  2519, "EUR", 1.0, 2519, S, "page redirects to /shop/macbooks/; store API search finds no 64GB+ Macs", "2026-11-09 03:05 UTC", "Removed (likely sold). Was EUR 2,799. UK keyboard. Intra-EU: Irish VAT incl. (or margin scheme) - no extra import VAT to IT; to CH add 8.1% import VAT."],
  ["Okamac", "FR", "https://www.okamac.com/gb/macbook/macbook-pro/17189-macbook-pro-16-2023-m2-max-chip-apple-gpu-38-12-cores-96-gb-ram-35-ghz.html",
-  "MacBook Pro 16\" 2023", "M2 Max 12C / 38C GPU", 96, "n/s", "Refurbished", "n/s", "", "EUR", 1.0, "", U, VM, D, "Page indexed; price not in snippet."],
+  "MacBook Pro 16\" 2023", "M2 Max 12C / 38C GPU", 96, "n/s", "Refurbished", "n/s", "", "EUR", 1.0, "", "Unverified (page opened, no price/stock shown)", "page opened", "2026-11-09 03:05 UTC", "Shop RAM filter tops at 64GB -> probably out of stock; ask seller."],
  ["refurb.me IT (aggregator; eBay/other)", "IT", "https://www.refurb.me/it/refurbished/mac-studio/sku/MQH73-25A",
   "Mac Studio 2023", "M2 Ultra 24C / 60C", 64, "1TB", "Refurbished (Italian)", "n/a", 2768, "EUR", 1.0, 2768, U, VM, D,
   "Snippet price; date unknown - conflicts with DE figure (3,599) and 2026 market trend; treat as stale until opened."],
@@ -79,7 +79,7 @@ LISTINGS = [
   "Used ~6 months", "n/a", 35000, "NOK", "", "", U, VM, "undated", "Norway (non-EU): customs/VAT on import; NOK rate not verified."],
  # --- Comparables (sold / out of stock) ---
  ["Revendo", "CH", "https://revendo.ch/en/products/apple-mac-studio-m2-ultra-24-core-cpu-60-core-gpu-8-tb-ssd-192-gb-ram-10-gigabit-ethernet-mid-2023",
-  "Mac Studio 2023", "M2 Ultra 24C / 60C", 192, "8TB", "Used (visible wear)", "n/a", 3158, "CHF", CHF, eur(3158, CHF), S, VM, D,
+  "Mac Studio 2023", "M2 Ultra 24C / 60C", 192, "8TB", "Used (visible wear)", "n/a", 3158, "CHF", CHF, eur(3158, CHF), S, "Revendo public product feed", "2026-11-09 03:05 UTC",
   "Out of stock at search time. Price looks far below 2026 market (likely pre-shortage pricing) - ask Revendo for next incoming unit."],
  ["refurb.me DE (eBay Refurbished)", "DE", "https://www.refurb.me/de/refurbished/mac-studio/sku/MQH73-28D", "Mac Studio 2023",
   "M2 Ultra 24C / 60C", 192, "8TB", "Good", "n/a", 7998, "EUR", 1.0, 7998, S, VM, "last seen 2026-11-01", "Not in stock anywhere."],
@@ -107,3 +107,52 @@ LISTINGS = [
   "Mac Studio 2022", "M1 Ultra", 128, "various", "Used", "n/a", "3850-4600", "USD", USD, "3436-4105", S,
   "vendor-published aggregate", "2026-09-10..10-06", "Vendor source."],
 ]
+
+# --- Verified 2026-11-09 by opening the shop's public product feed (Shopify products.json / .js) ---
+VA = "Appears active, seller not yet contacted"
+VT = "2026-11-09 03:05 UTC"
+VMF = "shop public product feed opened (variant available=true)"
+LISTINGS += [
+ ["Revendo", "CH", "https://revendo.ch/en/products/apple-macbook-pro-14-space-black-m3-max-16-core-cpu-and-40-core-gpu-2-tb-ssd-128-gb-ram-late-2023-ch",
+  "MacBook Pro 14\" Late 2023", "M3 Max 16C CPU / 40C GPU (400 GB/s)", 128, "2TB", "Very good (cosmetic) / battery 'Used'", "ask",
+  3646, "CHF", CHF, eur(3646, CHF), VA, VMF, VT, "ONLY 128GB portable found live. CH kbd. Other grades of same SKU sold out (Bargain 3,070 / Used 3,413 / As new 3,911)."],
+ ["Revendo", "CH", "https://revendo.ch/en/products/apple-macbook-pro-16-space-gray-m1-max-10-core-cpu-and-32-core-gpu-1-tb-ssd-64-gb-ram-late-2021-ch",
+  "MacBook Pro 16\" Late 2021", "M1 Max 10C / 32C GPU", 64, "1TB", "Very good / battery 'Used'", "ask", 1986, "CHF", CHF, eur(1986, CHF), VA, VMF, VT, "CH kbd."],
+ ["Revendo", "CH", "https://revendo.ch/en/products/apple-macbook-pro-14-silver-m1-max-10-core-cpu-32-core-gpu-2-tb-ssd-64-gb-ram-late-2021-ch",
+  "MacBook Pro 14\" Late 2021", "M1 Max 10C / 32C GPU", 64, "2TB", "Very good / battery 'Used'", "ask", 2148, "CHF", CHF, eur(2148, CHF), VA, VMF, VT, ""],
+ ["Revendo", "CH", "https://revendo.ch/en/products/apple-macbook-pro-16-space-grey-m2-max-12-core-cpu-38-core-gpu-1-tb-ssd-64-gb-ram-early-2023-ch",
+  "MacBook Pro 16\" Early 2023", "M2 Max 12C / 38C GPU", 64, "1TB", "Very good / battery 'New'", "ask", 2550, "CHF", CHF, eur(2550, CHF), VA, VMF, VT, ""],
+ ["Revendo", "CH", "https://revendo.ch/en/products/apple-macbook-pro-16-space-black-m3-max-16-core-cpu-and-40-core-gpu-1-tb-ssd-64-gb-ram-late-2023-ch",
+  "MacBook Pro 16\" Late 2023", "M3 Max 16C / 40C GPU", 64, "1TB", "Very good / battery 'New'", "ask", 2708, "CHF", CHF, eur(2708, CHF), VA, VMF, VT, ""],
+ ["Revendo", "CH", "https://revendo.ch/en/products/apple-macbook-pro-16-space-black-m3-max-16-core-cpu-and-40-core-gpu-2-tb-ssd-64-gb-ram-late-2023-ch",
+  "MacBook Pro 16\" Late 2023", "M3 Max 16C / 40C GPU", 64, "2TB", "Very good / battery 'New'", "ask", 3178, "CHF", CHF, eur(3178, CHF), VA, VMF, VT, ""],
+ ["Revendo", "CH", "https://revendo.ch/en/products/apple-macbook-pro-16-space-black-m3-max-16-core-cpu-and-40-core-gpu-4-tb-ssd-64-gb-ram-late-2023-ch",
+  "MacBook Pro 16\" Late 2023", "M3 Max 16C / 40C GPU", 64, "4TB", "Used / battery 'Used'", "ask", 3312, "CHF", CHF, eur(3312, CHF), VA, VMF, VT, ""],
+ ["Revendo", "CH", "https://revendo.ch/en/products/apple-macbook-pro-16-space-schwarz-m4-max-16-core-cpu-und-40-core-gpu-2-tb-ssd-64-gb-ram-late-2024-ch",
+  "MacBook Pro 16\" Late 2024", "M4 Max 16C / 40C GPU (546 GB/s)", 64, "2TB", "Very good / battery 'New'", "ask", 3996, "CHF", CHF, eur(3996, CHF), VA, VMF, VT, ""],
+ ["Revendo", "CH", "https://revendo.ch/en/products/apple-macbook-pro-14-silber-m4-max-16-core-cpu-und-40-core-gpu-4-tb-ssd-64-gb-ram-late-2024-ch",
+  "MacBook Pro 14\" Late 2024", "M4 Max 16C / 40C GPU", 64, "4TB", "As new / battery 'Used'", "ask", 4151, "CHF", CHF, eur(4151, CHF), VA, VMF, VT, ""],
+ ["mac-store24 (Remacs GmbH)", "DE", "https://mac-store24.com/products/mac-studio-2022-refurbished-gebraucht",
+  "Mac Studio 2022", "M1 Ultra 20C / 48C GPU", 128, "4TB", "Used/refurbished (grade per option)", "n/a", 4499, "EUR", 1.0, 4499, VA, VMF, VT,
+  "Variant of a configurator-style listing - confirm a physical unit exists. Only 128GB Ultra found live."],
+ ["mac-store24 (Remacs GmbH)", "DE", "https://mac-store24.com/products/mac-studio-2022-refurbished-gebraucht",
+  "Mac Studio 2022", "M1 Ultra 20C / 48C GPU", 64, "1TB", "Used/refurbished", "n/a", 2899, "EUR", 1.0, 2899, VA, VMF, VT, "Confirm physical unit."],
+ ["mac-store24 (Remacs GmbH)", "DE", "https://mac-store24.com/products/mac-studio-2022-refurbished-gebraucht",
+  "Mac Studio 2022", "M1 Ultra 20C / 48C GPU", 64, "2TB", "Used/refurbished", "n/a", 3399, "EUR", 1.0, 3399, VA, VMF, VT, "Confirm physical unit."],
+ ["mac-store24 (Remacs GmbH)", "DE", "https://mac-store24.com/products/mac-studio-2022-refurbished-gebraucht",
+  "Mac Studio 2022", "M1 Max 10C / 24C GPU", 64, "1TB", "Used/refurbished", "n/a", 2099, "EUR", 1.0, 2099, VA, VMF, VT, "Confirm physical unit."],
+ ["mac-store24 (Remacs GmbH)", "DE", "https://mac-store24.com/products/mac-studio-2023-refurbished-gebraucht",
+  "Mac Studio 2023", "M2 Max 12C / 30C GPU", 64, "1TB", "Used/refurbished", "n/a", 2799, "EUR", 1.0, 2799, VA, VMF, VT, "Confirm physical unit."],
+ ["mac-store24 (Remacs GmbH)", "DE", "https://mac-store24.com/products/mac-studio-m4-max-64gb-ram-1tb-ssd-40-core-gpu-2025-apple-cpo-1",
+  "Mac Studio 2025", "M4 Max 16C / 40C GPU", 64, "1TB", "Apple Certified Refurbished", "n/a", 4099, "EUR", 1.0, 4099, VA, VMF, VT, ""],
+ ["mac-store24 (Remacs GmbH)", "DE", "https://mac-store24.com/products/apple-macbook-pro-16-zoll-retina-ende-2023-m3-max-8tb-ssd-128gb-ram-black-40-core-gpu-tagesdeal-kopie",
+  "MacBook Pro 16\" Late 2023", "M3 Max 16C / 40C GPU", 128, "8TB", "Used/refurbished; IT kbd option", "ask", 7849, "EUR", 1.0, 7849, VA, VMF, VT, "Overpriced (8TB)."],
+]
+
+# Revendo sold-price grid (public feed, all variants SOLD at 2026-11-09 03:05 UTC) - shows Revendo's formula pricing:
+# M2 Ultra 60C 1TB 192GB: Bargain 2,663 / Used 3,053 / Very good 3,231 / As new 3,373 CHF
+# M2 Ultra 60C 2TB 192GB: 2,881 / 3,304 / 3,496 / 3,649 ; 4TB 192GB & 76C 2TB 192GB: 3,186 / 3,654 / 3,866 / 4,036
+# M2 Ultra 60C 1TB 64GB: 2,124 / 2,435 / 2,577 / 2,690 ; M1 Ultra 48C 1TB 64GB: 1,620 / 1,858 / 1,966 / 2,052
+# M3 Ultra 28C/60C 1TB 96GB: 2,827 / 3,242 / 3,430 / 3,581
+# Other sources checked at 2026-11-09 03:05 UTC: Creative IT store API (no 64GB+ Macs), BuyDifferent feed (none), Okamac (none >64GB).
+# Not checkable by plain request (site anti-bot 403): ricardo.ch, ebay.de, subito.it, refurb.me, smartgeneration.it, trendevice.com.
