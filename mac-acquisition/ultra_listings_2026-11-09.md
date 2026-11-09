@@ -75,3 +75,10 @@ Status key:
 - fonlos neo (M5 Ultra rental): no public email.
 - virge.io (exo cluster blog): no public email.
 - VEBEG and Zoll-Auktion (German state surplus auctions): platforms to watch for ex-government Macs.
+
+## SimplyUsed (user tip, checked 2026-11-09 ~07:10 UTC)
+- Page: https://shop.simplyused.com/products/mac-studio-2022-m1-ultra-20-core-cpu-64-core-gpu-silver (seller "SYA", Belgium/NL, info@sya.be).
+- The shop's public product data shows **all 75 variants priced at exactly €2,000 and all marked unavailable**.
+- That includes configurations that don't exist (M1 Ultra with 16/32/192 GB). So €2,000 looks like a placeholder price on a catch-all page, not a real offer or sale.
+- Scanned 1,500 products in their catalogue: no 64 GB+ Mac Studio or MacBook Pro currently in stock.
+- Emailed hello@ (cc shop@) on 2026-11-09 in Dutch: asked about restock, a reservation, and whether €2,000 applies to 128 GB.
