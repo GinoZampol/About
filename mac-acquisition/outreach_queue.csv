@@ -92,7 +92,7 @@ Freundliche Grüsse
 {SENDER_PHONE}",PENDING USER APPROVAL,NOT SENT,,send date + 7 days,,,"Purchase enquiry (we are the buyer), not marketing; one message per company; stop on any opt-out."
 Q008,1,8,Creative IT,IE,en,email,customerservice@creative-it.ie; +353 44 93 81033 (own llms.txt),Purchase enquiry: Apple Silicon Mac with 64 GB+ unified memory,"Hello,
 
-my name is {SENDER_NAME} and I noticed you've listed a MacBook Pro 16"" M2 Max 96GB/1TB as certified refurbished - is it still available?
+my name is {SENDER_NAME} and I saw you previously offered a MacBook Pro 16"" M2 Max 96GB as certified refurbished.
 
 I'm looking to buy a used professional Apple Silicon Mac with at least 64 GB of unified memory - ideally a Mac Studio M1/M2 Ultra (64-192 GB) or a MacBook Pro M1/M2 Max with 64-96 GB. Do you have any such units incoming, awaiting refurbishment or not yet listed? If not, could you source one through your suppliers?
 

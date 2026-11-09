@@ -112,7 +112,7 @@ CLOSE = {
 # Company-specific opening lines (recipient language), used where evidence allows.
 HOOK = {
  "Revendo AG": "ich habe gesehen, dass Revendo Mac Studio M1 Ultra mit 128 GB und M2 Ultra mit 192 GB im Sortiment hatte.",
- "Creative IT": "I noticed you've listed a MacBook Pro 16\" M2 Max 96GB/1TB as certified refurbished - is it still available?",
+ "Creative IT": "I saw you previously offered a MacBook Pro 16\" M2 Max 96GB as certified refurbished.",
  "Okamac / Okamac Pro (SENS Technologies)": "j'ai vu sur votre site une fiche MacBook Pro 16\" 2023 M2 Max 96 Go.",
  "Smart Generation srl": "ho visto che proponete MacBook Pro 16\" M1 Max ricondizionati con opzione 64 GB.",
  "Remacs GmbH (mac-store24.com)": "auf mac-store24.com habe ich Seiten zu gebrauchten Mac Studio M1 Ultra und M2 gesehen.",
