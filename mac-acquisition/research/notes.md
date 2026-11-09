@@ -178,3 +178,9 @@ NL/BE: Leapp (NL, bankrupt — exclude), ReMarkt (NL refurbished IT incl. Apple,
 - Foxway DE: auto-reply, escalated, answer within 48h. Okamac: ticket #299446 auto-ack.
 - Bounces: ticket@flexmiete.de, anfrage2@mac-profis.com, appleservice089@mail.de (3 of 118).
 - The user lost a Ricardo auction for an MBP16 M1 Max 64GB/1TB on 2026-11-08 (outbid); this was the user's own bidding.
+
+## 2026-11-09 09:40 UTC: reply triage (scheduled)
+- Revendo: no discounts, no reservation; only shop stock alert -> USER: set a stock alert on revendo.ch for Mac Studio M1/M2 Ultra (their grid prices are the cheapest seen).
+- MacRepair NL: MBP16 M1 Max 64GB/512GB EUR 1,899 incl VAT ex shipping. Replied: GPU cores, battery, MDM, warranty; asked about ~EUR 1,500 incl shipping to CH (non-binding question).
+- trademax24: retail only (M2 Ultra 64/1TB 3,799; M1 Ultra 64C 128GB/4TB 5,199).
+- No: Cropmark, Mac&Mobile, BresciaPC, Ledfilms, DoktorMac (recommends Revendo/Ricardo). maconline: check shop. industrieauktion: newsletter only. Foxway: 48h. Okamac: ticket.

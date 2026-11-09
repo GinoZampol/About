@@ -1,6 +1,6 @@
 queue_id,company,to,subject,sent_at_utc,gmail_thread_id,status
-Q001,Revendo AG,info@revendo.ch,"Anfrage: MacBook Pro 14"" M3 Max 128 GB und Reservation Mac Studio M2 Ultra",2026-11-09,1a1be5a6e5ddcdba,SENT
-Q002,Gebrauchtmacs.de GmbH (maconline),sales@maconline.de,Kaufanfrage: Apple-Silicon-Mac mit 64 GB+ Unified Memory,2026-11-09,1a1be5a71816a7d3,SENT
+Q001,Revendo AG,info@revendo.ch,"Anfrage: MacBook Pro 14"" M3 Max 128 GB und Reservation Mac Studio M2 Ultra",2026-11-09,1a1be5a6e5ddcdba,"REPLIED (Luca): no discounts, no reservations/waitlist; use shop stock alert; no battery info/photos"
+Q002,Gebrauchtmacs.de GmbH (maconline),sales@maconline.de,Kaufanfrage: Apple-Silicon-Mac mit 64 GB+ Unified Memory,2026-11-09,1a1be5a71816a7d3,"REPLIED: new stock daily, check shop; no specifics"
 Q003,Remacs GmbH (mac-store24),support@mac-store24.com,Mac Studio M1 Ultra 128 GB / 4 TB: physisch verfügbar?,2026-11-09,1a1be5a722dec92f,SENT
 Q004,Smart Generation srl,info@smartgeneration.it,Richiesta: Mac Studio Ultra o MacBook Pro Max con 64 GB+ di memoria,2026-11-09,1a1be5a742829d4a,SENT
 Q006,Okamac,contact@okamac.com,Recherche MacBook Pro M2/M3 Max 96-128 Go ou Mac Studio Ultra,2026-11-09,1a1be5a7738f8923,AUTO-REPLY: ticket #299446 received
@@ -15,12 +15,12 @@ Q017,MacFaaast,info@macfaaast.it,Cerco Mac Apple Silicon 64 GB+ (anche permute o
 Q019,Restlos,info@restlos.com,Anfrage: Apple Mac Studio / MacBook Pro (64 GB+) in kommenden Auktionen,2026-11-09,1a1be5b732431100,SENT
 Q020,CompTech e.U.,office@comptech.at,Einzelkauf aus Firmen-Rückläufern: Apple-Silicon-Mac 64 GB+,2026-11-09,1a1be5b74f7f87b5,SENT
 Q021,NCOM,commerciale@pc-ricondizionati.com,Acquisto singolo da lotti aziendali: Mac Apple Silicon 64 GB+,2026-11-09,1a1be5b79ce977d4,SENT
-Q022,trademax24,info@trademax24.de,Kaufanfrage: Apple-Silicon-Mac mit 64 GB+ Unified Memory,2026-11-09,1a1be5b7da8cc6e3,SENT
+Q022,trademax24,info@trademax24.de,Kaufanfrage: Apple-Silicon-Mac mit 64 GB+ Unified Memory,2026-11-09,1a1be5b7da8cc6e3,"REPLIED (Justin Rafflenbeul): in stock via shop; retail prices M2 Ultra 64/1TB 3,799, M1 Ultra 64C 128/4TB 5,199, Studio M1 Max 64/1TB 2,399"
 Q024,Grover,offers@grover.com,Kauf von Leasing-/Miet-Rückläufern: Mac 64 GB+,2026-11-09,1a1be5b7f0b3e451,SENT
 Q025,Turbo IT,info@turboit.ch,Einzelkauf aus Firmen-Rückläufern: Apple-Silicon-Mac 64 GB+,2026-11-09,1a1be5b816533caa,SENT
 Q026,asgoodasnew,info@asgoodasnew.de,Kaufanfrage: Apple-Silicon-Mac mit 64 GB+ Unified Memory,2026-11-09,1a1be5b82cad89e9,SENT
 Q027,Insolvenz-Auktionen Schwarzfischer,info@auktionen-schwarzfischer.de,Anfrage: Apple Mac Studio / MacBook Pro (64 GB+) in kommenden Auktionen,2026-11-09,1a1be5c0c1a2110f,SENT
-Q028,Ledfilms Production,info@ledfilms.com,Workstation Mac dismesse? Acquisto Mac Studio / MacBook Pro 64 GB+,2026-11-09,1a1be5c0ea2bb986,SENT
+Q028,Ledfilms Production,info@ledfilms.com,Workstation Mac dismesse? Acquisto Mac Studio / MacBook Pro 64 GB+,2026-11-09,1a1be5c0ea2bb986,REPLIED (Ledfilms JP Schoch): no retired workstations
 Q030,REDSPACE,info@redspace.ch,Ausgemusterte Mac-Workstations? Kaufe Mac Studio / MacBook Pro 64 GB+,2026-11-09,1a1be5c105b56e67,SENT
 Q031,Wisetek,info@wisetekmarket.com,Single-unit purchase from corporate batches: Apple Silicon Mac 64 GB+,2026-11-09,1a1be5c104d4fed5,SENT
 Q034,FlashMac,info@flashmac.com,Cerco Mac Apple Silicon 64 GB+ (anche permute o con difetti estetici),2026-11-09,1a1be5c12909b031,SENT
@@ -44,10 +44,10 @@ Q053,Vikast,commerciale@vikast.it,Acquisto singolo da lotti aziendali,2026-11-09
 Q054,Cinegrell,zurich@cinegrell.ch,Ausgemusterte Mac-Workstations?,2026-11-09,1a1bf03069ae55f5,SENT
 Q055,Eleven Studio,team@elevenstudio.it,Workstation Mac dismesse?,2026-11-09,1a1bf03d7780a30e,SENT
 Q057,MON MAC ECO,contact@mon-mac-eco.com,Recherche Mac Apple Silicon 64 Go+,2026-11-09,1a1bf03d9188ada8,SENT
-Q058,MacRepair,info@macrepair.nl,Gezocht: Apple Silicon Mac 64 GB+,2026-11-09,1a1bf03da68607cf,SENT
+Q058,MacRepair,info@macrepair.nl,Gezocht: Apple Silicon Mac 64 GB+,2026-11-09,1a1bf03da68607cf,"REPLIED: MBP16 M1 Max 64GB/512GB good cond. EUR 1,899 incl VAT ex shipping -> asked GPU/battery/MDM/warranty + room to ~1,500 (non-binding) 2026-11-09 09:40"
 Q059,ORBIS Production,info@orbispro.ch,Ausgemusterte Mac-Workstations?,2026-11-09,1a1bf03dd8e64b55,SENT
 Q060,Vstronik,info@vstronik.com,Suche Apple-Silicon-Mac 64 GB+,2026-11-09,1a1bf03de67c4517,SENT
-Q062,industrieauktion.online,info@industrieauktion.online,Anfrage: Apple Mac (64 GB+) in kommenden Auktionen,2026-11-09,1a1bf03e1881eb2d,SENT
+Q062,industrieauktion.online,info@industrieauktion.online,Anfrage: Apple Mac (64 GB+) in kommenden Auktionen,2026-11-09,1a1bf03e1881eb2d,REPLIED: no individual alerts; newsletter only (6-9x/yr)
 Q064,ALSO Schweiz,info@also.com,Einzelkauf aus Remarketing / Leasing-Rückläufern,2026-11-09,1a1bf03e45458654,SENT
 Q066,ALBI,info@albi.at,Einzelkauf aus Firmen-Rückläufern,2026-11-09,1a1bf03e9d608bb6,SENT
 Q067,Amac,ecommerce@amac.nl,Koopverzoek: Apple Silicon Mac 64 GB+,2026-11-09,1a1bf03eb84b208c,SENT
@@ -79,12 +79,12 @@ N008,Ad Produzioni,info@adproduzioni.com,Workstation Mac dismesse?,2026-11-09,1a
 N009,Parklab,studio@parklab.eu,Workstation Mac dismesse?,2026-11-09,1a1bf09cacb33886,SENT
 N010,macwerkstatt.at,hallo@macwerkstatt.at,Suche Apple-Silicon-Mac 64 GB+,2026-11-09,1a1bf09cc2fd77fd,SENT
 N011,Notebook Repair Corner,info@n-r-c.at,Suche Apple-Silicon-Mac 64 GB+,2026-11-09,1a1bf09d13e641e5,SENT
-N012,Mac & Mobile Service,office@macandmobile.at,Suche Apple-Silicon-Mac 64 GB+,2026-11-09,1a1bf0a895e1fab1,SENT
+N012,Mac & Mobile Service,office@macandmobile.at,Suche Apple-Silicon-Mac 64 GB+,2026-11-09,1a1bf0a895e1fab1,REPLIED: no Apple Silicon Mac available
 N013,Mac and Phone Doc,office@macandphonedoc.at,Suche Apple-Silicon-Mac 64 GB+,2026-11-09,1a1bf0a8bb48b731,SENT
 N014,mactrix,office@mactrix.at,Suche Apple-Silicon-Mac 64 GB+,2026-11-09,1a1bf0a8d5213cd0,SENT
 N015,Simpelfix,info@simpelfix.ch,Suche Apple-Silicon-Mac 64 GB+,2026-11-09,1a1bf0a916f653d4,SENT
 N016,Repairandshop,info@repairandshop.ch,Suche Apple-Silicon-Mac 64 GB+,2026-11-09,1a1bf0a937714131,SENT
-N017,DoktorMac,info@doktormac.ch,Suche Apple-Silicon-Mac 64 GB+,2026-11-09,1a1bf0a95dad16f5,SENT
+N017,DoktorMac,info@doktormac.ch,Suche Apple-Silicon-Mac 64 GB+,2026-11-09,1a1bf0a95dad16f5,REPLIED (DoktorMac): rarely occasions; recommends revendo/ricardo
 N018,i-macandmore,info@i-macandmore.nl,Koopverzoek: Apple Silicon Mac 64 GB+,2026-11-09,1a1bf0a96839a42d,SENT
 N019,ALOCO Filmproduktion Bern,info@aloco.ch,Ausgemusterte Mac-Workstations?,2026-11-09,1a1bf0a9b744631d,SENT
 N020,MIGN Filmproduktion,info@mign.ch,Ausgemusterte Mac-Workstations?,2026-11-09,1a1bf0a9f254cd0e,SENT
@@ -94,7 +94,7 @@ N023,ShowMyProject,welcome@showmyproject.ch,Ausgemusterte Mac-Workstations?,2026
 N024,LAVA VIDEO,hallo@lavavideo.ch,Ausgemusterte Mac-Workstations?,2026-11-09,1a1bf0b5ba256c0d,SENT
 N025,MacHelp Torino,info@machelp.it,Cerco Mac Apple Silicon 64 GB+,2026-11-09,1a1bf0b5ccc11f74,SENT
 N026,AGP Computer,info@agpcomputer.it,Cerco Mac Apple Silicon 64 GB+,2026-11-09,1a1bf0b5f8109df4,SENT
-N027,BresciaPC,info@bresciapc.com,Cerco Mac Apple Silicon 64 GB+,2026-11-09,1a1bf0b6293a7d8b,SENT
+N027,BresciaPC,info@bresciapc.com,Cerco Mac Apple Silicon 64 GB+,2026-11-09,1a1bf0b6293a7d8b,"REPLIED: repairs only, no sales"
 N028,Zip Computer,info@zipcomputer.com,Cerco Mac Apple Silicon 64 GB+,2026-11-09,1a1bf0b65663546c,SENT
 N029,ZeroDueMac,info@zeroduepc.com,Cerco Mac Apple Silicon 64 GB+,2026-11-09,1a1bf0b6835bce40,SENT
 N030,Ricondizionati Pro,info@ricondizionatipro.it,Acquisto singolo: MacBook Pro / Mac Studio 64 GB+,2026-11-09,1a1bf0b6af5eebc9,SENT
