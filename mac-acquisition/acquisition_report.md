@@ -160,7 +160,7 @@ Full definitions are in `research/build_outputs.py`.
 |---|---|
 | EU business seller → Italy | Price as listed, plus about €20-50 shipping. No further VAT (VAT-inclusive or margin scheme). |
 | Swiss seller → Italy | Ask the seller to invoice without Swiss VAT for export (÷1.081). Then add Italian import VAT of 22% on goods plus shipping, and about €20-40 courier brokerage. Example: Revendo's CHF 1,835 MBP becomes about €2,290 delivered to Italy, versus €1,968 bought in Switzerland. **Never treat Swiss shelf prices as Italian delivered prices.** |
-| EU seller → Switzerland | A business seller can zero-rate the export (not under the margin scheme). Add Swiss import VAT of 8.1% plus about CHF 20-40 brokerage. If you carry it across yourself: declare it, pay 8.1% (the duty-free allowance is CHF 300). |
+| EU seller → Switzerland | A business seller can zero-rate the export (not under the margin scheme). Add Swiss import VAT of 8.1% plus about CHF 20-40 brokerage. If you carry it across yourself: declare it and pay 8.1% (the personal allowance is CHF 150 per person per day since 1 Jan 2025; above that the full value is taxed). |
 | US (strategic option) | US used prices were historically lower. Pre-2026 Swappa examples: M2 Ultra 128 GB at $2,060, M1 Ultra 128 GB at $1,998. Import to Switzerland costs only 8.1% VAT, so it's worth checking current US listings for Swiss delivery. 2026 US eBay prices have also risen. |
 
 ## 5. What I could not do, and the access needed

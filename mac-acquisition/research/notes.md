@@ -165,3 +165,9 @@ NL/BE: Leapp (NL, bankrupt — exclude), ReMarkt (NL refurbished IT incl. Apple,
 - Recipients and thread IDs: sent_log.csv. Auction houses got a custom "notify me of upcoming Apple lots" message.
 - Next: triage replies; batch 2 = remaining 39 emailable (rank order).
 - USER INSTRUCTION 2026-11-09: NO follow-ups to non-responders. At most, after >=1 week, ASK the user before any follow-up.
+
+## 2026-11-09 ~04:30 UTC: OUTREACH BATCH 2 + 3 SENT
+- Batch 2: remaining 39 emailable DB targets (Q041-Q125). Auction houses got the custom auction message.
+- Batch 3: 33 NEW organisations (research/new_targets_batch3.tsv; emails from their own sites), N001-N033.
+- TOTAL SENT: 102. User asked for 100 more this round -> 72 done; 28 remaining (find new orgs + emails, then send).
+- Kleinanzeigen lead (user-supplied): https://www.kleinanzeigen.de/s-anzeige/macbook-pro-2021-16inch/3524720201-278-6817 . MBP16 2021, 64GB/1TB (=> M1 Max), silver, "Sehr Gut", 1,300 EUR VB, private, 90489 Nürnberg-Oststadt, posted 27.09.2026, shipping possible. Checked 2026-11-09 04:20 UTC (page live). Cannot message via platform (no account creation by agent); user to send drafted message.
