@@ -1,0 +1,26 @@
+# Mac acquisition campaign: checkpoint & resume guide
+
+Goal: buy the best used 64-192 GB Apple Silicon Mac in Europe (deliverable to IT or CH) at an exceptional price, mostly via off-market outreach.
+
+## State at checkpoint 1 (2026-11-09)
+- 150 targets researched and scored -> `acquisition_targets.csv`
+- 150 personalised drafts -> `outreach_queue.csv` (**all NOT SENT, pending approval**)
+- 34 listings/comparables -> `marketplace_listings.csv` (none seller-confirmed; pages could not be opened)
+- Analysis -> `mac_comparison.md`, `acquisition_report.md`
+- Raw evidence log -> `research/notes.md`
+
+## Blockers
+1. No outbound email capability in the session. Needs a mail connector + your approval, or you send the drafts manually.
+2. Network policy blocks direct page fetches. Allow the marketplace/retailer domains listed in `acquisition_report.md` §5.
+3. Sender identity (name/phone/email) still needed to replace `{SENDER_NAME}` / `{SENDER_PHONE}`.
+
+## How to resume
+1. Append new evidence to `research/notes.md` (dated batch).
+2. Edit `research/targets_data.py` (targets) or `research/listings_data.py` (listings).
+3. Regenerate: `python3 -I research/build_outputs.py` (run from this folder).
+   - The CSV `outreach_status`, `date_last_contact` and `response` columns are regenerated from data, so record send/response events in targets_data before rebuilding, or add tracking columns to the generator before Wave 1 goes out.
+4. Never mark a row SENT unless it was actually sent. Never list an email that wasn't found published.
+
+## Wave plan
+- Wave 1 = rank 1-50; Wave 2 = 51-100; Wave 3 = 101-150.
+- 10-15 messages per day, one message per company, a single follow-up after 7 days, stop immediately on any opt-out.
