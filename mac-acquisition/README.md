@@ -2,6 +2,8 @@
 
 Goal: buy the best used 64-192 GB Apple Silicon Mac in Europe (deliverable to IT or CH) at an exceptional price, mostly via off-market outreach.
 
+## STATUS: PAUSED by user 2026-11-09 09:46 UTC. No outreach or negotiation until resumed.
+
 ## State at checkpoint 1 (2026-11-09)
 - 150 targets researched and scored -> `acquisition_targets.csv`
 - 150 personalised drafts -> `outreach_queue.csv` (**all NOT SENT, pending approval**)

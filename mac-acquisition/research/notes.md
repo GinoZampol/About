@@ -184,3 +184,8 @@ NL/BE: Leapp (NL, bankrupt — exclude), ReMarkt (NL refurbished IT incl. Apple,
 - MacRepair NL: MBP16 M1 Max 64GB/512GB EUR 1,899 incl VAT ex shipping. Replied: GPU cores, battery, MDM, warranty; asked about ~EUR 1,500 incl shipping to CH (non-binding question).
 - trademax24: retail only (M2 Ultra 64/1TB 3,799; M1 Ultra 64C 128GB/4TB 5,199).
 - No: Cropmark, Mac&Mobile, BresciaPC, Ledfilms, DoktorMac (recommends Revendo/Ricardo). maconline: check shop. industrieauktion: newsletter only. Foxway: 48h. Okamac: ticket.
+
+## 2026-11-09 09:46 UTC: CAMPAIGN PAUSED BY USER
+- User instruction: pause negotiations and outreach. Scheduled task trig_013iqmjsm9zMZcDcVodK6DB4 disabled; no enabled scheduled tasks remain.
+- Do NOT send any outreach, follow-ups or negotiation replies until the user explicitly resumes.
+- State at pause: 118 emails sent; MacRepair NL negotiation question sent 09:40 (awaiting reply); 12 planned outreach emails NOT sent.
