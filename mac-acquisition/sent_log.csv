@@ -3,9 +3,9 @@ Q001,Revendo AG,info@revendo.ch,"Anfrage: MacBook Pro 14"" M3 Max 128 GB und Res
 Q002,Gebrauchtmacs.de GmbH (maconline),sales@maconline.de,Kaufanfrage: Apple-Silicon-Mac mit 64 GB+ Unified Memory,2026-11-09,1a1be5a71816a7d3,SENT
 Q003,Remacs GmbH (mac-store24),support@mac-store24.com,Mac Studio M1 Ultra 128 GB / 4 TB: physisch verfügbar?,2026-11-09,1a1be5a722dec92f,SENT
 Q004,Smart Generation srl,info@smartgeneration.it,Richiesta: Mac Studio Ultra o MacBook Pro Max con 64 GB+ di memoria,2026-11-09,1a1be5a742829d4a,SENT
-Q006,Okamac,contact@okamac.com,Recherche MacBook Pro M2/M3 Max 96-128 Go ou Mac Studio Ultra,2026-11-09,1a1be5a7738f8923,SENT
+Q006,Okamac,contact@okamac.com,Recherche MacBook Pro M2/M3 Max 96-128 Go ou Mac Studio Ultra,2026-11-09,1a1be5a7738f8923,AUTO-REPLY: ticket #299446 received
 Q007,AfB social & green IT,sales@afb-group.eu,Einzelkauf aus Firmen-Rückläufern: Apple Mac mit 64 GB+ Unified Memory,2026-11-09,1a1be5a79303d6c8,SENT
-Q008,Creative IT,customerservice@creative-it.ie,Purchase enquiry: Apple Silicon Mac with 64 GB+ unified memory,2026-11-09,1a1be5a7c51852d9,SENT
+Q008,Creative IT,customerservice@creative-it.ie,Purchase enquiry: Apple Silicon Mac with 64 GB+ unified memory,2026-11-09,1a1be5a7c51852d9,"REPLIED: no Ultra now; offers MBP16 M2 Max 64GB/2TB FR kbd grade B EUR 3,154 and MBP16 M3 Max 128GB/8TB A+ EUR 9,818; will notify if Ultra arrives (Evan)"
 Q012,Compu-Trade,info@compu-trade.ch,Kaufanfrage: Apple-Silicon-Mac mit 64 GB+ Unified Memory,2026-11-09,1a1be5a7cc5e4bc4,SENT
 Q013,ag.pl,sklep@ag.pl,Purchase enquiry: Apple Silicon Mac with 64 GB+ unified memory,2026-11-09,1a1be5a80b47c4e2,SENT
 Q014,2ndMax GmbH,info@2ndmax.de,Kaufanfrage: Apple-Silicon-Mac mit 64 GB+ Unified Memory,2026-11-09,1a1be5a82b38b2b8,SENT
@@ -37,7 +37,7 @@ Q045,IVY Filmstudio,info@ivyfilmstudio.com,Ausgemusterte Mac-Workstations?,2026-
 Q046,Proventura,info@proventura.de,Anfrage: Apple Mac (64 GB+) in kommenden Auktionen,2026-11-09,1a1bf02efc634ed6,SENT
 Q047,Red Studio,info@redstudio.ch,Workstation Mac dismesse?,2026-11-09,1a1bf02f086b83a1,SENT
 Q048,informatik-profi.ch,email@informatik-profi.ch,Einzelkauf aus Firmen-Rückläufern,2026-11-09,1a1bf02f40d30980,SENT
-Q049,Foxway,info.germany@foxway.com,Single-unit purchase from corporate batches,2026-11-09,1a1bf02f8de66796,SENT
+Q049,Foxway,info.germany@foxway.com,Single-unit purchase from corporate batches,2026-11-09,1a1bf02f8de66796,"AUTO-REPLY: escalated, answer within 48h"
 Q050,PKO Leasing,poleasingowy@pkoleasing.pl,Buying an off-lease MacBook Pro / Mac Studio (64 GB+),2026-11-09,1a1bf02fd179837a,SENT
 Q051,Second IT Remarketing,remarketing@second-it.de,Einzelkauf aus Firmen-Rückläufern,2026-11-09,1a1bf02ff93fab65,SENT
 Q053,Vikast,commerciale@vikast.it,Acquisto singolo da lotti aziendali,2026-11-09,1a1bf0301565d1d1,SENT
@@ -53,7 +53,7 @@ Q066,ALBI,info@albi.at,Einzelkauf aus Firmen-Rückläufern,2026-11-09,1a1bf03e9d
 Q067,Amac,ecommerce@amac.nl,Koopverzoek: Apple Silicon Mac 64 GB+,2026-11-09,1a1bf03eb84b208c,SENT
 Q068,Armonica Film,info@armonicafilm.ch,Workstation Mac dismesse?,2026-11-09,1a1bf03eee0da000,SENT
 Q069,Compuritas,info@compuritas.at,Einzelkauf aus Firmen-Rückläufern,2026-11-09,1a1bf03f0204fb6f,SENT
-Q070,Cropmark AG,verkauf@cropmark.ch,Suche Apple-Silicon-Mac 64 GB+,2026-11-09,1a1bf03f5553a665,SENT
+Q070,Cropmark AG,verkauf@cropmark.ch,Suche Apple-Silicon-Mac 64 GB+,2026-11-09,1a1bf03f5553a665,"REPLIED: no used devices (Jean-Marc Burri, Verkauf)"
 Q071,D-Video Production,info@d-videoproduction.com,Workstation Mac dismesse?,2026-11-09,1a1bf03f6c403989,SENT
 Q072,Exformat Movie Srl,info@exformat.com,Workstation Mac dismesse?,2026-11-09,1a1bf04c1880de8c,SENT
 Q076,itremarketing.at / iTReturn,office@itreturn.de,Einzelkauf aus Firmen-Rückläufern,2026-11-09,1a1bf04c2b5ba03a,SENT
@@ -68,9 +68,9 @@ Q110,Riparazione PC Milano,info@riparazionepcmilano.it,Cerco Mac Apple Silicon 6
 Q111,Roxmir,info@roxmir.it,Cerco Mac Apple Silicon 64 GB+,2026-11-09,1a1bf04d97c22433,SENT
 Q120,The ITAD Company,support@itad-company.com,Single-unit purchase from corporate batches,2026-11-09,1a1bf04dd811970a,SENT
 Q125,JATO,management@jato.be,Losse aankoop uit zakelijke partijen,2026-11-09,1a1bf04e174bad94,SENT
-N001,Apple Service 089,appleservice089@mail.de,Suche Apple-Silicon-Mac 64 GB+,2026-11-09,1a1bf09b7838783b,SENT
+N001,Apple Service 089,appleservice089@mail.de,Suche Apple-Silicon-Mac 64 GB+,2026-11-09,1a1bf09b7838783b,BOUNCED (address not found)
 N002,PC MAC Reparatur München,kontakt@pc-mac-reparatur.de,Suche Apple-Silicon-Mac 64 GB+,2026-11-09,1a1bf09b95e1cb14,SENT
-N003,Mac-Profis München,anfrage2@mac-profis.com,Suche Apple-Silicon-Mac 64 GB+,2026-11-09,1a1bf09bbb7e52ed,SENT
+N003,Mac-Profis München,anfrage2@mac-profis.com,Suche Apple-Silicon-Mac 64 GB+,2026-11-09,1a1bf09bbb7e52ed,BOUNCED (address not found)
 N004,Maclabor,info@maclabor.de,Suche Apple-Silicon-Mac 64 GB+,2026-11-09,1a1bf09bd4b51465,SENT
 N005,MZ-Computer-Service,info@mz-computer-service.de,Suche Apple-Silicon-Mac 64 GB+,2026-11-09,1a1bf09be85c5d97,SENT
 N006,CM Video Agency,info@carlomameli.it,Workstation Mac dismesse?,2026-11-09,1a1bf09c167ca3d5,SENT
@@ -105,7 +105,7 @@ U001,Miete24,info@miete24.com,Kaufanfrage: Mac Studio M1/M2 Ultra aus Ihrem Miet
 U002,Pad4Rent UG,vertrieb@pad4rent.de,Kaufanfrage: Mac Studio M1/M2 Ultra aus Ihrem Mietpool,2026-11-09,1a1bf126a2c07824,SENT
 U003,Simons (simons.works),info@simons.works,Kaufanfrage: Mac Studio Ultra aus Ihrem Vermietpark,2026-11-09,1a1bf126cc05a546,SENT
 U004,FlexIT Rent,info@flexitrent.com,Buying an ex-rental Mac Studio M1/M2 Ultra,2026-11-09,1a1bf126f89bf4a9,SENT
-U005,Flexmiete,ticket@flexmiete.de,Kaufanfrage: ältere Mac Studio Ultra aus Ihrem Mietpool,2026-11-09,1a1bf1273b130839,SENT
+U005,Flexmiete,ticket@flexmiete.de,Kaufanfrage: ältere Mac Studio Ultra aus Ihrem Mietpool,2026-11-09,1a1bf1273b130839,BOUNCED (address not found)
 U006,Ideenkraftwerk Leasing (maclease.de),leasing@cno.de,Kaufanfrage: Mac Studio Ultra aus Leasing-Rückläufern,2026-11-09,1a1bf1275cf3fd1e,SENT
 U007,Leasingshop.de,support@leasingshop.de,Kaufanfrage: Mac Studio Ultra aus Leasing-Rückläufern,2026-11-09,1a1bf1279316e22e,SENT
 U008,printer4you,info@printer4you.com,Kaufanfrage: Mac Studio Ultra aus Ihrem Mietpool,2026-11-09,1a1bf127b6d50de5,SENT

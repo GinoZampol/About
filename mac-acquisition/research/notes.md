@@ -171,3 +171,10 @@ NL/BE: Leapp (NL, bankrupt — exclude), ReMarkt (NL refurbished IT incl. Apple,
 - Batch 3: 33 NEW organisations (research/new_targets_batch3.tsv; emails from their own sites), N001-N033.
 - TOTAL SENT: 102. User asked for 100 more this round -> 72 done; 28 remaining (find new orgs + emails, then send).
 - Kleinanzeigen lead (user-supplied): https://www.kleinanzeigen.de/s-anzeige/macbook-pro-2021-16inch/3524720201-278-6817 . MBP16 2021, 64GB/1TB (=> M1 Max), silver, "Sehr Gut", 1,300 EUR VB, private, 90489 Nürnberg-Oststadt, posted 27.09.2026, shipping possible. Checked 2026-11-09 04:20 UTC (page live). Cannot message via platform (no account creation by agent); user to send drafted message.
+
+## 2026-11-09 ~07:40 UTC: replies so far
+- Cropmark AG (Jean-Marc Burri): no used/occasion devices. Closed.
+- Creative IT (Evan): no Ultra; offered MBP16 M2 Max 30C 64GB/2TB FR keyboard grade B EUR 3,154 (overpriced vs market) and MBP16 M3 Max 128GB/8TB A+ EUR 9,818 (overpriced). Will notify if an M1/M2 Ultra arrives. No action needed.
+- Foxway DE: auto-reply, escalated, answer within 48h. Okamac: ticket #299446 auto-ack.
+- Bounces: ticket@flexmiete.de, anfrage2@mac-profis.com, appleservice089@mail.de (3 of 118).
+- The user lost a Ricardo auction for an MBP16 M1 Max 64GB/1TB on 2026-11-08 (outbid); this was the user's own bidding.
