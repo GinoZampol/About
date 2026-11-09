@@ -23,4 +23,4 @@ Goal: buy the best used 64-192 GB Apple Silicon Mac in Europe (deliverable to IT
 
 ## Wave plan
 - Wave 1 = rank 1-50; Wave 2 = 51-100; Wave 3 = 101-150.
-- 10-15 messages per day, one message per company, a single follow-up after 7 days, stop immediately on any opt-out.
+- One message per company. NO follow-ups to non-responders (user instruction); ask the user first if ever considered (>=1 week). Stop immediately on any opt-out.

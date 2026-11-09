@@ -163,4 +163,5 @@ NL/BE: Leapp (NL, bankrupt — exclude), ReMarkt (NL refurbished IT incl. Apple,
 ## 2026-11-09 ~03:30 UTC: OUTREACH BATCH 1 SENT (30 emails via Gmail, user-authorised)
 - Signed "Gino", phones +41 78 447 32 44 / +39 352 009 5293 (IT recipients: +39 first). Gmail label "Mac Acquisition" (Label_3) applied to all threads.
 - Recipients and thread IDs: sent_log.csv. Auction houses got a custom "notify me of upcoming Apple lots" message.
-- Next: triage replies; batch 2 = remaining 39 emailable (rank order); follow-ups day 7 (2026-11-16) to non-responders, once.
+- Next: triage replies; batch 2 = remaining 39 emailable (rank order).
+- USER INSTRUCTION 2026-11-09: NO follow-ups to non-responders. At most, after >=1 week, ASK the user before any follow-up.
