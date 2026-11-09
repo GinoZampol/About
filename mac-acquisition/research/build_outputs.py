@@ -175,7 +175,11 @@ def channel(contact):
 
 def main():
     rows = []
+    from emails_found import EMAILS, FOUND_AT
     for (name, country, city, web, cat, reason, evid, contact, person, lang, inv, s) in T:
+        if name in EMAILS and '@' not in contact:
+            contact = f"{EMAILS[name]} (published on own website, {FOUND_AT})"
+            s = tuple(s[:4]) + (10,) + tuple(s[5:])
         total = sum(s)
         A = s[0]
         conf = "High" if (A >= 18 and "@" in contact) else ("Medium" if (A >= 10 or "@" in contact or s[4] >= 5) else "Low")

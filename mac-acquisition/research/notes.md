@@ -154,3 +154,8 @@ NL/BE: Leapp (NL, bankrupt — exclude), ReMarkt (NL refurbished IT incl. Apple,
 - AT ITAD: CompTech e.U. (Wien 1210; explicitly buys Apple MacBook/iMac/Mac mini; NIST erasure) comptech.at; Compuritas (compuritas.at); ALBI (albi.at, Austria-wide IT-Ankauf); itremarketing.at; SOCIUS (sozialentsorgen.at, Wien 1210); RMK DataErasure (rmkgmbh.com); iTReturn (Pinsdorf/Wien, page ~647 days old); AfB Austria (afb-group.at; employees can buy their service notebook).
 - CH: Cropmark AG (Wettingen; Apple service provider) cropmark.ch; ART Computer SA (APR Geneva/Lausanne/Fribourg); codename AG (Apple authorised service provider). Revendo stores: Basel, Bern, St. Gallen, Winterthur, Zürich, Luzern; AASP.
 - IT studios: La Bottega dell'immagine (Torino, Via Venaria 38; edit/grade/VFX/mix); Cine Chromatix Italy (Merano; grading & motion).
+
+## 2026-11-09 03:20 UTC: email enrichment (full internet access granted)
+- Fetched public home/contact/imprint pages of 93 target websites (plain requests). Found role emails for 63 additional targets -> research/emails_found.py. Total email-reachable: 69/150.
+- Excluded: personal staff addresses, placeholders (beispiel/esempio/dominio/business.com), PEC, unrelated domains.
+- Sites returning nothing (form-only or anti-bot): dq-solutions, afb-group.ch, digitec, trendevice, smartgeneration (email known from App Store), juice, rstore, cec, iused, mactastic, lendis, chg-meridian, stock4less, moyacell, aiho, socius, rmk, motion-design.berlin, letec, produzionevideolugano, thomasgraziani.
