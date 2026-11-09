@@ -24,3 +24,8 @@ Goal: buy the best used 64-192 GB Apple Silicon Mac in Europe (deliverable to IT
 ## Wave plan
 - Wave 1 = rank 1-50; Wave 2 = 51-100; Wave 3 = 101-150.
 - One message per company. NO follow-ups to non-responders (user instruction); ask the user first if ever considered (>=1 week). Stop immediately on any opt-out.
+
+## Email style rules (user feedback, 2026-11-09)
+- Never open with "My name is Gino" (or "mein Name ist" / "mi chiamo" / "je m'appelle"). Lead with the request or one specific evidence line. Name only in the signature.
+- German: ß for Germany and Austria (Grüße, weiß); ss for Switzerland.
+- Short, natural, one request per email, no follow-ups to non-responders.

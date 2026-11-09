@@ -157,8 +157,16 @@ INTRO = {"it": "mi chiamo {SENDER_NAME} e ", "de": "mein Name ist {SENDER_NAME} 
 
 
 def message(name, cat, lang):
-    hook = HOOK.get(name) or HOOK_GENERIC[lang][cat]
-    body = (f"{GREET[lang]}\n\n{INTRO[lang]}{hook}\n\n{ANGLE[lang][cat]}\n\n{CLOSE[lang]}")
+    # Lead with the reason for writing; no "My name is ..." opener (name is in the signature).
+    # Use a company-specific hook only when we have real evidence; skip generic hooks.
+    hook = HOOK.get(name)
+    if hook:
+        hook = hook[0].upper() + hook[1:]
+        body = f"{GREET[lang]}\n\n{hook} {ANGLE[lang][cat]}\n\n{CLOSE[lang]}"
+    else:
+        body = f"{GREET[lang]}\n\n{ANGLE[lang][cat]}\n\n{CLOSE[lang]}"
+    if lang == "de":  # Germany/Austria spelling; Swiss recipients get ss via SWISS fix below
+        body = body.replace("Grüsse", "Grüße").replace("weiss", "weiß")
     return SUBJ[lang][cat], body
 
 
@@ -227,6 +235,8 @@ def main():
         w.writerow(qcols)
         for r in rows:
             subj, body = message(r["name"], r["cat"], r["lang"])
+            if r["country"] == "CH":
+                body = body.replace("Grüße", "Grüsse").replace("weiß", "weiss")
             w.writerow([f"Q{r['rank']:03d}", r["wave"], r["rank"], r["name"], r["country"], r["lang"],
                         r["channel"], r["contact"], subj, body, "PENDING USER APPROVAL", "NOT SENT", "",
                         "send date + 7 days", "", "", "Purchase enquiry (we are the buyer), not marketing; "
