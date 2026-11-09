@@ -159,3 +159,8 @@ NL/BE: Leapp (NL, bankrupt — exclude), ReMarkt (NL refurbished IT incl. Apple,
 - Fetched public home/contact/imprint pages of 93 target websites (plain requests). Found role emails for 63 additional targets -> research/emails_found.py. Total email-reachable: 69/150.
 - Excluded: personal staff addresses, placeholders (beispiel/esempio/dominio/business.com), PEC, unrelated domains.
 - Sites returning nothing (form-only or anti-bot): dq-solutions, afb-group.ch, digitec, trendevice, smartgeneration (email known from App Store), juice, rstore, cec, iused, mactastic, lendis, chg-meridian, stock4less, moyacell, aiho, socius, rmk, motion-design.berlin, letec, produzionevideolugano, thomasgraziani.
+
+## 2026-11-09 ~03:30 UTC: OUTREACH BATCH 1 SENT (30 emails via Gmail, user-authorised)
+- Signed "Gino", phones +41 78 447 32 44 / +39 352 009 5293 (IT recipients: +39 first). Gmail label "Mac Acquisition" (Label_3) applied to all threads.
+- Recipients and thread IDs: sent_log.csv. Auction houses got a custom "notify me of upcoming Apple lots" message.
+- Next: triage replies; batch 2 = remaining 39 emailable (rank order); follow-ups day 7 (2026-11-16) to non-responders, once.
