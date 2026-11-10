@@ -2,8 +2,8 @@ queue_id,company,to,subject,sent_at_utc,gmail_thread_id,status
 Q001,Revendo AG,info@revendo.ch,"Anfrage: MacBook Pro 14"" M3 Max 128 GB und Reservation Mac Studio M2 Ultra",2026-11-09,1a1be5a6e5ddcdba,"REPLIED (Luca): no discounts, no reservations/waitlist; use shop stock alert; no battery info/photos"
 Q002,Gebrauchtmacs.de GmbH (maconline),sales@maconline.de,Kaufanfrage: Apple-Silicon-Mac mit 64 GB+ Unified Memory,2026-11-09,1a1be5a71816a7d3,"REPLIED: new stock daily, check shop; no specifics"
 Q003,Remacs GmbH (mac-store24),support@mac-store24.com,Mac Studio M1 Ultra 128 GB / 4 TB: physisch verfügbar?,2026-11-09,1a1be5a722dec92f,SENT
-Q004,Smart Generation srl,info@smartgeneration.it,Richiesta: Mac Studio Ultra o MacBook Pro Max con 64 GB+ di memoria,2026-11-09,1a1be5a742829d4a,SENT
-Q006,Okamac,contact@okamac.com,Recherche MacBook Pro M2/M3 Max 96-128 Go ou Mac Studio Ultra,2026-11-09,1a1be5a7738f8923,AUTO-REPLY: ticket #299446 received
+Q004,Smart Generation srl,info@smartgeneration.it,Richiesta: Mac Studio Ultra o MacBook Pro Max con 64 GB+ di memoria,2026-11-09,1a1be5a742829d4a,REPLIED: nothing available or expected
+Q006,Okamac,contact@okamac.com,Recherche MacBook Pro M2/M3 Max 96-128 Go ou Mac Studio Ultra,2026-11-09,1a1be5a7738f8923,REPLIED (Margaux): nothing now; check back around Black Friday for powerful MBP/Mac Studio
 Q007,AfB social & green IT,sales@afb-group.eu,Einzelkauf aus Firmen-Rückläufern: Apple Mac mit 64 GB+ Unified Memory,2026-11-09,1a1be5a79303d6c8,SENT
 Q008,Creative IT,customerservice@creative-it.ie,Purchase enquiry: Apple Silicon Mac with 64 GB+ unified memory,2026-11-09,1a1be5a7c51852d9,"REPLIED: no Ultra now; offers MBP16 M2 Max 64GB/2TB FR kbd grade B EUR 3,154 and MBP16 M3 Max 128GB/8TB A+ EUR 9,818; will notify if Ultra arrives (Evan)"
 Q012,Compu-Trade,info@compu-trade.ch,Kaufanfrage: Apple-Silicon-Mac mit 64 GB+ Unified Memory,2026-11-09,1a1be5a7cc5e4bc4,SENT
@@ -11,10 +11,10 @@ Q013,ag.pl,sklep@ag.pl,Purchase enquiry: Apple Silicon Mac with 64 GB+ unified m
 Q014,2ndMax GmbH,info@2ndmax.de,Kaufanfrage: Apple-Silicon-Mac mit 64 GB+ Unified Memory,2026-11-09,1a1be5a82b38b2b8,SENT
 Q015,Budgetcomputer.ch,info@budgetcomputer.ch,Einzelkauf aus Firmen-Rückläufern: Apple-Silicon-Mac 64 GB+,2026-11-09,1a1be5b6d3c863ed,SENT
 Q016,mResell,info@mresell.de,Kaufanfrage: Apple-Silicon-Mac mit 64 GB+ Unified Memory,2026-11-09,1a1be5b6fdece61e,SENT
-Q017,MacFaaast,info@macfaaast.it,Cerco Mac Apple Silicon 64 GB+ (anche permute o con difetti estetici),2026-11-09,1a1be5b71f17a7c8,SENT
+Q017,MacFaaast,info@macfaaast.it,Cerco Mac Apple Silicon 64 GB+ (anche permute o con difetti estetici),2026-11-09,1a1be5b71f17a7c8,REPLIED: check website (updated daily)
 Q019,Restlos,info@restlos.com,Anfrage: Apple Mac Studio / MacBook Pro (64 GB+) in kommenden Auktionen,2026-11-09,1a1be5b732431100,SENT
 Q020,CompTech e.U.,office@comptech.at,Einzelkauf aus Firmen-Rückläufern: Apple-Silicon-Mac 64 GB+,2026-11-09,1a1be5b74f7f87b5,SENT
-Q021,NCOM,commerciale@pc-ricondizionati.com,Acquisto singolo da lotti aziendali: Mac Apple Silicon 64 GB+,2026-11-09,1a1be5b79ce977d4,SENT
+Q021,NCOM,commerciale@pc-ricondizionati.com,Acquisto singolo da lotti aziendali: Mac Apple Silicon 64 GB+,2026-11-09,1a1be5b79ce977d4,REPLIED: no Mac Studio / Max 64GB
 Q022,trademax24,info@trademax24.de,Kaufanfrage: Apple-Silicon-Mac mit 64 GB+ Unified Memory,2026-11-09,1a1be5b7da8cc6e3,"REPLIED (Justin Rafflenbeul): in stock via shop; retail prices M2 Ultra 64/1TB 3,799, M1 Ultra 64C 128/4TB 5,199, Studio M1 Max 64/1TB 2,399"
 Q024,Grover,offers@grover.com,Kauf von Leasing-/Miet-Rückläufern: Mac 64 GB+,2026-11-09,1a1be5b7f0b3e451,SENT
 Q025,Turbo IT,info@turboit.ch,Einzelkauf aus Firmen-Rückläufern: Apple-Silicon-Mac 64 GB+,2026-11-09,1a1be5b816533caa,SENT
@@ -31,25 +31,25 @@ Q039,Unsere Farben,contact@unserefarben.ch,Ausgemusterte Mac-Workstations? Kaufe
 Q040,XLR8,info@xlr8.it,Workstation Mac dismesse? Acquisto Mac Studio / MacBook Pro 64 GB+,2026-11-09,1a1be5c2094d32f3,SENT
 Q041,frame eleven,info@frame-eleven.com,Ausgemusterte Mac-Workstations?,2026-11-09,1a1bf02e553400a2,SENT
 Q042,Akra Studios,info@akrastudios.com,Workstation Mac dismesse?,2026-11-09,1a1bf02e7d7173f9,SENT
-Q043,Assetorb,kontakt@assetorb.com,Anfrage: Apple Mac (64 GB+) in kommenden Auktionen,2026-11-09,1a1bf02e640f8f3a,SENT
+Q043,Assetorb,kontakt@assetorb.com,Anfrage: Apple Mac (64 GB+) in kommenden Auktionen,2026-11-09,1a1bf02e640f8f3a,"REPLIED (Jörg Soller): only MacBook = Aurena lot A2141 (Intel 2019 MBP16), irrelevant"
 Q044,Central Productions,info@centralproductions.ch,Workstation Mac dismesse?,2026-11-09,1a1bf02eb33f8934,SENT
 Q045,IVY Filmstudio,info@ivyfilmstudio.com,Ausgemusterte Mac-Workstations?,2026-11-09,1a1bf02ec56c27f6,SENT
 Q046,Proventura,info@proventura.de,Anfrage: Apple Mac (64 GB+) in kommenden Auktionen,2026-11-09,1a1bf02efc634ed6,SENT
 Q047,Red Studio,info@redstudio.ch,Workstation Mac dismesse?,2026-11-09,1a1bf02f086b83a1,SENT
-Q048,informatik-profi.ch,email@informatik-profi.ch,Einzelkauf aus Firmen-Rückläufern,2026-11-09,1a1bf02f40d30980,SENT
+Q048,informatik-profi.ch,email@informatik-profi.ch,Einzelkauf aus Firmen-Rückläufern,2026-11-09,1a1bf02f40d30980,REPLIED: nothing in stock or incoming
 Q049,Foxway,info.germany@foxway.com,Single-unit purchase from corporate batches,2026-11-09,1a1bf02f8de66796,"AUTO-REPLY: escalated, answer within 48h"
 Q050,PKO Leasing,poleasingowy@pkoleasing.pl,Buying an off-lease MacBook Pro / Mac Studio (64 GB+),2026-11-09,1a1bf02fd179837a,SENT
 Q051,Second IT Remarketing,remarketing@second-it.de,Einzelkauf aus Firmen-Rückläufern,2026-11-09,1a1bf02ff93fab65,SENT
-Q053,Vikast,commerciale@vikast.it,Acquisto singolo da lotti aziendali,2026-11-09,1a1bf0301565d1d1,SENT
+Q053,Vikast,commerciale@vikast.it,Acquisto singolo da lotti aziendali,2026-11-09,1a1bf0301565d1d1,REPLIED: no 64GB Macs; Apple not core business
 Q054,Cinegrell,zurich@cinegrell.ch,Ausgemusterte Mac-Workstations?,2026-11-09,1a1bf03069ae55f5,SENT
 Q055,Eleven Studio,team@elevenstudio.it,Workstation Mac dismesse?,2026-11-09,1a1bf03d7780a30e,SENT
 Q057,MON MAC ECO,contact@mon-mac-eco.com,Recherche Mac Apple Silicon 64 Go+,2026-11-09,1a1bf03d9188ada8,SENT
-Q058,MacRepair,info@macrepair.nl,Gezocht: Apple Silicon Mac 64 GB+,2026-11-09,1a1bf03da68607cf,"REPLIED: MBP16 M1 Max 64GB/512GB good cond. EUR 1,899 incl VAT ex shipping -> asked GPU/battery/MDM/warranty + room to ~1,500 (non-binding) 2026-11-09 09:40"
+Q058,MacRepair,info@macrepair.nl,Gezocht: Apple Silicon Mac 64 GB+,2026-11-09,1a1bf03da68607cf,"REPLIED x2: MBP16 M1 Max 64GB/512GB EUR 1,899; 24-core GPU, battery >=85%, NL QWERTY, 12-mo warranty; no answer on price"
 Q059,ORBIS Production,info@orbispro.ch,Ausgemusterte Mac-Workstations?,2026-11-09,1a1bf03dd8e64b55,SENT
 Q060,Vstronik,info@vstronik.com,Suche Apple-Silicon-Mac 64 GB+,2026-11-09,1a1bf03de67c4517,SENT
 Q062,industrieauktion.online,info@industrieauktion.online,Anfrage: Apple Mac (64 GB+) in kommenden Auktionen,2026-11-09,1a1bf03e1881eb2d,REPLIED: no individual alerts; newsletter only (6-9x/yr)
 Q064,ALSO Schweiz,info@also.com,Einzelkauf aus Remarketing / Leasing-Rückläufern,2026-11-09,1a1bf03e45458654,SENT
-Q066,ALBI,info@albi.at,Einzelkauf aus Firmen-Rückläufern,2026-11-09,1a1bf03e9d608bb6,SENT
+Q066,ALBI,info@albi.at,Einzelkauf aus Firmen-Rückläufern,2026-11-09,1a1bf03e9d608bb6,REPLIED (David): only MBP14 M3 Pro 36GB/512GB like new (does not qualify)
 Q067,Amac,ecommerce@amac.nl,Koopverzoek: Apple Silicon Mac 64 GB+,2026-11-09,1a1bf03eb84b208c,SENT
 Q068,Armonica Film,info@armonicafilm.ch,Workstation Mac dismesse?,2026-11-09,1a1bf03eee0da000,SENT
 Q069,Compuritas,info@compuritas.at,Einzelkauf aus Firmen-Rückläufern,2026-11-09,1a1bf03f0204fb6f,SENT
@@ -96,8 +96,8 @@ N025,MacHelp Torino,info@machelp.it,Cerco Mac Apple Silicon 64 GB+,2026-11-09,1a
 N026,AGP Computer,info@agpcomputer.it,Cerco Mac Apple Silicon 64 GB+,2026-11-09,1a1bf0b5f8109df4,SENT
 N027,BresciaPC,info@bresciapc.com,Cerco Mac Apple Silicon 64 GB+,2026-11-09,1a1bf0b6293a7d8b,"REPLIED: repairs only, no sales"
 N028,Zip Computer,info@zipcomputer.com,Cerco Mac Apple Silicon 64 GB+,2026-11-09,1a1bf0b65663546c,SENT
-N029,ZeroDueMac,info@zeroduepc.com,Cerco Mac Apple Silicon 64 GB+,2026-11-09,1a1bf0b6835bce40,SENT
-N030,Ricondizionati Pro,info@ricondizionatipro.it,Acquisto singolo: MacBook Pro / Mac Studio 64 GB+,2026-11-09,1a1bf0b6af5eebc9,SENT
+N029,ZeroDueMac,info@zeroduepc.com,Cerco Mac Apple Silicon 64 GB+,2026-11-09,1a1bf0b6835bce40,"REPLIED: Mac Studio M1 Max 24C GPU 64GB/1TB refurb EUR 2,995 (overpriced)"
+N030,Ricondizionati Pro,info@ricondizionatipro.it,Acquisto singolo: MacBook Pro / Mac Studio 64 GB+,2026-11-09,1a1bf0b6af5eebc9,REPLIED: check website
 N031,Rivivonet,info@rivivonet.it,Acquisto singolo da fine leasing,2026-11-09,1a1bf0b6f2b95d6e,SENT
 N032,Intercom IT GmbH,info@intercom-it.de,Einzelkauf aus Leasing-Rückläufern,2026-11-09,1a1bf0b735d473a2,SENT
 N033,Preiswerte IT,info@preiswerte-it.de,Kaufanfrage: Apple-Silicon-Mac 64 GB+,2026-11-09,1a1bf0b770ba1138,SENT

@@ -189,3 +189,10 @@ NL/BE: Leapp (NL, bankrupt — exclude), ReMarkt (NL refurbished IT incl. Apple,
 - User instruction: pause negotiations and outreach. Scheduled task trig_013iqmjsm9zMZcDcVodK6DB4 disabled; no enabled scheduled tasks remain.
 - Do NOT send any outreach, follow-ups or negotiation replies until the user explicitly resumes.
 - State at pause: 118 emails sent; MacRepair NL negotiation question sent 09:40 (awaiting reply); 12 planned outreach emails NOT sent.
+
+## 2026-11-10: read-only reply check (campaign PAUSED; nothing sent)
+- MacRepair NL: M1 Max is 24-core GPU, battery >=85%, NL QWERTY, 12-mo warranty; no price answer yet (EUR 1,899).
+- Okamac: nothing now; come back at Black Friday.
+- ZeroDueMac: Mac Studio M1 Max 24C 64GB/1TB EUR 2,995 (overpriced). ALBI: only M3 Pro 36GB. Assetorb: only an Intel 2019 MBP16 (A2141) lot on Aurena.
+- No: informatik-profi, Smart Generation, NCOM, Vikast. Check-site: MacFaaast, Ricondizionati Pro.
+- industrieauktion sent a newsletter-subscription confirmation email (user/agent did not subscribe; ignore unless wanted).
