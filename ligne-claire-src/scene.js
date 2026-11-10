@@ -3,7 +3,8 @@ THREE.ColorManagement.enabled = false;
 const V3 = THREE.Vector3;
 const P = new URLSearchParams(location.search);
 const W = 1952, H = 1352, SS = +(P.get('ss') || 2);
-const INK = '#1b1a18';
+const INK = '#12131f';
+const LAMP = [0.75, 1.13, -0.9];
 
 const canvas = document.getElementById('c');
 const renderer = new THREE.WebGLRenderer({ canvas, antialias: false, preserveDrawingBuffer: true });
@@ -24,7 +25,15 @@ function place(o3, o) {
   return o3;
 }
 function m(geo, color, o = {}) {
-  const mat = new THREE.MeshBasicMaterial({ color, side: o.double ? THREE.DoubleSide : THREE.FrontSide });
+  const mat = new THREE.ShaderMaterial({ uniforms: { col: { value: new THREE.Color(color) }, raw: { value: o.raw ? 1 : 0 } }, side: o.double ? THREE.DoubleSide : THREE.FrontSide,
+    vertexShader: `varying vec3 vW; void main(){ vec4 w = modelMatrix*vec4(position,1.); vW = w.xyz; gl_Position = projectionMatrix*viewMatrix*w; }`,
+    fragmentShader: `uniform vec3 col; uniform float raw; varying vec3 vW; void main(){ vec3 c = col;
+      if(raw < .5){ float d = distance(vW, vec3(${LAMP.join(',')}));
+        vec3 night = c*vec3(0.36,0.43,0.62) + vec3(0.03,0.05,0.12);
+        vec3 warm = c*vec3(1.0,0.95,0.80) + vec3(0.04,0.02,0.0);
+        vec3 mid = c*vec3(0.70,0.62,0.66) + vec3(0.03,0.03,0.06);
+        c = vW.y < 0.776 ? night : (d < 1.02 ? warm : (d < 1.5 ? mid : night)); }
+      gl_FragColor = vec4(c, 1.); }` });
   const me = new THREE.Mesh(geo, mat);
   me.userData = { ink: !!o.ink, crease: !!o.crease, eid: o.eid ?? newId() };
   return place(me, o);
@@ -90,7 +99,6 @@ function book(w, h, d, color, o = {}) { // lying book with visible pages
 m(box(10, 0.1, 10), '#c68b4e', { p: [0, -0.05, 0] });
 for (let x = -4; x < 3; x += 0.24) {
   m(box(0.007, 0.002, 8), '#7a4f24', { p: [x, 0.001, 0], ink: true });
-  for (let k = 0; k < 4; k++) m(box(0.24, 0.002, 0.007), '#7a4f24', { p: [x + 0.12, 0.001, -2.4 + rnd() * 6], ink: true });
 }
 // rug
 m(box(2.9, 0.012, 2.0), '#a8423a', { p: [0.25, 0.006, -0.55] });
@@ -114,45 +122,35 @@ m(box(0.1, 3.4, 10), '#e7d6a2', { p: [3.05, 1.7, 0] });
 // ---------- WINDOW ----------
 {
   const g = G({ p: [-1.2, 1.68, -2.6] });
-  m(plane(1.2, 1.3), '#bfe3f2', { p: [0, 0, 0.004], in: g });
-  // clouds
+  const v = (geo, c, o) => m(geo, c, { in: g, raw: true, ...o });
+  v(plane(1.2, 1.3), '#1f2d5c', { p: [0, 0, 0.004] });
+  poly([[0.42, 0.2], [-0.62, 0.5], [-0.62, 0.24], [0.42, 0.15]], '#3a4d8c', { p: [0, 0, 0.0042], ink: true, raw: true, in: g });
+  for (let i = 0; i < 16; i++) v(circ(0.007), '#fdf3c4', { p: [-0.55 + rnd() * 1.1, 0.0 + rnd() * 0.6, 0.0043], ink: true });
+  v(circ(0.1), '#fdf3c4', { p: [-0.3, 0.38, 0.0046] });
   let id = newId();
-  [[-0.40, 0.36, .07], [-0.30, 0.41, .10], [-0.18, 0.38, .085], [-0.08, 0.35, .06]].forEach(c => m(circ(c[2]), '#ffffff', { p: [c[0], c[1], 0.0045], eid: id, in: g }));
+  [[-0.18, 0.3, .05], [-0.1, 0.32, .065], [0.0, 0.3, .05], [0.07, 0.29, .035]].forEach(c => v(circ(c[2]), '#34447a', { p: [c[0], c[1], 0.0048], eid: id }));
   id = newId();
-  [[0.2, 0.2, .05], [0.28, 0.24, .075], [0.38, 0.21, .06], [0.46, 0.19, .04]].forEach(c => m(circ(c[2]), '#ffffff', { p: [c[0], c[1], 0.0045], eid: id, in: g }));
-  // hills
+  [[-0.4, -0.2, .26], [-0.1, -0.22, .2], [-0.62, -0.22, .16]].forEach(c => v(circ(c[2]), '#14234a', { p: [c[0], c[1], 0.005], s: [1, 0.55, 1], eid: id }));
+  [[-0.5, -0.17], [-0.42, -0.14], [-0.2, -0.17], [-0.3, -0.19], [-0.08, -0.18]].forEach(c => v(plane(0.022, 0.022), '#f6d55c', { p: [c[0], c[1], 0.0053], ink: true }));
+  poly([[0.365, -0.2], [0.475, -0.2], [0.455, 0.14], [0.385, 0.14]], '#dfe5f2', { p: [0, 0, 0.0052], raw: true, in: g });
+  v(plane(0.094, 0.07), '#b5352a', { p: [0.42, -0.07, 0.0054], ink: true });
+  v(plane(0.078, 0.06), '#b5352a', { p: [0.42, 0.07, 0.0054], ink: true });
+  v(plane(0.1, 0.07), '#fff3a8', { p: [0.42, 0.175, 0.0055] });
+  poly([[0.35, 0.21], [0.49, 0.21], [0.42, 0.3]], '#8f2a22', { p: [0, 0, 0.0055], raw: true, in: g });
+  v(circ(0.17), '#2a2f4a', { p: [0.45, -0.24, 0.0057], s: [1, 0.45, 1] });
+  v(plane(1.2, 0.42), '#16305e', { p: [0, -0.44, 0.006] });
+  [[-0.3, -0.28, .2], [-0.3, -0.33, .14], [-0.31, -0.38, .17], [-0.29, -0.43, .1], [-0.3, -0.49, .13], [-0.31, -0.55, .07], [-0.3, -0.61, .1]].forEach(c => v(plane(c[2], 0.012), '#fdf3c4', { p: [c[0], c[1], 0.0062], ink: true }));
+  for (let i = 0; i < 9; i++) v(plane(0.07, 0.007), '#4466a8', { p: [0.0 + rnd() * 0.5, -0.62 + rnd() * 0.25, 0.0063], ink: true });
+  const s = G({ p: [0.12, 0.02, 0.007], s: 0.85, in: g }); const w = (geo, c, o) => m(geo, c, { in: s, raw: true, ...o });
   id = newId();
-  [[-0.4, -0.2, .26], [-0.1, -0.22, .2], [-0.62, -0.22, .16]].forEach(c => m(circ(c[2]), '#8db58a', { p: [c[0], c[1], 0.005], s: [1, 0.55, 1], eid: id, in: g }));
-  [[-0.5, -0.17], [-0.42, -0.15], [-0.2, -0.17]].forEach(c => m(plane(0.05, 0.045), '#f7f1e1', { p: [c[0], c[1], 0.0053], in: g }));
-  // lighthouse
-  poly([[0.365, -0.2], [0.475, -0.2], [0.455, 0.14], [0.385, 0.14]], '#ffffff', { p: [0, 0, 0.0052], in: g });
-  m(plane(0.094, 0.07), '#d8452e', { p: [0.42, -0.07, 0.0054], ink: true, in: g });
-  m(plane(0.078, 0.06), '#d8452e', { p: [0.42, 0.07, 0.0054], ink: true, in: g });
-  m(plane(0.1, 0.07), '#f6d55c', { p: [0.42, 0.175, 0.0055], in: g });
-  poly([[0.35, 0.21], [0.49, 0.21], [0.42, 0.3]], '#d8452e', { p: [0, 0, 0.0055], in: g });
-  m(circ(0.17), '#a9825a', { p: [0.45, -0.24, 0.0057], s: [1, 0.45, 1], in: g });
-  // sea
-  m(plane(1.2, 0.42), '#5ba7c9', { p: [0, -0.44, 0.006], in: g });
-  for (let i = 0; i < 16; i++) m(plane(0.06, 0.006), INK, { p: [-0.5 + rnd() * 1.0, -0.62 + rnd() * 0.3, 0.0063], ink: true, in: g });
-  // steamship
-  const s = G({ p: [0.02, 0.02, 0.007], in: g });
-  id = newId();
-  [[0.02, -0.06, .04], [0.1, -0.01, .055], [0.2, 0.04, .07]].forEach(c => m(circ(c[2]), '#e9e9e9', { p: [c[0], c[1], -0.0004], eid: id, in: s }));
-  m(plane(0.007, 0.2), INK, { p: [-0.22, -0.22, 0], ink: true, in: s }); m(plane(0.007, 0.18), INK, { p: [0.16, -0.23, 0], ink: true, in: s });
-  poly([[-0.22, -0.14], [-0.15, -0.165], [-0.22, -0.19]], '#d8452e', { in: s, ink: true });
-  m(plane(0.07, 0.12), '#d8452e', { p: [-0.03, -0.2, 0.0002], in: s });
-  m(plane(0.07, 0.035), '#2a2a2a', { p: [-0.03, -0.158, 0.0004], ink: true, in: s });
-  m(plane(0.3, 0.075), '#ffffff', { p: [-0.03, -0.275, 0.0004], in: s });
-  for (let i = 0; i < 5; i++) m(circ(0.009), INK, { p: [-0.14 + i * 0.055, -0.27, 0.0006], ink: true, in: s });
-  poly([[-0.32, -0.31], [0.26, -0.31], [0.2, -0.43], [-0.26, -0.43]], '#2a2a2a', { p: [0, 0, 0.0006], in: s });
-  poly([[-0.275, -0.4], [0.215, -0.4], [0.2, -0.43], [-0.26, -0.43]], '#b5352a', { p: [0, 0, 0.0008], ink: true, in: s });
-  // sailboat + gulls
-  poly([[-0.5, -0.36], [-0.38, -0.36], [-0.4, -0.4], [-0.48, -0.4]], '#ffffff', { p: [0, 0, 0.007], in: g });
-  poly([[-0.445, -0.35], [-0.445, -0.22], [-0.385, -0.35]], '#f6d55c', { p: [0, 0, 0.007], in: g });
-  [[-0.1, 0.18], [0.12, 0.38], [-0.45, 0.12], [0.3, 0.02]].forEach(c => {
-    m(plane(0.045, 0.007), INK, { p: [c[0] - 0.018, c[1], 0.0062], r: [0, 0, -0.45], ink: true, in: g });
-    m(plane(0.045, 0.007), INK, { p: [c[0] + 0.018, c[1], 0.0062], r: [0, 0, 0.45], ink: true, in: g });
-  });
+  [[0.02, -0.06, .04], [0.1, -0.01, .055], [0.2, 0.04, .07]].forEach(c => w(circ(c[2]), '#34447a', { p: [c[0], c[1], -0.0004], eid: id }));
+  w(plane(0.007, 0.2), INK, { p: [-0.22, -0.22, 0], ink: true }); w(plane(0.007, 0.18), INK, { p: [0.16, -0.23, 0], ink: true });
+  w(plane(0.07, 0.12), '#b5352a', { p: [-0.03, -0.2, 0.0002] });
+  w(plane(0.07, 0.035), '#0f1830', { p: [-0.03, -0.158, 0.0004], ink: true });
+  w(plane(0.3, 0.075), '#c9d2e6', { p: [-0.03, -0.275, 0.0004] });
+  for (let i = 0; i < 5; i++) w(circ(0.011), '#f6d55c', { p: [-0.14 + i * 0.055, -0.27, 0.0006], ink: true });
+  poly([[-0.32, -0.31], [0.26, -0.31], [0.2, -0.43], [-0.26, -0.43]], '#0f1830', { p: [0, 0, 0.0006], raw: true, in: s });
+  poly([[-0.275, -0.4], [0.215, -0.4], [0.2, -0.43], [-0.26, -0.43]], '#7a2a2a', { p: [0, 0, 0.0008], ink: true, raw: true, in: s });
   // frame
   id = newId(); const FR = '#f7f1e1';
   m(box(1.38, 0.09, 0.08), FR, { p: [0, 0.695, 0.04], crease: true, eid: id, in: g });
@@ -185,15 +183,6 @@ m(box(0.1, 3.4, 10), '#e7d6a2', { p: [3.05, 1.7, 0] });
   limb([0.085, 0.2, 0], [0.09, 0.27, 0], 0.02, '#4c9a5a', { in: c, eid: id });
   m(sph(0.02), '#e9638a', { p: [0, 0.315, 0], in: c });
 }
-// radiator
-{
-  const g = G({ p: [-1.2, 0, -2.48] });
-  for (let i = 0; i < 10; i++) m(cap(0.036, 0.5), '#e9e2cf', { p: [-0.405 + i * 0.09, 0.42, 0], s: [1, 1, 1.7], in: g });
-  rod([-0.6, 0.14, 0], [0.5, 0.14, 0], 0.02, '#cfc6ae', { in: g });
-  rod([-0.6, 0.14, 0], [-0.6, 0, 0], 0.02, '#cfc6ae', { in: g });
-  m(sph(0.04), '#d9a441', { p: [0.52, 0.66, 0], in: g });
-}
-
 // ---------- WALL MAP ----------
 {
   const g = G({ p: [0.2, 1.82, -2.6] });
@@ -243,50 +232,6 @@ m(box(0.1, 3.4, 10), '#e7d6a2', { p: [3.05, 1.7, 0] });
     if (lean) m(box(0.04, 0.25, 0.2), pick(), { p: [x + 0.055, y + 0.122, 0.04], r: [0, 0, 0.28], crease: true, in: g });
   };
   row(0.1, -0.47, 0.47, 0.43); row(0.565, -0.47, 0.12, 0.4, true); row(0.995, -0.47, 0.47, 0.37); row(1.395, -0.47, 0.05, 0.31, true); row(1.735, -0.1, 0.47, 0.26);
-  // vase
-  lathe([[0, 0], [0.05, 0], [0.085, 0.08], [0.07, 0.17], [0.035, 0.22], [0.05, 0.26]], '#2d6fb3', { p: [0.33, 0.565, 0.02], in: g });
-  m(tor(0.074, 0.008), '#f7f1e1', { p: [0.33, 0.565 + 0.14, 0.02], r: [Math.PI / 2, 0, 0], ink: true, in: g });
-  // alarm clock
-  const c = G({ p: [0.3, 1.395, 0.05], in: g }); const cid = newId();
-  rod([-0.05, 0.0, 0], [-0.035, 0.03, 0], 0.008, '#d9a441', { in: c, eid: cid }); rod([0.05, 0.0, 0], [0.035, 0.03, 0], 0.008, '#d9a441', { in: c, eid: cid });
-  m(sph(0.035), '#d9a441', { p: [-0.05, 0.175, 0], s: [1, 0.7, 1], in: c }); m(sph(0.035), '#d9a441', { p: [0.05, 0.175, 0], s: [1, 0.7, 1], in: c });
-  m(cyl(0.085, 0.085, 0.06), '#d9a441', { p: [0, 0.1, 0], r: [Math.PI / 2, 0, 0], eid: cid, in: c });
-  m(circ(0.068), '#fffdf4', { p: [0, 0.1, 0.031], in: c });
-  m(plane(0.008, 0.05), INK, { p: [0, 0.122, 0.032], ink: true, in: c }); m(plane(0.04, 0.008), INK, { p: [0.018, 0.094, 0.032], r: [0, 0, -0.4], ink: true, in: c });
-  // lying books on top shelf
-  book(0.26, 0.04, 0.2, '#b5352a', { p: [-0.3, 1.735, 0.02], in: g }); book(0.24, 0.035, 0.19, '#2f5d4a', { p: [-0.29, 1.775, 0.02], r: [0, 0.15, 0], in: g }); book(0.2, 0.03, 0.17, '#f2c230', { p: [-0.31, 1.81, 0.02], r: [0, -0.1, 0], in: g });
-  // model ship
-  const s = G({ p: [0, 2.045, 0.02], in: g });
-  m(box(0.3, 0.02, 0.1), '#5d3a1c', { p: [0, 0.01, 0], crease: true, in: s });
-  rod([-0.1, 0.02, 0], [-0.1, 0.06, 0], 0.008, '#d9a441', { in: s }); rod([0.1, 0.02, 0], [0.1, 0.06, 0], 0.008, '#d9a441', { in: s });
-  const hull = new THREE.ExtrudeGeometry(new THREE.Shape([[-0.24, 0.1], [0.27, 0.1], [0.2, 0], [-0.18, 0]].map(p => new THREE.Vector2(...p))), { depth: 0.08, bevelEnabled: false }); hull.translate(0, 0, -0.04);
-  m(hull, '#7a4a2a', { p: [0, 0.06, 0], crease: true, in: s });
-  m(box(0.5, 0.015, 0.002), '#f7f1e1', { p: [0.015, 0.14, 0.041], ink: true, in: s });
-  [[-0.1, 0.36], [0.08, 0.42]].forEach(([x, h], i) => {
-    rod([x, 0.16, 0], [x, 0.16 + h, 0], 0.006, INK, { ink: true, in: s });
-    poly([[0, 0], [0.15, 0.015], [0.135, 0.15], [0, 0.16]], '#fbf3dc', { p: [x - 0.07, 0.2, 0.004], in: s });
-    poly([[0, 0], [0.12, 0.012], [0.105, 0.11], [0, 0.12]], '#fbf3dc', { p: [x - 0.055, 0.38, 0.004], in: s });
-  });
-  poly([[0.1, 0.2], [0.27, 0.18], [0.1, 0.5]], '#fbf3dc', { p: [0, 0, 0.002], in: s });
-  poly([[0.08, 0.58], [0.15, 0.56], [0.08, 0.54]], '#d8452e', { ink: true, in: s });
-}
-
-// ---------- COAT STAND ----------
-{
-  const g = G({ p: [2.72, 0, -2.2] });
-  lathe([[0, 0], [0.22, 0], [0.22, 0.03], [0.05, 0.07], [0.03, 0.1]], '#4a2f18', { in: g });
-  rod([0, 0.05, 0], [0, 1.86, 0], 0.025, '#4a2f18', { in: g });
-  m(sph(0.04), '#4a2f18', { p: [0, 1.88, 0], in: g });
-  for (let i = 0; i < 4; i++) { const a = i * Math.PI / 2 + 0.6; tube([[0, 1.62, 0], [0.09 * Math.cos(a), 1.66, 0.09 * Math.sin(a)], [0.14 * Math.cos(a), 1.74, 0.14 * Math.sin(a)]], 0.012, '#4a2f18', { in: g }); }
-  // hanging trench coat
-  const cid = newId();
-  lathe([[0.0, 1.66], [0.06, 1.66], [0.15, 1.58], [0.17, 1.35], [0.15, 1.0], [0.19, 0.5], [0.21, 0.42]], '#d8c08a', { p: [-0.05, 0, 0.14], s: [1, 1, 0.5], eid: cid, in: g });
-  limb([-0.2, 1.52, 0.14], [-0.24, 0.95, 0.16], 0.05, '#d8c08a', { in: g });
-  m(tor(0.158, 0.014), '#b89c62', { p: [-0.05, 1.05, 0.14], r: [Math.PI / 2, 0, 0], s: [1, 0.52, 1], in: g });
-  // hat
-  const h = G({ p: [0.02, 1.9, 0.02], r: [0.25, 0, -0.2], in: g }); const hid = newId();
-  lathe([[0, 0.12], [0.07, 0.12], [0.092, 0.1], [0.098, 0.0], [0.17, -0.012], [0.175, 0.0], [0.098, 0.006]], '#7a7f63', { eid: hid, in: h });
-  m(cyl(0.1, 0.101, 0.03, true), '#3a3d2e', { p: [0, 0.022, 0], ink: true, in: h });
 }
 
 // ---------- SUITCASE + UMBRELLA ----------
@@ -299,10 +244,6 @@ m(box(0.1, 3.4, 10), '#e7d6a2', { p: [3.05, 1.7, 0] });
   m(tor(0.07, 0.013, Math.PI), '#4a2f18', { p: [0, 0.46, 0], in: g });
   m(circ(0.075), '#d8452e', { p: [-0.02, 0.26, 0.112], in: g }); m(circ(0.05), '#ffffff', { p: [-0.02, 0.26, 0.113], ink: true, in: g });
   poly([[-0.03, -0.02], [0.03, -0.02], [0, 0.03]], '#2d6fb3', { p: [-0.02, 0.255, 0.114], ink: true, in: g });
-  m(plane(0.16, 0.1), '#2d6fb3', { p: [0.08, 0.12, 0.112], r: [0, 0, 0.15], in: g });
-  m(plane(0.12, 0.012), '#ffffff', { p: [0.08, 0.12, 0.113], r: [0, 0, 0.15], ink: true, in: g });
-  poly([[-0.07, -0.05], [0.07, -0.05], [0, 0.07]], '#f6d55c', { p: [-0.1, 0.11, 0.112], in: g });
-  m(plane(0.11, 0.07), '#4c9a5a', { p: [0.1, 0.33, 0.112], r: [0, 0, -0.1], in: g });
   // umbrella leaning on the desk
   const u = G({}); const a = new V3(-0.98, 0, -0.42), b = new V3(-0.76, 0.98, -0.58);
   u.position.copy(a); u.quaternion.setFromUnitVectors(new V3(0, 1, 0), b.clone().sub(a).normalize());
@@ -312,16 +253,6 @@ m(box(0.1, 3.4, 10), '#e7d6a2', { p: [3.05, 1.7, 0] });
   m(tor(0.04, 0.014, Math.PI), '#b5803f', { p: [0.04, 0.86, 0], in: u });
   for (let i = 0; i < 6; i++) { const t = i * Math.PI / 3; rod([0.012 * Math.cos(t), 0.09, 0.012 * Math.sin(t)], [0.042 * Math.cos(t), 0.74, 0.042 * Math.sin(t)], 0.002, INK, { ink: true, in: u }); }
 }
-// wastebasket
-{
-  const g = G({ p: [1.75, 0, -0.25] });
-  m(cyl(0.17, 0.13, 0.36, true), '#c9a15a', { p: [0, 0.18, 0], double: true, in: g });
-  [0.09, 0.18, 0.27].forEach(y => m(tor(0.131 + 0.04 * y / 0.36 + 0.002, 0.003), '#7a5a22', { p: [0, y, 0], r: [Math.PI / 2, 0, 0], ink: true, in: g }));
-  m(tor(0.17, 0.012), '#8b5a2b', { p: [0, 0.36, 0], r: [Math.PI / 2, 0, 0], in: g });
-  const ball = (p, r) => m(new THREE.IcosahedronGeometry(r, 0), '#fbf8ef', { p, r: [rnd() * 3, rnd() * 3, 0], crease: true, in: g });
-  ball([0.03, 0.36, 0.02], 0.08); ball([-0.07, 0.34, -0.04], 0.07); ball([-0.3, 0.05, 0.22], 0.065); ball([0.28, 0.045, 0.3], 0.055);
-}
-
 // ---------- DESK ----------
 const desk = G({ p: [0.2, 0, -0.6] });
 {
@@ -340,15 +271,14 @@ const desk = G({ p: [0.2, 0, -0.6] });
   m(sph(0.022), '#d9a441', { p: [0, 0.66, 0.445], in: g });
   m(box(0.82, 0.5, 0.03), '#8a4f24', { p: [0, 0.4, -0.3], crease: true, in: g });
   // blotter
-  m(box(0.86, 0.008, 0.5), '#6b4320', { p: [0.12, 0.784, -0.12], in: g });
-  m(box(0.78, 0.008, 0.42), '#2f5d4a', { p: [0.12, 0.786, -0.12], in: g });
+  
 }
 const top = (x, z, o = {}) => G({ p: [x, 0.78, z], in: desk, ...o });
 
 // cat
 let catHead;
 {
-  const g = top(-0.7, -0.2, { r: [0, 0.3, 0] }), OR = '#e8892f', CR = '#fff4e2', id = newId();
+  const g = top(-0.4, -0.08, { r: [0, 0.75, 0] }), OR = '#e8892f', CR = '#fff4e2', id = newId();
   const tid = newId();
   tube([[0, 0.03, -0.09], [-0.1, 0.028, -0.16], [-0.19, 0.028, -0.08], [-0.18, 0.03, 0.04]], 0.024, OR, { eid: tid, in: g });
   m(sph(0.024), OR, { p: [-0.18, 0.03, 0.04], eid: tid, in: g });
@@ -360,7 +290,7 @@ let catHead;
   [[0.2, 0.075], [0.15, 0.09]].forEach(([y, x]) => { m(sph(1), '#b55f17', { p: [x, y, -0.03], s: [0.02, 0.011, 0.06], ink: true, in: g }); m(sph(1), '#b55f17', { p: [-x, y, -0.03], s: [0.02, 0.011, 0.06], ink: true, in: g }); });
   m(tor(0.052, 0.009), '#2d6fb3', { p: [0, 0.262, 0.035], r: [Math.PI / 2 - 0.3, 0, 0], in: g });
   m(sph(0.016), '#f6d55c', { p: [0, 0.243, 0.09], in: g });
-  const h = G({ p: [0, 0.335, 0.05], r: [-0.25, 0.25, 0], in: g }); catHead = h; const hid = newId();
+  const h = G({ p: [0, 0.335, 0.05], r: [-0.3, -0.25, 0], in: g }); catHead = h; const hid = newId();
   m(sph(0.08), OR, { s: [1.1, 0.95, 1], eid: hid, in: h });
   [-1, 1].forEach(sx => {
     m(new THREE.ConeGeometry(0.034, 0.075, 20), OR, { p: [sx * 0.05, 0.085, -0.005], r: [0, 0, -sx * 0.35], eid: hid, in: h });
@@ -373,18 +303,9 @@ let catHead;
   m(sph(0.009), '#d86a6a', { p: [0, -0.012, 0.084], ink: true, in: h });
   [-0.016, 0, 0.016].forEach(x => m(sph(1), '#b55f17', { p: [x, 0.07, 0.025], s: [0.005, 0.008, 0.028], ink: true, in: h }));
 }
-// stack of books + magnifier
-{
-  const g = top(-0.66, 0.22, { r: [0, 0.35, 0] });
-  book(0.26, 0.045, 0.19, '#22335c', { in: g }); book(0.24, 0.04, 0.17, '#b5352a', { p: [0.01, 0.045, 0], r: [0, 0.2, 0], in: g }); book(0.2, 0.03, 0.15, '#f2c230', { p: [0, 0.085, 0], r: [0, -0.25, 0], in: g });
-  const mg = G({ p: [0.0, 0.123, 0.0], r: [0, 0.6, 0], in: g });
-  m(circ(0.04), '#d9eef5', { r: [-Math.PI / 2, 0, 0], p: [0, 0.004, 0], ink: true, in: mg });
-  m(tor(0.042, 0.007), '#3a3a3a', { r: [Math.PI / 2, 0, 0], p: [0, 0.007, 0], in: mg });
-  limb([0.055, 0.008, 0], [0.15, 0.008, 0], 0.009, '#6b4320', { in: mg });
-}
 // typewriter
 {
-  const g = top(-0.3, 0.1, { r: [0, 0.45, 0] }), TB = '#3d5566';
+  const g = top(0.76, 0.17, { r: [0, -0.35, 0] }), TB = '#3d5566';
   extrSide([[-0.15, 0], [0.18, 0], [0.18, 0.03], [0.03, 0.115], [-0.15, 0.115]], 0.36, TB, { in: g });
   for (let k = 0; k < 4; k++) for (let i = 0; i < 10; i++) {
     const t = (k + 0.5) / 4, z = 0.168 - 0.135 * t, y = 0.03 + 0.085 * (0.18 - z) / 0.15 + 0.012;
@@ -402,7 +323,7 @@ let catHead;
 }
 // envelope
 {
-  const g = top(0.1, 0.3, { r: [0, 0.35, 0] });
+  const g = top(-0.05, 0.3, { r: [0, 0.35, 0] });
   m(box(0.22, 0.005, 0.14), '#f3e3b5', { p: [0, 0.0025, 0], in: g });
   rod([-0.11, 0.0055, -0.07], [0, 0.0055, 0.01], 0.002, INK, { ink: true, in: g }); rod([0.11, 0.0055, -0.07], [0, 0.0055, 0.01], 0.002, INK, { ink: true, in: g });
   m(box(0.032, 0.003, 0.038), '#2d9a8a', { p: [0.075, 0.006, 0.04], in: g });
@@ -410,7 +331,7 @@ let catHead;
 }
 // coffee
 {
-  const g = top(0.36, 0.12);
+  const g = top(0.2, 0.16);
   m(cyl(0.08, 0.06, 0.012), '#fffdf4', { p: [0, 0.006, 0], in: g });
   m(tor(0.02, 0.0065, Math.PI), '#fffdf4', { p: [0.046, 0.048, 0], r: [0, 0, -Math.PI / 2], in: g });
   m(cyl(0.05, 0.036, 0.066), '#fffdf4', { p: [0, 0.045, 0], in: g });
@@ -419,55 +340,23 @@ let catHead;
   tube([[0, 0.1, 0], [0.014, 0.135, 0], [-0.012, 0.17, 0], [0.012, 0.205, 0], [0, 0.235, 0]], 0.003, INK, { ink: true, in: g });
   tube([[0.03, 0.11, 0], [0.042, 0.14, 0], [0.02, 0.17, 0], [0.036, 0.2, 0]], 0.003, INK, { ink: true, in: g });
 }
-// ink + pen
-{
-  const g = top(0.43, 0.33);
-  m(cyl(0.032, 0.032, 0.05), '#22335c', { p: [0, 0.025, 0], in: g });
-  m(cyl(0.0325, 0.0325, 0.024, true), '#fffdf4', { p: [0, 0.024, 0], ink: true, in: g });
-  m(cyl(0.02, 0.02, 0.028), '#1b1a18', { p: [0, 0.064, 0], in: g });
-  limb([0.07, 0.009, 0.03], [0.2, 0.009, -0.04], 0.009, '#b5352a', { in: g });
-  const nib = m(new THREE.ConeGeometry(0.008, 0.035, 12), '#d9a441', { in: g }); between(nib, [0.2, 0.009, -0.04], [0.245, 0.009, -0.064]);
-}
 // banker's lamp
 {
-  const g = top(0.47, -0.3, { r: [0, -0.2, 0] }), BR = '#d9a441';
+  const g = top(0.55, -0.3, { r: [0, -0.2, 0] }), BR = '#d9a441';
   lathe([[0, 0], [0.1, 0], [0.1, 0.016], [0.04, 0.032], [0.014, 0.05]], BR, { in: g });
   m(cyl(0.012, 0.012, 0.3), BR, { p: [0, 0.19, 0], in: g });
   const sid = newId(), s = G({ p: [0, 0.345, 0.02], in: g });
   m(cyl(0.085, 0.085, 0.3, true, 0, Math.PI), '#2e8b57', { r: [0, 0, Math.PI / 2], double: true, eid: sid, in: s });
   m(circ(0.085, 0, Math.PI), '#2e8b57', { p: [0.15, 0, 0], r: [0, Math.PI / 2, 0], double: true, eid: sid, in: s });
   m(circ(0.085, 0, Math.PI), '#2e8b57', { p: [-0.15, 0, 0], r: [0, Math.PI / 2, 0], double: true, eid: sid, in: s });
-  m(box(0.3, 0.004, 0.17), '#f6e7a0', { p: [0, 0.002, 0], in: s });
+  m(box(0.3, 0.004, 0.17), '#fff3a8', { p: [0, 0.002, 0], raw: true, in: s });
   m(sph(0.014), BR, { p: [0, 0.092, 0], in: s });
   m(box(0.2, 0.004, 0.004), '#8fd3a8', { p: [0, 0.078, 0.036], ink: true, in: s });
   rod([0.09, 0, 0.07], [0.09, -0.09, 0.07], 0.002, INK, { ink: true, in: s }); m(sph(0.009), BR, { p: [0.09, -0.095, 0.07], in: s });
 }
-// camera (twin-lens)
-{
-  const g = top(0.6, 0.02, { r: [0, -0.4, 0] });
-  m(box(0.085, 0.13, 0.085), '#3a3a3a', { p: [0, 0.065, 0], crease: true, in: g });
-  m(box(0.075, 0.03, 0.075), '#5a5a5a', { p: [0, 0.145, 0], crease: true, in: g });
-  [0.092, 0.04].forEach(y => { m(cyl(0.027, 0.027, 0.03), '#c9c9c9', { p: [0, y, 0.05], r: [Math.PI / 2, 0, 0], in: g }); m(circ(0.016), '#22335c', { p: [0, y, 0.0655], ink: true, in: g }); });
-  m(cyl(0.015, 0.015, 0.016), '#c9c9c9', { p: [0.05, 0.09, 0], r: [0, 0, Math.PI / 2], in: g });
-  tube([[-0.045, 0.12, 0], [-0.09, 0.05, 0.02], [-0.12, 0.006, 0.07], [-0.05, 0.006, 0.13], [0.05, 0.006, 0.11]], 0.006, '#6b4320', { ink: true, in: g });
-}
-// telephone
-{
-  const g = top(0.82, 0.2, { r: [0, -0.55, 0] }), PH = '#3a3f45', id = newId();
-  extrSide([[-0.09, 0], [0.11, 0], [0.08, 0.05], [-0.03, 0.095], [-0.09, 0.095]], 0.17, PH, { eid: id, in: g });
-  const d = G({ p: [0, 0.079, 0.028], r: [0.39, 0, 0], in: g });
-  m(cyl(0.05, 0.05, 0.01), '#fffdf4', { in: d }); m(cyl(0.017, 0.017, 0.012), '#d8452e', { in: d });
-  for (let i = 0; i < 9; i++) { const a = i * 0.62 + 0.6; m(cyl(0.0065, 0.0065, 0.012), INK, { p: [0.035 * Math.cos(a), 0, 0.035 * Math.sin(a)], ink: true, in: d }); }
-  [-0.055, 0.055].forEach(x => m(box(0.025, 0.035, 0.05), PH, { p: [x, 0.11, -0.05], crease: true, eid: id, in: g }));
-  const hid = newId();
-  tube([[-0.115, 0.125, -0.05], [-0.06, 0.155, -0.05], [0, 0.163, -0.05], [0.06, 0.155, -0.05], [0.115, 0.125, -0.05]], 0.015, '#4a5058', { eid: hid, in: g });
-  m(cyl(0.032, 0.032, 0.035), '#4a5058', { p: [-0.12, 0.118, -0.05], r: [0, 0, -0.35], eid: hid, in: g }); m(cyl(0.032, 0.032, 0.035), '#4a5058', { p: [0.12, 0.118, -0.05], r: [0, 0, 0.35], eid: hid, in: g });
-  const pts = []; for (let i = 0; i <= 60; i++) { const t = i / 60, a = t * 40; pts.push([-0.09 - 0.16 * t + 0.012 * Math.cos(a), 0.016 + 0.012 * Math.sin(a), -0.03 + 0.2 * t * t]); }
-  tube(pts, 0.003, INK, { ink: true, in: g });
-}
 // globe
 {
-  const g = top(0.9, -0.27, { r: [0, -0.5, 0] }), BR = '#d9a441', R = 0.15;
+  const g = top(-0.78, -0.28, { r: [0, 0.4, 0] }), BR = '#d9a441', R = 0.15;
   lathe([[0, 0], [0.09, 0], [0.09, 0.014], [0.03, 0.03], [0.014, 0.05]], BR, { in: g });
   m(cyl(0.012, 0.012, 0.1), BR, { p: [0, 0.095, 0], in: g });
   const c = G({ p: [-0.066, 0.3, 0], in: g });
@@ -539,9 +428,9 @@ let head;
 }
 
 // ---------- CAMERA ----------
-const cam = new THREE.PerspectiveCamera(+(P.get('fov') || 34), W / H, 0.5, 40);
-cam.position.set(-1.35, 1.85, 4.3);
-cam.lookAt(0.25, 1.1, -1.0);
+const cam = new THREE.PerspectiveCamera(+(P.get('fov') || 32), W / H, 0.5, 40);
+cam.position.set(-1.1, 1.75, 3.3);
+cam.lookAt(0.0, 1.17, -1.0);
 scene.updateMatrixWorld(true);
 cam.updateMatrixWorld(true);
 
@@ -549,7 +438,7 @@ cam.updateMatrixWorld(true);
 const RW = W * SS, RH = H * SS;
 const rtC = new THREE.WebGLRenderTarget(RW, RH, { minFilter: THREE.NearestFilter, magFilter: THREE.NearestFilter });
 const rtE = new THREE.WebGLRenderTarget(RW, RH, { type: THREE.HalfFloatType, minFilter: THREE.NearestFilter, magFilter: THREE.NearestFilter });
-renderer.setRenderTarget(rtC); renderer.setClearColor('#f1e3b4', 1); renderer.clear(); renderer.render(scene, cam);
+renderer.setRenderTarget(rtC); renderer.setClearColor('#6a7fae', 1); renderer.clear(); renderer.render(scene, cam);
 const vs = `varying vec3 vN; void main(){ vN = normalMatrix*normal; gl_Position = projectionMatrix*modelViewMatrix*vec4(position,1.); }`;
 const fs = `uniform float id, cr; varying vec3 vN; void main(){ vec3 n = normalize(vN); if(!gl_FrontFacing) n = -n; gl_FragColor = vec4(mix(vec3(0.,0.,1.), n, cr), id); }`;
 scene.traverse(o => {
@@ -566,7 +455,7 @@ const quad = new THREE.Mesh(new THREE.PlaneGeometry(2, 2), new THREE.ShaderMater
       for(int i=0;i<20;i++){ float a = 6.2831853*float(i)/20.;
         for(int k=1;k<=2;k++){ vec4 s = texture2D(tE, vUv + vec2(cos(a), sin(a))*R*float(k)*0.5*px);
           if(abs(s.a-e.a) > 0.5 || dot(s.rgb, e.rgb) < 0.55) edge = 1.; } }
-      gl_FragColor = vec4(mix(c.rgb, vec3(0.105,0.1,0.095), edge), 1.); }`,
+      gl_FragColor = vec4(mix(c.rgb, vec3(0.07,0.07,0.12), edge), 1.); }`,
   depthTest: false
 }));
 const qs = new THREE.Scene(); qs.add(quad);
@@ -577,21 +466,19 @@ const proj = (o3, off = [0, 0, 0]) => { const v = o3.localToWorld(new V3(...off)
 const [hx, hy] = proj(head, [0, 0.16, 0]);
 const [fx, fy] = proj(head, [0, 0, 0]);
 const svg = document.getElementById('o');
-const bw = 900, bh = 196, by = 30, bx = Math.min(Math.max(hx - 330, 600), W - bw - 30);
+const bw = 800, bh = 150, by = 30, bx = Math.min(Math.max(hx - 330, 600), W - bw - 30);
 const tx = Math.min(Math.max(hx - 20, bx + 80), bx + bw - 140);
 let marks = '';
 [[1.3, -0.45], [1.38, 0.0], [0.95, -0.95]].forEach(([dx, dy]) => { const r1 = 78, r2 = 112; marks += `<line x1="${fx + dx * r1}" y1="${fy + dy * r1}" x2="${fx + dx * r2}" y2="${fy + dy * r2}"/>`; });
 svg.innerHTML = `
-  <g stroke="#1b1a18" stroke-width="5" stroke-linecap="round" fill="none">${marks}</g>
-  <path d="M${bx + 26},${by} H${bx + bw - 26} a26,26 0 0 1 26,26 V${by + bh - 26} a26,26 0 0 1 -26,26 H${tx + 70} L${hx + 6},${hy - 14} L${tx},${by + bh} H${bx + 26} a26,26 0 0 1 -26,-26 V${by + 26} a26,26 0 0 1 26,-26 Z" fill="#fff" stroke="#1b1a18" stroke-width="5" stroke-linejoin="round"/>
-  <g font-family="Comic Neue" font-weight="700" font-style="italic" font-size="35" text-anchor="middle" fill="#1b1a18">
-    <text x="${bx + bw / 2}" y="${by + 62}">GOOD GRACIOUS, MARMALADE! THIS LETTER</text>
-    <text x="${bx + bw / 2}" y="${by + 110}">WAS POSTED FROM PORT MERIDIAN… A HARBOUR</text>
-    <text x="${bx + bw / 2}" y="${by + 158}">THAT VANISHED FROM EVERY MAP IN 1907!</text>
+  <g stroke="#12131f" stroke-width="5" stroke-linecap="round" fill="none">${marks}</g>
+  <path d="M${bx + 26},${by} H${bx + bw - 26} a26,26 0 0 1 26,26 V${by + bh - 26} a26,26 0 0 1 -26,26 H${tx + 70} L${hx + 6},${hy - 14} L${tx},${by + bh} H${bx + 26} a26,26 0 0 1 -26,-26 V${by + 26} a26,26 0 0 1 26,-26 Z" fill="#fff" stroke="#12131f" stroke-width="5" stroke-linejoin="round"/>
+  <g font-family="Comic Neue" font-weight="700" font-style="italic" font-size="35" text-anchor="middle" fill="#12131f">
+    <text x="${bx + bw / 2}" y="${by + 64}">MARMALADE… THIS WAS POSTED FROM A</text>
+    <text x="${bx + bw / 2}" y="${by + 112}">HARBOUR THAT VANISHED IN 1907!</text>
   </g>
-  <rect x="-3" y="-3" width="560" height="112" fill="#f6d55c" stroke="#1b1a18" stroke-width="5"/>
-  <g font-family="Comic Neue" font-weight="700" font-size="31" fill="#1b1a18">
-    <text x="24" y="44">THE NEXT MORNING, A MOST</text>
-    <text x="24" y="86">PECULIAR LETTER ARRIVES…</text>
+  <rect x="-3" y="-3" width="330" height="70" fill="#f6d55c" stroke="#12131f" stroke-width="5"/>
+  <g font-family="Comic Neue" font-weight="700" font-size="31" fill="#12131f">
+    <text x="24" y="45">THAT NIGHT…</text>
   </g>`;
 document.fonts.load('italic 700 35px "Comic Neue"').then(() => document.fonts.load('700 31px "Comic Neue"')).then(() => { window.done = true; });
