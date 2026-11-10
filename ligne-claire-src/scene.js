@@ -32,7 +32,10 @@ function m(geo, color, o = {}) {
         vec3 night = c*vec3(0.36,0.43,0.62) + vec3(0.03,0.05,0.12);
         vec3 warm = c*vec3(1.0,0.95,0.80) + vec3(0.04,0.02,0.0);
         vec3 mid = c*vec3(0.70,0.62,0.66) + vec3(0.03,0.03,0.06);
-        c = vW.y < 0.776 ? night : (d < 1.02 ? warm : (d < 1.5 ? mid : night)); }
+        float t = vW.z + 2.6; vec2 o = vec2(vW.x - 0.25*t, vW.y + 0.75*t);
+        bool moon = t > 0.3 && o.x > -1.74 && o.x < -0.62 && o.y > 1.03 && o.y < 2.33 && abs(o.x + 1.2) > 0.035 && abs(o.y - 1.8) > 0.035;
+        vec3 dark = moon ? c*vec3(0.62,0.68,0.86) + vec3(0.04,0.06,0.10) : night;
+        c = vW.y < 0.776 ? dark : (d < 1.02 ? warm : (d < 1.5 ? mid : dark)); }
       gl_FragColor = vec4(c, 1.); }` });
   const me = new THREE.Mesh(geo, mat);
   me.userData = { ink: !!o.ink, crease: !!o.crease, eid: o.eid ?? newId() };
@@ -317,8 +320,8 @@ let catHead;
   m(cyl(0.03, 0.03, 0.44), '#2a2a2a', { p: [0, 0.15, -0.1], r: [0, 0, Math.PI / 2], eid: pid, in: g });
   m(cyl(0.04, 0.04, 0.025), '#55595e', { p: [-0.23, 0.15, -0.1], r: [0, 0, Math.PI / 2], in: g }); m(cyl(0.04, 0.04, 0.025), '#55595e', { p: [0.23, 0.15, -0.1], r: [0, 0, Math.PI / 2], in: g });
   const pp = G({ p: [0, 0.165, -0.1], r: [-0.22, 0, 0], in: g });
-  m(box(0.22, 0.28, 0.003), '#fffdf4', { p: [0, 0.14, 0], crease: true, in: pp });
-  [0.05, 0.08, 0.11, 0.14].forEach((y, i) => m(plane(i == 3 ? 0.09 : 0.16, 0.007), '#7b7469', { p: [i == 3 ? -0.035 : 0, y, 0.003], ink: true, in: pp }));
+  m(box(0.22, 0.15, 0.003), '#fffdf4', { p: [0, 0.075, 0], crease: true, in: pp });
+  [0.05, 0.08, 0.11, 0.14].slice(0, 2).forEach((y, i) => m(plane(i == 1 ? 0.09 : 0.16, 0.007), '#7b7469', { p: [i == 1 ? -0.035 : 0, y, 0.003], ink: true, in: pp }));
   rod([-0.2, 0.16, -0.08], [-0.27, 0.215, 0.0], 0.005, INK, { ink: true, in: g }); m(sph(0.012), '#d9a441', { p: [-0.27, 0.215, 0.0], in: g });
 }
 // envelope
