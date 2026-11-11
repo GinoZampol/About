@@ -1,0 +1,1 @@
+const {chromium}=require('playwright');(async()=>{const br=await chromium.launch();const p=await br.newPage({viewport:{width:360,height:408}});await p.goto('file://'+__dirname+'/wojak_raw.html');await p.screenshot({path:__dirname+'/wojak_raw.png',omitBackground:true});await br.close()})()

@@ -1,0 +1,59 @@
+<!doctype html><html><head><meta charset="utf-8"><style>@font-face{font-family:'Michroma';font-style:normal;font-weight:400;src:url('fonts/Michroma-400-normal.ttf')}
+@font-face{font-family:'Share Tech Mono';font-style:normal;font-weight:400;src:url('fonts/ShareTechMono-400-normal.ttf')}
+@font-face{font-family:'Syncopate';font-style:normal;font-weight:400;src:url('fonts/Syncopate-400-normal.ttf')}
+@font-face{font-family:'Syncopate';font-style:normal;font-weight:700;src:url('fonts/Syncopate-700-normal.ttf')}
+*{box-sizing:border-box;margin:0;padding:0}
+body{width:1080px;height:1920px;overflow:hidden;background:#000;font-family:'Share Tech Mono',monospace}
+.stage{position:relative;width:1080px;height:1920px;overflow:hidden;background:#000;color:#fff}
+.lb{position:absolute;left:0;right:0;height:96px;background:#000;z-index:20}.lb.t{top:0}.lb.b{bottom:0}
+.scan{position:absolute;inset:0;z-index:18;pointer-events:none;background:repeating-linear-gradient(0deg,rgba(255,255,255,.035) 0 1px,transparent 1px 4px)}
+.vig{position:absolute;inset:0;z-index:17;pointer-events:none;background:radial-gradient(ellipse at 50% 50%,transparent 55%,rgba(0,0,0,.6) 100%)}
+.chart{position:absolute;left:0;right:0;top:600px;z-index:5}
+.grid{position:absolute;left:60px;right:60px;top:0;height:730px}.grid i{position:absolute;left:0;right:0;border-top:1px dashed rgba(255,255,255,.16)}
+.grid i:nth-child(1){top:0}.grid i:nth-child(2){top:243px}.grid i:nth-child(3){top:486px}.grid i:nth-child(4){top:730px}
+.bars{height:730px;display:flex;align-items:flex-end;justify-content:center;gap:22px;position:relative}
+.bw{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;width:200px}.bw.gap{margin-left:70px}
+.bar{width:100%;position:relative;background:linear-gradient(180deg,color-mix(in srgb,var(--c) 72%,transparent),color-mix(in srgb,var(--c) 16%,transparent));border:2px solid var(--c);border-bottom:0;box-shadow:0 0 38px color-mix(in srgb,var(--c) 55%,transparent),inset 0 0 44px color-mix(in srgb,var(--c) 22%,transparent)}
+.bar:before{content:"";position:absolute;inset:0;background:radial-gradient(rgba(255,255,255,.4) 1.2px,transparent 1.7px) 0 0/10px 10px;opacity:.45}
+.bar:after{content:"";position:absolute;left:-2px;right:-2px;top:-2px;height:5px;background:#fff;box-shadow:0 0 18px #fff,0 0 40px var(--c)}
+.bad{--c:var(--bad)}.good{--c:var(--good)}
+.lab{position:absolute;bottom:-52px;font-size:28px;letter-spacing:8px;color:#e6ecf5;text-shadow:0 0 12px rgba(255,255,255,.4)}
+.mag{position:absolute;width:290px;height:290px;left:50%;top:50%;margin-left:-125px;transform:translateY(-175px) rotate(-8deg);filter:drop-shadow(0 0 14px rgba(255,255,255,.7))}
+.groups{display:flex;justify-content:center;margin-top:92px}
+.grp{width:422px;text-align:center;border-top:1px solid rgba(255,255,255,.75);padding-top:16px;position:relative}.grp+.grp{margin-left:70px}
+.grp:before,.grp:after{content:"";position:absolute;top:-5px;width:1px;height:9px;background:#fff}.grp:before{left:0}.grp:after{right:0}
+.gt{font-family:Syncopate,sans-serif;font-weight:700;font-size:22px;letter-spacing:5px;line-height:1.45;text-transform:uppercase;text-shadow:0 0 14px rgba(255,255,255,.5)}
+.gs{font-size:22px;letter-spacing:9px;margin-top:8px;opacity:.7;text-transform:uppercase}
+.tag{position:absolute;left:0;right:0;text-align:center;font-size:24px;letter-spacing:10px;color:#cfd7e4;text-transform:uppercase;z-index:6}
+.t{position:absolute;left:40px;right:40px;text-align:center;font-family:Michroma,sans-serif;text-transform:uppercase;line-height:1.2;z-index:6;color:#fff;text-shadow:0 0 22px rgba(255,255,255,.55),3px 0 rgba(255,70,70,.5),-3px 0 rgba(70,200,255,.5)}
+.sub{position:absolute;left:60px;right:60px;text-align:center;font-family:Syncopate,sans-serif;font-weight:400;font-size:23px;letter-spacing:7px;color:#cfd7e4;text-transform:uppercase;z-index:6}
+.foot{position:absolute;bottom:128px;left:0;right:0;text-align:center;font-size:21px;letter-spacing:6px;color:#9aa6b8;z-index:6;text-transform:uppercase}
+.planet{position:absolute;z-index:1}.shade{position:absolute;left:0;right:0;top:1290px;height:560px;z-index:3;background:linear-gradient(transparent,rgba(0,0,0,.78) 34%)}.shade2{position:absolute;left:0;right:0;top:560px;height:760px;z-index:3;background:radial-gradient(ellipse at 50% 50%,rgba(0,0,0,.32),transparent 70%)}
+.wjw{position:absolute;left:0;top:620px;width:800px;height:440px;z-index:9}
+.wjw>.wj,.wjw>img.wj{position:absolute;left:50px;top:90px;width:300px;height:340px;transform:none;filter:drop-shadow(0 0 18px rgba(255,255,255,.28))}
+.bubble{position:absolute;left:322px;top:0;width:452px;padding:24px 22px;background:#fff;color:#000;border-radius:30px;font-family:Inter,sans-serif;font-weight:900;font-size:46px;line-height:1.05;text-align:center;text-transform:uppercase;box-shadow:0 0 44px rgba(255,255,255,.35)}
+.bubble u{text-decoration:none;color:#e5192b}
+.bubble:after{content:"";position:absolute;left:26px;bottom:-24px;width:44px;height:44px;background:#fff;transform:rotate(45deg) skew(8deg,8deg);border-radius:0 0 8px 0}
+:root{--bad:#ff4a3a;--good:#eaf4ff}.t{top:170px;font-size:66px}.ring{position:absolute;z-index:2;left:-380px;top:860px;width:1560px;height:560px;border:1.5px solid rgba(255,255,255,.4);border-radius:50%;transform:rotate(-13deg);box-shadow:0 0 14px rgba(255,255,255,.2)}</style></head><body><div class="stage"><svg class="planet" style="left:-60.0px;top:360.0px;opacity:0.8" width="1300" height="1300" viewBox="0 0 1000 1000"><defs>
+<filter id="mn5" x="0" y="0" width="100%" height="100%"><feTurbulence type="fractalNoise" baseFrequency=".013 .016" numOctaves="6" seed="5" result="t"/><feDiffuseLighting in="t" surfaceScale="16" diffuseConstant="1.15" lighting-color="#e4e4e4"><feDistantLight azimuth="215" elevation="46"/></feDiffuseLighting></filter>
+<filter id="mr5" x="0" y="0" width="100%" height="100%"><feTurbulence type="fractalNoise" baseFrequency=".0035 .005" numOctaves="4" seed="8"/><feColorMatrix values="0 0 0 0 .05  0 0 0 0 .05  0 0 0 0 .06  16 0 0 0 -8.2"/></filter>
+<clipPath id="mc5"><circle cx="500" cy="500" r="480"/></clipPath>
+<radialGradient id="ms5" cx="66%" cy="38%" r="78%"><stop offset="0" stop-color="#000" stop-opacity="0"/><stop offset=".5" stop-color="#000" stop-opacity=".32"/><stop offset="1" stop-color="#000" stop-opacity=".96"/></radialGradient></defs>
+<g clip-path="url(#mc5)"><rect width="1000" height="1000" filter="url(#mn5)" opacity=".78"/><rect width="1000" height="1000" filter="url(#mr5)" opacity=".3"/><rect width="1000" height="1000" fill="url(#ms5)"/></g></svg><div class="shade"></div><div class="ring"></div>
+<div class="tag" style="top:122px">Outcomes // Before &amp; After_</div>
+<div class="t">The ratio they<br>won’t show you</div><div class="sub" style="top:440px">Colonialism · harm vs. good</div>
+<div class="chart"><div class="grid"><i></i><i></i><i></i><i></i></div><div class="bars"><div class="bw bad "><div class="bar" style="height:231.0px"></div><div class="lab">BAD</div></div><div class="bw good "><div class="bar" style="height:283.5px"></div><div class="lab">GOOD</div></div><div class="bw bad gap"><div class="bar" style="height:126.0px"></div><svg class="mag" viewBox="0 0 300 300"><circle cx="115" cy="115" r="85" fill="rgba(255,255,255,.14)" stroke="#fff" stroke-width="10"/>
+<path d="M62 85 A60 60 0 0 1 100 52" fill="none" stroke="#fff" stroke-width="9" stroke-linecap="round" opacity=".9"/>
+<line x1="178" y1="178" x2="268" y2="268" stroke="#fff" stroke-width="22" stroke-linecap="round"/></svg><div class="lab">BAD</div></div><div class="bw good "><div class="bar" style="height:682.5px"></div><div class="lab">GOOD</div></div></div>
+<div class="groups"><div class="grp pre"><div class="gt">Pre-colonial<br>Nigerian regimes</div><div class="gs">before</div></div><div class="grp eu"><div class="gt">European<br>colonialism</div><div class="gs">after</div></div></div></div><div class="wjw"><svg class="wj" viewBox="0 0 300 340"><path d="M10 340 C22 268 78 250 150 250 C222 250 278 268 290 340Z" fill="#4a4f57" stroke="#000" stroke-width="6" stroke-linejoin="round"/>
+<path d="M112 244 L150 290 L188 244" fill="#e9e9e9" stroke="#000" stroke-width="5" stroke-linejoin="round"/>
+<rect x="118" y="215" width="64" height="45" fill="#f4dcc8" stroke="#000" stroke-width="5"/>
+<ellipse cx="54" cy="140" rx="16" ry="26" fill="#f4dcc8" stroke="#000" stroke-width="5"/><ellipse cx="246" cy="140" rx="16" ry="26" fill="#f4dcc8" stroke="#000" stroke-width="5"/>
+<path d="M150 14 C86 14 56 68 58 132 C60 190 96 238 150 238 C204 238 240 190 242 132 C244 68 214 14 150 14Z" fill="#f4dcc8" stroke="#000" stroke-width="6"/>
+<path d="M104 52 Q150 36 196 52" fill="none" stroke="#000" stroke-width="4" opacity=".5"/><path d="M114 68 Q150 58 186 68" fill="none" stroke="#000" stroke-width="3" opacity=".4"/>
+<path d="M82 108 L132 88" stroke="#000" stroke-width="9" stroke-linecap="round"/><path d="M218 108 L168 88" stroke="#000" stroke-width="9" stroke-linecap="round"/>
+<ellipse cx="108" cy="124" rx="19" ry="14" fill="#fff" stroke="#000" stroke-width="4"/><ellipse cx="192" cy="124" rx="19" ry="14" fill="#fff" stroke="#000" stroke-width="4"/>
+<circle cx="112" cy="126" r="6" fill="#000"/><circle cx="188" cy="126" r="6" fill="#000"/>
+<path d="M88 146 Q108 156 128 146" fill="none" stroke="#000" stroke-width="3" opacity=".6"/><path d="M172 146 Q192 156 212 146" fill="none" stroke="#000" stroke-width="3" opacity=".6"/>
+<path d="M148 132 Q140 168 158 174" fill="none" stroke="#000" stroke-width="5" stroke-linecap="round"/>
+<path d="M104 214 Q150 176 196 214 Q150 198 104 214Z" fill="#6b2020" stroke="#000" stroke-width="5" stroke-linejoin="round"/></svg><div class="bubble">European colonialism did <u>so many</u> bad things!!</div></div><div class="foot">Illustrative · not exact figures</div><div class="vig"></div><div class="scan"></div><div class="lb t"></div><div class="lb b"></div></div></body></html>
