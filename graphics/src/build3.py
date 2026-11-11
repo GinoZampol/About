@@ -25,7 +25,7 @@ def laurel(color="#d9b44a", flip=False):
     return f'<svg class="lau" viewBox="0 0 200 70"><g {tr}>{st}{leaves}</g></svg>'
 
 def wojak(bubble_bg="#fbf3dc", ink="#1b1208", frame=GOLD):
-    return f'''<div class="wjw"><div class="wjf"><div class="in">{b.WOJAK}</div></div><div class="bubble">European colonialism did <u>so many</u> bad things!!</div></div>'''
+    return f'''<div class="wjw">{b.WOJAK}<div class="bubble">European colonialism did <u>so many</u> bad things!!</div></div>'''
 
 COMMON = f'''
 .bord{{position:absolute;inset:0;width:1080px;height:1920px;z-index:6;pointer-events:none}}
@@ -45,6 +45,7 @@ h2{{position:absolute;left:90px;right:90px;text-align:center}}
 .wjf{{position:absolute;left:66px;top:150px;width:292px;height:344px;border-radius:50%;padding:13px;background:{GOLD};box-shadow:0 14px 30px #0008,inset 0 0 0 3px #7a5a14}}
 .wjf .in{{width:100%;height:100%;border-radius:50%;overflow:hidden;position:relative;background:radial-gradient(circle at 50% 35%,#6b5436,#2b1d0e 80%);box-shadow:inset 0 0 40px #000a}}
 .wjf .wj{{position:absolute;left:-17px;top:20px;width:300px;height:340px;transform:none}}
+.wjw>.wj{{left:50px!important;top:96px!important;width:320px!important;height:363px!important;transform:rotate(-3deg)!important;filter:drop-shadow(0 12px 14px #0007)}}
 div.wjw .bubble{{left:262px!important;width:508px!important;font-family:'Playfair Display',serif!important;font-weight:900!important;font-size:56px!important;line-height:1.06!important;background:#fbf3dc!important;color:#1b1208!important;border:6px solid #1b1208!important;border-radius:34px!important;box-shadow:10px 10px 0 #0006!important}}
 .bubble u{{color:#9c1620!important}}.bubble:after{{background:#fbf3dc!important;border-color:#1b1208!important}}
 '''
@@ -120,3 +121,4 @@ h2{{top:590px;font-family:'Cormorant Garamond',serif;font-style:italic;font-weig
 f'''{border("#e3bf55","#9a7a22")}<div class="kick">{laurel("#e3bf55")}<span>M D C C C</span>{laurel("#e3bf55",True)}</div>
 <h1>The ledger nobody dares open</h1><h2>One chart. Two sides of the empire.</h2>
 {b.chart("Pre-colonial<br>Nigerian regimes","European<br>colonialism",b.mag("#f1d98a",12,"rgba(255,240,190,.22)"),("BAD","GOOD"))}{wojak()}<div class="foot">Illustrative, not exact figures</div>''')
+
