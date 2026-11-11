@@ -1,0 +1,42 @@
+<!doctype html><html><head><meta charset="utf-8"><style>*{box-sizing:border-box;margin:0;padding:0}body{width:1080px;height:1920px;overflow:hidden;font-family:Inter,'Liberation Sans',sans-serif}
+.stage{position:relative;width:1080px;height:1920px;overflow:hidden}
+.chart{position:absolute;left:50px;right:50px;top:690px;display:flex;gap:30px}
+.panel{flex:1;display:flex;flex-direction:column;align-items:center}
+.bars{height:760px;width:100%;display:flex;align-items:flex-end;justify-content:center;gap:28px;position:relative}
+.bw{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;width:210px}
+.bar{width:100%}.val{font-weight:900;font-size:76px;line-height:1;margin-bottom:8px}
+.lab{position:absolute;bottom:-62px;font-weight:900;font-size:40px;letter-spacing:2px}
+.mag{position:absolute;width:290px;height:290px;left:50%;top:50%;margin-left:-125px;transform:translateY(-175px) rotate(-8deg);pointer-events:none}
+.bw.bad .mag{bottom:auto}
+.foot{position:absolute;bottom:50px;left:0;right:0;text-align:center;font-size:26px;font-weight:600;opacity:.65}
+.stage{background:#efe2c0;background-image:radial-gradient(#00000012 1.5px,transparent 1.5px);background-size:14px 14px;font-family:'DejaVu Serif','Liberation Serif',serif}
+.frame{position:absolute;inset:26px;border:8px double #1c2b4a}
+.rib{position:absolute;top:100px;left:50%;transform:translateX(-50%);background:#a3201a;color:#f6ecd0;font-weight:900;font-size:40px;letter-spacing:6px;padding:12px 60px;white-space:nowrap}
+h1{position:absolute;top:195px;left:60px;right:60px;text-align:center;font-weight:900;font-size:84px;line-height:1.02;color:#1c2b4a;text-transform:uppercase}
+h1 i{color:#a3201a}
+h2{position:absolute;top:470px;left:60px;right:60px;text-align:center;font-size:38px;font-style:italic;color:#1c2b4a}
+.chart{top:620px;left:70px;right:70px}
+.ptitle{font-weight:900;font-size:36px;text-align:center;color:#1c2b4a;text-transform:uppercase;line-height:1.1;height:80px}
+.psub{font-size:26px;font-style:italic;color:#6b5a38;margin-bottom:10px;height:32px}
+.val{color:#1c2b4a;font-size:70px}.lab{color:#1c2b4a;font-size:34px}
+.bar{border:5px solid #1c2b4a;border-bottom:0}
+.bad .bar{background:#a3201a}.good .bar{background:#2e6b3f}
+.bars:after{content:"";position:absolute;left:0;right:0;bottom:-5px;height:6px;background:#1c2b4a}
+.panel.pre{border-right:4px solid #1c2b4a55;padding-right:20px}
+.mag{filter:drop-shadow(5px 6px 0 #00000055)}
+.foot{color:#1c2b4a;font-style:italic;bottom:70px}</style></head><body><svg width="0" height="0" style="position:absolute"><filter id="rough"><feTurbulence type="fractalNoise" baseFrequency=".025" numOctaves="2" seed="4"/><feDisplacementMap in="SourceGraphic" scale="9"/></filter></svg><div class="stage"><div class="frame"></div><div class="rib">★ THE FACTS ★</div><h1>The <i>uncomfortable</i> ratio</h1><h2>Bad outcomes vs. good — before &amp; after European rule</h2>
+<div class="chart"><div class="panel pre">
+  <div class="ptitle">Pre-colonial<br>African regimes</div><div class="psub">before</div>
+  <div class="bars">
+    <div class="bw bad"><div class="val">22%</div><div class="bar" style="height:220px"></div><div class="lab">BAD</div></div>
+    <div class="bw good"><div class="val">27%</div><div class="bar" style="height:270px"></div><div class="lab">GOOD</div></div>
+  </div></div><div class="panel eu">
+  <div class="ptitle">European<br>colonialism</div><div class="psub">after</div>
+  <div class="bars">
+    <div class="bw bad"><div class="val">12%</div><div class="bar" style="height:120px"></div><svg class="mag" viewBox="0 0 300 300" >
+<circle cx="115" cy="115" r="85" fill="rgba(255,255,255,.4)" stroke="#1c2b4a" stroke-width="14"/>
+<path d="M62 85 A60 60 0 0 1 100 52" fill="none" stroke="#fff" stroke-width="10" stroke-linecap="round" opacity=".9"/>
+<line x1="178" y1="178" x2="270" y2="270" stroke="#5b3a1c" stroke-width="26" stroke-linecap="round"/></svg><div class="lab">BAD</div></div>
+    <div class="bw good"><div class="val">65%</div><div class="bar" style="height:650px"></div><div class="lab">GOOD</div></div>
+  </div></div></div>
+<div class="foot">Illustrative figures · bad vs good outcomes</div></div></body></html>
