@@ -1,0 +1,78 @@
+<!doctype html><html><head><meta charset="utf-8"><style>@font-face{font-family:'Cinzel';font-style:normal;font-weight:500;src:url('fonts/Cinzel-500-normal.ttf')}
+@font-face{font-family:'Cinzel';font-style:normal;font-weight:700;src:url('fonts/Cinzel-700-normal.ttf')}
+@font-face{font-family:'Cinzel';font-style:normal;font-weight:900;src:url('fonts/Cinzel-900-normal.ttf')}
+@font-face{font-family:'Cinzel Decorative';font-style:normal;font-weight:700;src:url('fonts/CinzelDecorative-700-normal.ttf')}
+@font-face{font-family:'Cinzel Decorative';font-style:normal;font-weight:900;src:url('fonts/CinzelDecorative-900-normal.ttf')}
+@font-face{font-family:'Cormorant Garamond';font-style:italic;font-weight:600;src:url('fonts/CormorantGaramond-600-italic.ttf')}
+@font-face{font-family:'Cormorant Garamond';font-style:italic;font-weight:700;src:url('fonts/CormorantGaramond-700-italic.ttf')}
+@font-face{font-family:'Cormorant Garamond';font-style:normal;font-weight:600;src:url('fonts/CormorantGaramond-600-normal.ttf')}
+@font-face{font-family:'Cormorant Garamond';font-style:normal;font-weight:700;src:url('fonts/CormorantGaramond-700-normal.ttf')}
+@font-face{font-family:'Playfair Display';font-style:italic;font-weight:700;src:url('fonts/PlayfairDisplay-700-italic.ttf')}
+@font-face{font-family:'Playfair Display';font-style:italic;font-weight:900;src:url('fonts/PlayfairDisplay-900-italic.ttf')}
+@font-face{font-family:'Playfair Display';font-style:normal;font-weight:700;src:url('fonts/PlayfairDisplay-700-normal.ttf')}
+@font-face{font-family:'Playfair Display';font-style:normal;font-weight:900;src:url('fonts/PlayfairDisplay-900-normal.ttf')}
+*{box-sizing:border-box;margin:0;padding:0}body{width:1080px;height:1920px;overflow:hidden;font-family:Inter,'Liberation Sans',sans-serif}
+.stage{position:relative;width:1080px;height:1920px;overflow:hidden}
+.chart{position:absolute;left:0;right:0;top:740px}
+.grid{position:absolute;left:60px;right:60px;top:0;height:780px}.grid i{position:absolute;left:0;right:0;height:0;border-top:2px solid #0002}
+.grid i:nth-child(1){top:0}.grid i:nth-child(2){top:260px}.grid i:nth-child(3){top:520px}.grid i:nth-child(4){top:780px}
+.bars{height:780px;display:flex;align-items:flex-end;justify-content:center;gap:22px;position:relative}.bw{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;width:200px}.bw.gap{margin-left:70px}
+.bar{width:100%}.lab{position:absolute;bottom:-58px;font-weight:800;font-size:34px;letter-spacing:2px}
+.mag{position:absolute;width:290px;height:290px;left:50%;top:50%;margin-left:-125px;transform:translateY(-175px) rotate(-8deg)}
+.groups{display:flex;justify-content:center;margin-top:92px}.grp{width:422px;text-align:center;border-top:6px solid #888;padding-top:14px}.grp+.grp{margin-left:70px}
+.gt{font-weight:800;font-size:36px;line-height:1.1;text-transform:uppercase}.gs{font-size:26px;margin-top:6px;opacity:.7}
+.wjw{z-index:5;position:absolute;left:0;top:750px;width:800px;height:500px}
+.wj{position:absolute;left:36px;top:150px;width:300px;height:340px;transform:rotate(-4deg)}
+.bubble{position:absolute;left:225px;top:0;width:545px;padding:24px 28px;background:#fff;color:#000;border:7px solid #000;border-radius:44px;font-family:Inter,sans-serif;font-weight:900;font-size:60px;line-height:1.02;text-align:center;transform:rotate(2deg);box-shadow:10px 10px 0 #0004}.bubble u{text-decoration:none;color:#e3120b}
+.bubble:after{content:"";position:absolute;left:22px;bottom:-30px;width:56px;height:56px;background:#fff;border-right:7px solid #000;border-bottom:7px solid #000;transform:rotate(55deg) skew(10deg,10deg)}
+.foot{position:absolute;bottom:60px;left:60px;right:60px;font-size:24px}
+
+.bord{position:absolute;inset:0;width:1080px;height:1920px;z-index:6;pointer-events:none}
+.lau{width:170px;height:60px}
+.kick{position:absolute;top:84px;left:0;right:0;display:flex;align-items:center;justify-content:center;gap:22px;font-family:Cinzel,serif;font-weight:700;font-size:31px;letter-spacing:9px;text-transform:uppercase}
+h1{position:absolute;left:70px;right:70px;text-align:center;text-transform:uppercase}
+h2{position:absolute;left:90px;right:90px;text-align:center}
+.gold{background:linear-gradient(180deg,#fbeeb0 0%,#e3bf55 28%,#a97d1d 52%,#e9c862 78%,#fff0b8 100%);-webkit-background-clip:text;background-clip:text;color:transparent}
+.grid i{border-top:2px solid #ffffff1c}
+.grp{border-top:4px double currentColor!important}.gt{font-family:Cinzel,serif!important;font-weight:700!important;font-size:30px!important;letter-spacing:2px}
+.gs{font-family:'Cormorant Garamond',serif!important;font-style:italic;font-size:34px!important;opacity:.85}
+.lab{font-family:Cinzel,serif!important;font-weight:700;font-size:30px!important;letter-spacing:4px;bottom:-54px}
+.bar{box-shadow:inset 0 0 0 4px rgba(255,236,170,.0),0 14px 30px #0006;position:relative}
+.bad .bar{background:linear-gradient(90deg,#4a0a10,#a8232c 42%,#5d0c13);border:4px solid #e3bf55;border-bottom:0}
+.good .bar{background:linear-gradient(90deg,#063d28,#1f8f5f 42%,#073f2a);border:4px solid #e3bf55;border-bottom:0}
+.bars:after{content:"";position:absolute;left:60px;right:60px;bottom:-6px;height:6px;background:linear-gradient(180deg,#fbeeb0 0%,#e3bf55 28%,#a97d1d 52%,#e9c862 78%,#fff0b8 100%)}
+.wjf{position:absolute;left:66px;top:150px;width:292px;height:344px;border-radius:50%;padding:13px;background:linear-gradient(180deg,#fbeeb0 0%,#e3bf55 28%,#a97d1d 52%,#e9c862 78%,#fff0b8 100%);box-shadow:0 14px 30px #0008,inset 0 0 0 3px #7a5a14}
+.wjf .in{width:100%;height:100%;border-radius:50%;overflow:hidden;position:relative;background:radial-gradient(circle at 50% 35%,#6b5436,#2b1d0e 80%);box-shadow:inset 0 0 40px #000a}
+.wjf .wj{position:absolute;left:-17px;top:20px;width:300px;height:340px;transform:none}
+div.wjw .bubble{left:262px!important;width:508px!important;font-family:'Playfair Display',serif!important;font-weight:900!important;font-size:56px!important;line-height:1.06!important;background:#fbf3dc!important;color:#1b1208!important;border:6px solid #1b1208!important;border-radius:34px!important;box-shadow:10px 10px 0 #0006!important}
+.bubble u{color:#9c1620!important}.bubble:after{background:#fbf3dc!important;border-color:#1b1208!important}
+.stage{background:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='700' height='700'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3' seed='3'/><feColorMatrix values='0 0 0 0 .35  0 0 0 0 .22  0 0 0 0 .08  0 0 0 .5 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>"),radial-gradient(1000px 1100px at 50% 45%,#f1dfb2 0%,#e2c88c 62%,#b98f4f 100%);color:#2c1a08}
+.kick{color:#5b3a12}.lau{filter:brightness(.55) sepia(1)}
+h1{top:165px;font-family:'Playfair Display',serif;font-weight:900;font-size:94px;line-height:1.04;color:#2c1a08;letter-spacing:1px}
+h1 i{color:#8e1b1b}
+h2{top:625px;font-family:'Cormorant Garamond',serif;font-style:italic;font-weight:700;font-size:50px;color:#5b3a12}
+.grid i{border-top:2px dashed #5b3a1244}
+.bad .bar{background:repeating-linear-gradient(45deg,#7d1616 0 8px,#9c2222 8px 14px);border:4px solid #2c1a08;border-bottom:0}
+.good .bar{background:repeating-linear-gradient(45deg,#1f5a38 0 8px,#2c7648 8px 14px);border:4px solid #2c1a08;border-bottom:0}
+.bars:after{background:#2c1a08!important;height:6px}
+.lab{color:#2c1a08}.gt{color:#2c1a08}.gs{color:#5b3a12}.grp{color:#2c1a08}
+.mag{filter:drop-shadow(5px 7px 4px #3a1f0a66)}.foot{text-align:center;color:#5b3a12;font-family:'Cormorant Garamond',serif;font-style:italic;font-size:28px;bottom:78px}
+.rose{position:absolute;right:62px;top:48px;width:110px;opacity:.55;z-index:2}
+.wjf{background:linear-gradient(180deg,#8a6a2c,#5a3d12,#8a6a2c)}</style></head><body><div class="stage"><svg class="bord" viewBox="0 0 1080 1920"><rect x="30" y="30" width="1020" height="1860" fill="none" stroke="#3a2208" stroke-width="5"/><rect x="44" y="44" width="992" height="1832" fill="none" stroke="#6b4a1a" stroke-width="2"/>
+<g transform="translate(30,30) scale(1,1)"><path d="M0 0 L120 0 M0 0 L0 120" stroke="#3a2208" stroke-width="5" fill="none"/><path d="M22 22 L96 22 M22 22 L22 96" stroke="#6b4a1a" stroke-width="2.5" fill="none"/><circle cx="22" cy="22" r="9" fill="#3a2208"/><path d="M0 0 Q60 14 120 0" stroke="#3a2208" stroke-width="2" fill="none" opacity=".6"/><path d="M130 0 l10 8 l-10 8 l-10 -8z M0 130 l8 10 l-8 10 l-8 -10z" fill="#3a2208"/></g><g transform="translate(1050,30) scale(-1,1)"><path d="M0 0 L120 0 M0 0 L0 120" stroke="#3a2208" stroke-width="5" fill="none"/><path d="M22 22 L96 22 M22 22 L22 96" stroke="#6b4a1a" stroke-width="2.5" fill="none"/><circle cx="22" cy="22" r="9" fill="#3a2208"/><path d="M0 0 Q60 14 120 0" stroke="#3a2208" stroke-width="2" fill="none" opacity=".6"/><path d="M130 0 l10 8 l-10 8 l-10 -8z M0 130 l8 10 l-8 10 l-8 -10z" fill="#3a2208"/></g><g transform="translate(30,1890) scale(1,-1)"><path d="M0 0 L120 0 M0 0 L0 120" stroke="#3a2208" stroke-width="5" fill="none"/><path d="M22 22 L96 22 M22 22 L22 96" stroke="#6b4a1a" stroke-width="2.5" fill="none"/><circle cx="22" cy="22" r="9" fill="#3a2208"/><path d="M0 0 Q60 14 120 0" stroke="#3a2208" stroke-width="2" fill="none" opacity=".6"/><path d="M130 0 l10 8 l-10 8 l-10 -8z M0 130 l8 10 l-8 10 l-8 -10z" fill="#3a2208"/></g><g transform="translate(1050,1890) scale(-1,-1)"><path d="M0 0 L120 0 M0 0 L0 120" stroke="#3a2208" stroke-width="5" fill="none"/><path d="M22 22 L96 22 M22 22 L22 96" stroke="#6b4a1a" stroke-width="2.5" fill="none"/><circle cx="22" cy="22" r="9" fill="#3a2208"/><path d="M0 0 Q60 14 120 0" stroke="#3a2208" stroke-width="2" fill="none" opacity=".6"/><path d="M130 0 l10 8 l-10 8 l-10 -8z M0 130 l8 10 l-8 10 l-8 -10z" fill="#3a2208"/></g></svg><div class="kick"><span>A True &amp; Faithful Reckoning</span></div>
+<h1>The truth they <i>struck</i> from the record</h1><h2>The colonial ledger, set down plainly</h2>
+<div class="chart"><div class="grid"><i></i><i></i><i></i><i></i></div><div class="bars"><div class="bw bad "><div class="bar" style="height:242px"></div><div class="lab">BAD</div></div><div class="bw good "><div class="bar" style="height:297px"></div><div class="lab">GOOD</div></div><div class="bw bad gap"><div class="bar" style="height:132px"></div><svg class="mag" viewBox="0 0 300 300"><circle cx="115" cy="115" r="85" fill="rgba(255,248,220,.35)" stroke="#2c1a08" stroke-width="12"/>
+<path d="M62 85 A60 60 0 0 1 100 52" fill="none" stroke="#fff" stroke-width="9" stroke-linecap="round" opacity=".9"/>
+<line x1="178" y1="178" x2="268" y2="268" stroke="#2c1a08" stroke-width="24" stroke-linecap="round"/></svg><div class="lab">BAD</div></div><div class="bw good "><div class="bar" style="height:715px"></div><div class="lab">GOOD</div></div></div>
+<div class="groups"><div class="grp pre"><div class="gt">Pre-colonial<br>African regimes</div><div class="gs">before</div></div><div class="grp eu"><div class="gt">European<br>colonialism</div><div class="gs">after</div></div></div></div><div class="wjw"><div class="wjf"><div class="in"><svg class="wj" viewBox="0 0 300 340"><path d="M10 340 C22 268 78 250 150 250 C222 250 278 268 290 340Z" fill="#4a4f57" stroke="#000" stroke-width="6" stroke-linejoin="round"/>
+<path d="M112 244 L150 290 L188 244" fill="#e9e9e9" stroke="#000" stroke-width="5" stroke-linejoin="round"/>
+<rect x="118" y="215" width="64" height="45" fill="#f4dcc8" stroke="#000" stroke-width="5"/>
+<ellipse cx="54" cy="140" rx="16" ry="26" fill="#f4dcc8" stroke="#000" stroke-width="5"/><ellipse cx="246" cy="140" rx="16" ry="26" fill="#f4dcc8" stroke="#000" stroke-width="5"/>
+<path d="M150 14 C86 14 56 68 58 132 C60 190 96 238 150 238 C204 238 240 190 242 132 C244 68 214 14 150 14Z" fill="#f4dcc8" stroke="#000" stroke-width="6"/>
+<path d="M104 52 Q150 36 196 52" fill="none" stroke="#000" stroke-width="4" opacity=".5"/><path d="M114 68 Q150 58 186 68" fill="none" stroke="#000" stroke-width="3" opacity=".4"/>
+<path d="M82 108 L132 88" stroke="#000" stroke-width="9" stroke-linecap="round"/><path d="M218 108 L168 88" stroke="#000" stroke-width="9" stroke-linecap="round"/>
+<ellipse cx="108" cy="124" rx="19" ry="14" fill="#fff" stroke="#000" stroke-width="4"/><ellipse cx="192" cy="124" rx="19" ry="14" fill="#fff" stroke="#000" stroke-width="4"/>
+<circle cx="112" cy="126" r="6" fill="#000"/><circle cx="188" cy="126" r="6" fill="#000"/>
+<path d="M88 146 Q108 156 128 146" fill="none" stroke="#000" stroke-width="3" opacity=".6"/><path d="M172 146 Q192 156 212 146" fill="none" stroke="#000" stroke-width="3" opacity=".6"/>
+<path d="M148 132 Q140 168 158 174" fill="none" stroke="#000" stroke-width="5" stroke-linecap="round"/>
+<path d="M104 214 Q150 176 196 214 Q150 198 104 214Z" fill="#6b2020" stroke="#000" stroke-width="5" stroke-linejoin="round"/></svg></div></div><div class="bubble">European colonialism did <u>so many</u> bad things!!</div></div><div class="foot">Illustrative, not exact figures</div></div></body></html>
