@@ -17,14 +17,21 @@ def panel(title, sub, bad, good, extra_cls="", magsvg="", tag=""):
     <div class="bw good"><div class="val">{good}%</div><div class="bar" style="height:{good*S}px"></div><div class="lab">GOOD</div></div>
   </div></div>'''
 
+def chart(pre, eu, magsvg):
+    def bw(kind, val, extra="", m=""):
+        return f'<div class="bw {kind} {extra}"><div class="val">{val}%</div><div class="bar" style="height:{val*S}px"></div>{m}<div class="lab">{kind.upper()}</div></div>'
+    return f'''<div class="chart"><div class="bars">{bw("bad",22)}{bw("good",27)}{bw("bad",12,"gap",magsvg)}{bw("good",65)}</div>
+<div class="groups"><div class="grp pre"><div class="ptitle">{pre}</div><div class="psub">before</div></div><div class="grp eu"><div class="ptitle">{eu}</div><div class="psub">after</div></div></div></div>'''
+
 DEFS = '''<svg width="0" height="0" style="position:absolute"><filter id="rough"><feTurbulence type="fractalNoise" baseFrequency=".025" numOctaves="2" seed="4"/><feDisplacementMap in="SourceGraphic" scale="9"/></filter></svg>'''
 
 BASE = '''*{box-sizing:border-box;margin:0;padding:0}body{width:1080px;height:1920px;overflow:hidden;font-family:Inter,'Liberation Sans',sans-serif}
 .stage{position:relative;width:1080px;height:1920px;overflow:hidden}
-.chart{position:absolute;left:50px;right:50px;top:690px;display:flex;gap:30px}
-.panel{flex:1;display:flex;flex-direction:column;align-items:center}
-.bars{height:760px;width:100%;display:flex;align-items:flex-end;justify-content:center;gap:28px;position:relative}
-.bw{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;width:210px}
+.chart{position:absolute;left:0;right:0;top:680px}
+.bars{height:760px;display:flex;align-items:flex-end;justify-content:center;gap:22px;position:relative}.bw.gap{margin-left:70px}
+.groups{display:flex;justify-content:center;margin-top:92px}.grp{width:422px;text-align:center;border-top:8px solid #888;padding-top:14px}.grp+.grp{margin-left:70px}
+.grp .ptitle{height:auto!important;margin-bottom:6px}.grp .psub{height:auto!important;margin:0!important;display:block!important}
+.bw{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;width:200px}
 .bar{width:100%}.val{font-weight:900;font-size:76px;line-height:1;margin-bottom:8px}
 .lab{position:absolute;bottom:-62px;font-weight:900;font-size:40px;letter-spacing:2px}
 .mag{position:absolute;width:290px;height:290px;left:50%;top:50%;margin-left:-125px;transform:translateY(-175px) rotate(-8deg);pointer-events:none}
@@ -47,13 +54,11 @@ h2{position:absolute;top:585px;left:50px;right:50px;color:#ffd800;font-weight:80
 .psub{color:#aaa;font-size:26px;font-weight:600;margin-bottom:16px;height:32px}
 .val{color:#fff}.lab{color:#fff}
 .bad .bar{background:#e10600;box-shadow:0 0 40px #e1060088}.good .bar{background:#16d94a;box-shadow:0 0 40px #16d94a77}
-.panel.eu{background:#1a1a1a;border:4px solid #ffd800;border-radius:20px;padding:20px 8px 90px}
-.panel.pre{padding:24px 8px 90px}
 .mag{filter:drop-shadow(0 8px 0 #000)}
-.foot{color:#fff}'''
+.foot{color:#fff}.grp.eu{border-top-color:#ffd800}.grp .ptitle{color:#fff}'''
 body = f'''<div class="haz" style="top:0"></div><div class="tag">BREAKING</div>
 <h1>Colonialism was <em>all bad</em>… right?</h1><h2>Now look at the actual ratio 👀</h2>
-<div class="chart">{panel("Pre-colonial<br>Nigerian regimes","before",22,27,"pre")}{panel("European<br>colonialism","after",12,65,"eu",mag("#ffd800","rgba(255,216,0,.25)",14,False,"#ffd800"))}</div>
+{chart("Pre-colonial<br>Nigerian regimes","European<br>colonialism",mag("#ffd800","rgba(255,216,0,.25)",14,False,"#ffd800"))}
 <div class="foot">Illustrative figures · bad vs good outcomes</div><div class="haz" style="bottom:0"></div>'''
 page("v1-breaking-tabloid", css, body)
 
@@ -71,11 +76,10 @@ h2{position:absolute;top:490px;left:110px;right:60px;font-weight:800;font-size:5
 .bad .bar{background:repeating-linear-gradient(-45deg,#ff4d4d 0 14px,#ff8a8a 14px 26px)}
 .good .bar{background:repeating-linear-gradient(-45deg,#33c26b 0 14px,#7fe3a3 14px 26px)}
 .bars:after{content:"";position:absolute;left:-10px;right:-10px;bottom:-4px;height:8px;background:#111;border-radius:4px}
-.panel.eu .ptitle:after{content:" ✓";color:#1faa59}
 .arrow{position:absolute;right:70px;top:1500px;font-weight:900;font-size:52px;color:#e0262b;transform:rotate(-6deg);filter:url(#rough);text-align:center;line-height:1.05}
-.foot{color:#111;font-style:italic}'''
+.foot{color:#111;font-style:italic}.grp{border-top:8px solid #111;border-radius:6px;filter:url(#rough)}'''
 body = f'''<h1>ALL BAD?? <span>look closer</span></h1><h2>↓ same story, but with receipts</h2>
-<div class="chart">{panel("Pre-colonial<br>Africa","before",22,27,"pre")}{panel("European<br>colonialism","after",12,65,"eu",mag("#111","rgba(255,255,255,.55)",14,True,"#111"))}</div>
+{chart("Pre-colonial<br>Africa","European<br>colonialism",mag("#111","rgba(255,255,255,.55)",14,True,"#111"))}
 <div class="foot">illustrative figures · bad vs good outcomes</div>'''
 page("v2-doodle-notebook", css, body)
 
@@ -85,8 +89,6 @@ css = '''.stage{background:radial-gradient(1200px 900px at 20% 0%,#3a1170 0%,tra
 h1{position:absolute;top:175px;left:60px;right:60px;font-weight:900;font-size:124px;line-height:.92;letter-spacing:-4px;color:#fff;text-transform:uppercase;text-shadow:0 0 40px #b04dff}
 h1 b{background:linear-gradient(90deg,#00f0ff,#ff2bd6);-webkit-background-clip:text;color:transparent;text-shadow:none}
 h2{position:absolute;top:585px;left:60px;right:60px;font-weight:600;font-size:46px;color:#c9c4ff}
-.panel{background:#ffffff0d;border:2px solid #ffffff24;border-radius:36px;padding:28px 10px 90px;backdrop-filter:blur(6px)}
-.panel.eu{border-color:#00f0ff88;box-shadow:0 0 60px #00f0ff33}
 .ptitle{color:#fff;font-weight:900;font-size:38px;text-align:center;text-transform:uppercase;line-height:1.05;height:82px}
 .psub{color:#9a95d0;font-size:26px;font-weight:600;height:32px;margin-bottom:12px}
 .val{color:#fff}.lab{color:#c9c4ff}
@@ -94,9 +96,9 @@ h2{position:absolute;top:585px;left:60px;right:60px;font-weight:600;font-size:46
 .bad .bar{background:linear-gradient(#ff5470,#a0102d);box-shadow:0 0 50px #ff2d55aa}
 .good .bar{background:linear-gradient(#5dffa3,#00a85a);box-shadow:0 0 50px #00ff88aa}
 .mag{filter:drop-shadow(0 0 18px #00f0ff)}
-.foot{color:#fff}'''
+.foot{color:#fff}.grp.eu{border-top-color:#00f0ff;box-shadow:0 -14px 30px -12px #00f0ff}.grp.pre{border-top-color:#8a86c9}'''
 body = f'''<div class="kick">Side by side</div><h1>The ratio <b>nobody</b> shows you</h1><h2>Bad vs good outcomes, before and after.</h2>
-<div class="chart">{panel("Pre-colonial<br>Nigerian regimes","before",22,27,"pre")}{panel("European<br>colonialism","after",12,65,"eu",mag("#00f0ff","rgba(0,240,255,.18)",13,False,"#00f0ff"))}</div>
+{chart("Pre-colonial<br>Nigerian regimes","European<br>colonialism",mag("#00f0ff","rgba(0,240,255,.18)",13,False,"#00f0ff"))}
 <div class="foot">Illustrative figures · bad vs good outcomes</div>'''
 page("v3-neon-ratio", css, body)
 
@@ -107,18 +109,17 @@ css = '''.stage{background:#efe2c0;background-image:radial-gradient(#00000012 1.
 h1{position:absolute;top:195px;left:60px;right:60px;text-align:center;font-weight:900;font-size:84px;line-height:1.02;color:#1c2b4a;text-transform:uppercase}
 h1 i{color:#a3201a}
 h2{position:absolute;top:470px;left:60px;right:60px;text-align:center;font-size:38px;font-style:italic;color:#1c2b4a}
-.chart{top:620px;left:70px;right:70px}
+.chart{top:620px}
 .ptitle{font-weight:900;font-size:36px;text-align:center;color:#1c2b4a;text-transform:uppercase;line-height:1.1;height:80px}
 .psub{font-size:26px;font-style:italic;color:#6b5a38;margin-bottom:10px;height:32px}
 .val{color:#1c2b4a;font-size:70px}.lab{color:#1c2b4a;font-size:34px}
 .bar{border:5px solid #1c2b4a;border-bottom:0}
 .bad .bar{background:#a3201a}.good .bar{background:#2e6b3f}
 .bars:after{content:"";position:absolute;left:0;right:0;bottom:-5px;height:6px;background:#1c2b4a}
-.panel.pre{border-right:4px solid #1c2b4a55;padding-right:20px}
 .mag{filter:drop-shadow(5px 6px 0 #00000055)}
-.foot{color:#1c2b4a;font-style:italic;bottom:70px}'''
+.foot{color:#1c2b4a;font-style:italic;bottom:70px}.grp{border-top:5px solid #1c2b4a}.grp.eu{border-top-color:#a3201a}'''
 body = f'''<div class="frame"></div><div class="rib">★ THE FACTS ★</div><h1>The <i>uncomfortable</i> ratio</h1><h2>Bad outcomes vs. good — before &amp; after European rule</h2>
-<div class="chart">{panel("Pre-colonial<br>African regimes","before",22,27,"pre")}{panel("European<br>colonialism","after",12,65,"eu",mag("#1c2b4a","rgba(255,255,255,.4)",14,False,"#5b3a1c"))}</div>
+{chart("Pre-colonial<br>African regimes","European<br>colonialism",mag("#1c2b4a","rgba(255,255,255,.4)",14,False,"#5b3a1c"))}
 <div class="foot">Illustrative figures · bad vs good outcomes</div>'''
 page("v4-vintage-poster", css, body)
 
@@ -129,9 +130,7 @@ h1 em{font-style:normal;color:#ff2d55}
 .burst{position:absolute;right:30px;top:470px;width:300px;height:210px;background:#fff;border:8px solid #000;border-radius:50%;display:flex;align-items:center;justify-content:center;text-align:center;font-weight:900;font-size:50px;line-height:1;transform:rotate(7deg);box-shadow:8px 8px 0 #000}
 .burst:after{content:"";position:absolute;left:30px;bottom:-34px;border:24px solid transparent;border-top:44px solid #000;transform:rotate(18deg)}
 h2{position:absolute;top:520px;left:50px;width:640px;font-weight:900;font-size:56px;line-height:1;color:#000;text-transform:uppercase}
-.chart{top:730px}
-.panel{background:#fff;border:8px solid #000;border-radius:28px;box-shadow:12px 12px 0 #000;padding:22px 10px 90px}
-.panel.eu{background:#d9fff0}
+.chart{top:700px}
 .ptitle{font-weight:900;font-size:38px;text-transform:uppercase;text-align:center;line-height:1.02;height:78px}
 .psub{display:none}
 .bars{height:760px}
@@ -139,8 +138,8 @@ h2{position:absolute;top:520px;left:50px;width:640px;font-weight:900;font-size:5
 .bar{border:8px solid #000;border-bottom:0;box-shadow:8px 0 0 #000}
 .bad .bar{background:#ff2d55}.good .bar{background:#18c964}
 .mag{filter:drop-shadow(6px 6px 0 #000)}
-.foot{color:#000;opacity:1;bottom:36px;font-size:28px}'''
+.foot{color:#000;opacity:1;bottom:36px;font-size:28px}.grp{border-top:10px solid #000}.grp.eu{border-top-color:#ff2d55}'''
 body = f'''<h1>Bad?! <em>Look</em> at the ratio</h1><h2>Everyone yells "evil." Nobody shows this.</h2><div class="burst">WAIT…<br>WHAT?!</div>
-<div class="chart">{panel("Pre-colonial<br>Nigerian regimes","",22,27,"pre")}{panel("European<br>colonialism","",12,65,"eu",mag("#000","rgba(255,255,255,.6)",15,False,"#000"))}</div>
+{chart("Pre-colonial<br>Nigerian regimes","European<br>colonialism",mag("#000","rgba(255,255,255,.6)",15,False,"#000"))}
 <div class="foot">Illustrative figures · bad vs good outcomes</div>'''
 page("v5-pop-art-comic", css, body)
