@@ -1,0 +1,63 @@
+{
+ "date": "2026-11-13",
+ "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+ "cpu": "Intel(R) Xeon(R) Processor @ 2.10GHz",
+ "cores": 4,
+ "quality": "medium",
+ "resolution": "1280x720",
+ "initialLoadSec": 4,
+ "rows": [
+  {
+   "view": "valley_plain",
+   "frameMs": 13,
+   "streamSec": 3.5,
+   "chunksBuilt": 817,
+   "avgChunkBuildMs": 12,
+   "visibleChunks": 621,
+   "trisDrawnM": 2.35,
+   "drawCalls": 353,
+   "vegInstances": 57245,
+   "geometries": 643,
+   "jsHeapMB": 212
+  },
+  {
+   "view": "overview",
+   "frameMs": 2,
+   "streamSec": 0.5,
+   "chunksBuilt": 44,
+   "avgChunkBuildMs": 11.8,
+   "visibleChunks": 333,
+   "trisDrawnM": 1.31,
+   "drawCalls": 161,
+   "vegInstances": 36463,
+   "geometries": 693,
+   "jsHeapMB": 212
+  },
+  {
+   "view": "spine_valley",
+   "frameMs": 11298,
+   "streamSec": 56.6,
+   "chunksBuilt": 556,
+   "avgChunkBuildMs": 14.9,
+   "visibleChunks": 603,
+   "trisDrawnM": 3.73,
+   "drawCalls": 507,
+   "vegInstances": 120363,
+   "geometries": 1190,
+   "jsHeapMB": 212
+  },
+  {
+   "view": "dark_forest",
+   "frameMs": 6464,
+   "streamSec": 41,
+   "chunksBuilt": 504,
+   "avgChunkBuildMs": 14.4,
+   "visibleChunks": 525,
+   "trisDrawnM": 4.59,
+   "drawCalls": 607,
+   "vegInstances": 88973,
+   "geometries": 1700,
+   "jsHeapMB": 212
+  }
+ ]
+}

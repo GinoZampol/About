@@ -97,6 +97,22 @@ Same seed and config give a bit-identical erosion result (checked by `validate.m
 `docs/validation.txt` (hydrology, terrain, seams, traversability, ecology, mining, determinism)
 and `docs/performance_medium.json`.
 
+Measured at medium quality, 1280×720, 4 vCPUs (3 terrain workers), no GPU:
+
+| View | Visible chunks | Triangles drawn (incl. 3 shadow cascades) | Draw calls | Vegetation instances | Chunks built on arrival | Avg chunk build | Time to fully streamed |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| Valley floor, on foot | 621 | 2.35 M | 353 | 57 k | 817 | 12.0 ms | 3.5 s |
+| 1,800 m above the valley | 333 | 1.31 M | 161 | 36 k | 44 | 11.8 ms | 0.5 s |
+| Spine valley, forested | 603 | 3.73 M | 507 | 120 k | 556 | 14.9 ms | 56.6 s |
+| Dark forest, on foot | 525 | 4.59 M | 607 | 89 k | 504 | 14.4 ms | 41.0 s |
+
+Streaming times in forest are dominated by vegetation placement sharing the worker pool with
+terrain, and were measured while the software renderer was also using the CPUs. Software frame
+times in the two forest views were 6–11 s per frame; the other two readings were not credible and
+are not reported. The JS heap reading (212 MB) is Chrome's bucketed figure and excludes worker
+copies of the world data (about 50 MB each) and GPU buffers. So: no frame rate on real hardware
+has been measured yet.
+
 The development environment has no GPU: frame times there come from a software rasteriser on
 4 vCPUs and say nothing about real hardware. Triangle counts, draw calls, chunk build times,
 streaming latency and memory are hardware-independent. Run `node tools/perf.mjs --gpu` on a

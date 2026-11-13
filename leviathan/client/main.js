@@ -168,6 +168,7 @@ function regionName(x, z, h) {
 const clock = new THREE.Clock(); let fps = 60, frames = 0, readyFrames = 0, hudT = 0;
 window.__stats = () => ({ frames, fps, calls: renderer.info.render.calls, tris: renderer.info.render.triangles, chunks: terrain.stats.chunks, terrainTris: terrain.stats.tris, built: terrain.stats.built, avgBuildMs: terrain.stats.buildMs / Math.max(1, terrain.stats.built), geometries: renderer.info.memory.geometries, textures: renderer.info.memory.textures, heap: performance.memory ? performance.memory.usedJSHeapSize : 0, veg: vegetation.stats, riverTris: rivers.tris, pos: player.pos.toArray() });
 window.__setView = (x, alt, z, yawDeg, pitchDeg, time) => { player.fly = true; player.pos.set(x, world.ground(x, z) + alt, z); player.yaw = -yawDeg * Math.PI / 180; player.pitch = pitchDeg * Math.PI / 180; if (time !== undefined) { timeOfDay = time; updateSun(); } readyFrames = 0; window.__ready = false; };
+window.__bench = (n) => { const gl = renderer.getContext(), t = performance.now(); for (let k = 0; k < n; k++) { if (csm) csm.update(); renderer.render(scene, camera); gl.finish(); } return (performance.now() - t) / n; };
 window.__world = world; window.__player = player; window.__terrain = terrain;
 $('loading').style.display = 'none';
 

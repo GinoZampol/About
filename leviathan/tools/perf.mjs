@@ -18,7 +18,7 @@ const browser = await chromium.launch({ args: gpu ? ['--ignore-gpu-blocklist'] :
 const page = await browser.newPage({ viewport: { width: 1280, height: 720 }, deviceScaleFactor: 1 });
 page.on('pageerror', (e) => console.log('[pageerror]', e.message));
 const t0 = Date.now();
-await page.goto(`http://localhost:${port}/client/index.html?ui=0&pr=1&quality=${quality}`);
+await page.goto(`http://localhost:${port}/client/index.html?shot=1&ui=0&pr=1&quality=${quality}`);
 await page.waitForFunction(() => typeof window.__setView === 'function', null, { timeout: 300000 });
 const loadMs = Date.now() - t0;
 const renderer = await page.evaluate(() => { const g = document.createElement('canvas').getContext('webgl2'); const e = g.getExtension('WEBGL_debug_renderer_info'); return e ? g.getParameter(e.UNMASKED_RENDERER_WEBGL) : 'unknown'; });
@@ -29,10 +29,9 @@ for (const name of (names.length ? names : Object.keys(VIEWS))) {
   await page.evaluate((v) => window.__setView(...v), v);
   await page.waitForFunction(() => window.__ready === true, null, { timeout: 600000, polling: 250 });
   const streamMs = Date.now() - t1;
-  const a = await page.evaluate(() => window.__stats()); const ta = Date.now();
-  await page.waitForTimeout(6000);
-  const b = await page.evaluate(() => window.__stats()); const tb = Date.now();
-  rows.push({ view: name, frameMs: +((tb - ta) / Math.max(1, b.frames - a.frames)).toFixed(1), streamSec: +(streamMs / 1000).toFixed(1), chunksBuilt: b.built - before, avgChunkBuildMs: +b.avgBuildMs.toFixed(1), visibleChunks: b.chunks, trisDrawnM: +(b.tris / 1e6).toFixed(2), drawCalls: b.calls, vegInstances: b.veg.instances, geometries: b.geometries, jsHeapMB: Math.round(b.heap / 1e6) });
+  const frameMs = await page.evaluate(() => window.__bench(3));
+  const b = await page.evaluate(() => window.__stats());
+  rows.push({ view: name, frameMs: +frameMs.toFixed(0), streamSec: +(streamMs / 1000).toFixed(1), chunksBuilt: b.built - before, avgChunkBuildMs: +b.avgBuildMs.toFixed(1), visibleChunks: b.chunks, trisDrawnM: +(b.tris / 1e6).toFixed(2), drawCalls: b.calls, vegInstances: b.veg.instances, geometries: b.geometries, jsHeapMB: Math.round(b.heap / 1e6) });
   console.log(JSON.stringify(rows[rows.length - 1]));
 }
 const result = { date: new Date().toISOString().slice(0, 10), renderer, cpu: os.cpus()[0].model, cores: os.cpus().length, quality, resolution: '1280x720', initialLoadSec: +(loadMs / 1000).toFixed(1), rows };
