@@ -82,3 +82,9 @@ Status key:
 - That includes configurations that don't exist (M1 Ultra with 16/32/192 GB). So €2,000 looks like a placeholder price on a catch-all page, not a real offer or sale.
 - Scanned 1,500 products in their catalogue: no 64 GB+ Mac Studio or MacBook Pro currently in stock.
 - Emailed hello@ (cc shop@) on 2026-11-09 in Dutch: asked about restock, a reservation, and whether €2,000 applies to 128 GB.
+
+## Re-check 2026-11-13 (~11:00 UTC, read-only)
+- **NEW, best 128 GB deal seen: M1 Ultra 20C/64C GPU, 128 GB / 1 TB, €3,250 fixed price.** Marktplaats, Amsterdam, private seller "Erf". Posted 2026-11-13 10:44 UTC. Bought new at the Apple Store NL for €6,122 (student price); seller says "not used enough". Pickup only. No bids, 47 views. https://www.marktplaats.nl/v/computers-en-software/apple-desktops/m2465254141-mac-studio-apple-m1-ultra-128gb-ram-20c-cpu-64c-gpu-1tb-ssd
+- M1 Ultra 64C, 128 GB / 1 TB, "bid from €2,295". Marktplaats, Sijbekarspel. Bids already at €3,000 (2026-11-13 09:59); page now shows OutOfStock (probably sold or reserved). https://www.marktplaats.nl/v/computers-en-software/apple-desktops/m2464993955-mac-studio-m1-ultra-128-gb-ram-1-tb-64-core-gpu
+- M1 Ultra 64C, 128 GB, €4,490. Kleinanzeigen, Augsburg (posted 11.11).
+- Unchanged: Hamburg M1 Ultra 64 GB €2,650 VB (still live); Bayern-Schweinfurt M2 Ultra dropped to €3,550 VB.
