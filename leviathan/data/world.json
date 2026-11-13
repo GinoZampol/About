@@ -1,0 +1,178 @@
+{
+ "name": "The Leviathan",
+ "version": 1,
+ "seed": 7,
+ "sizeM": 50000,
+ "heightRes": 4096,
+ "mapRes": 1024,
+ "lakeRes": 2048,
+ "riverMaskRes": 2048,
+ "hOffset": 300,
+ "hScale": 0.0625,
+ "seaLevel": 0,
+ "maxElevation": 3147,
+ "landKm2": 2143,
+ "riverKm": 1019,
+ "mapChannels": [
+  "rock",
+  "strat",
+  "precip",
+  "forest",
+  "dark",
+  "wet",
+  "sand",
+  "ao"
+ ],
+ "lakes": [
+  {
+   "level": 340.95,
+   "areaKm2": 11.79,
+   "x": 31313,
+   "z": 5877
+  },
+  {
+   "level": 331.8,
+   "areaKm2": 0.49,
+   "x": 28993,
+   "z": 16575
+  },
+  {
+   "level": 166.44,
+   "areaKm2": 0.29,
+   "x": 10392,
+   "z": 34736
+  }
+ ],
+ "landmarks": [
+  {
+   "name": "Mount Leviathan",
+   "x": 32294,
+   "z": 38739,
+   "h": 2940,
+   "note": "stratovolcano, the highest point of the world"
+  },
+  {
+   "name": "The Spine (high crest)",
+   "x": 35406,
+   "z": 18842,
+   "h": 2725,
+   "note": "granite core of the alpine range"
+  },
+  {
+   "name": "Great River delta",
+   "x": 18182,
+   "z": 17706,
+   "h": 0,
+   "note": "mouth of the Great River at the head of the Sound"
+  },
+  {
+   "name": "The Gorge",
+   "x": 35000,
+   "z": 27000,
+   "h": 0,
+   "note": "antecedent water gap through the Spine: the low-level route east"
+  },
+  {
+   "name": "The Tor",
+   "x": 20428,
+   "z": 36359,
+   "h": 909,
+   "note": "granite monadnock above the Central Valley"
+  },
+  {
+   "name": "Central Valley",
+   "x": 20000,
+   "z": 28000,
+   "h": 0,
+   "note": "prairie and parkland lowland"
+  },
+  {
+   "name": "Coast Range",
+   "x": 10248,
+   "z": 29242,
+   "h": 564,
+   "note": "rain-forested fold belt"
+  },
+  {
+   "name": "The Sound",
+   "x": 14500,
+   "z": 11200,
+   "h": 0,
+   "note": "glacially scoured marine inlet"
+  },
+  {
+   "name": "Northern Highlands",
+   "x": 16132,
+   "z": 1117,
+   "h": 1682,
+   "note": "fjord-cut schist uplands"
+  },
+  {
+   "name": "High Desert canyonlands",
+   "x": 45000,
+   "z": 23000,
+   "h": 0,
+   "note": "layered plateau cut by the upper Great River"
+  },
+  {
+   "name": "Badlands",
+   "x": 45300,
+   "z": 41400,
+   "h": 0,
+   "note": "soft shale basin"
+  },
+  {
+   "name": "Longwater (largest lake)",
+   "x": 31313,
+   "z": 5877,
+   "h": 341,
+   "note": "11.8 km2, up to 117 m deep"
+  },
+  {
+   "name": "Lake 2",
+   "x": 28993,
+   "z": 16575,
+   "h": 332,
+   "note": "0.5 km2, up to 32 m deep"
+  },
+  {
+   "name": "Lake 3",
+   "x": 10392,
+   "z": 34736,
+   "h": 166,
+   "note": "0.3 km2, up to 22 m deep"
+  }
+ ],
+ "config": {
+  "K0": 0.0000052,
+  "levels": [
+   [
+    256,
+    110,
+    20000
+   ],
+   [
+    512,
+    60,
+    10000
+   ],
+   [
+    1024,
+    40,
+    6000
+   ],
+   [
+    2048,
+    20,
+    9000
+   ],
+   [
+    4096,
+    12,
+    8000
+   ]
+  ],
+  "ELA": 1700,
+  "Q_RIVER": 1200000
+ }
+}

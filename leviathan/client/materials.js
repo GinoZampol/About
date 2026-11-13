@@ -1,0 +1,308 @@
+// Shaders: shared atmosphere/lighting model, terrain surface, water, sky.
+import * as THREE from 'three';
+
+export const ATMO = /* glsl */`
+uniform vec3 uSunDir; uniform vec3 uSunCol; uniform vec3 uAmbSky; uniform vec3 uAmbGround;
+uniform vec3 uFogCol; uniform vec3 uFogSun; uniform vec3 uZenith; uniform float uFogA; uniform float uFogB;
+uniform vec3 uSplits; uniform float uTime;
+vec3 S(vec3 c) { return pow(c, vec3(2.2)); }
+vec3 skyColor(vec3 rd) {
+  float y = max(rd.y, 0.0);
+  vec3 c = mix(uFogCol, uZenith, 1.0 - exp(-y * 3.0));
+  float sd = max(dot(rd, uSunDir), 0.0);
+  c += uFogSun * (0.18 * pow(sd, 6.0) + 0.5 * pow(sd, 48.0));
+  return c;
+}
+// height-attenuated haze with analytic integration along the view ray
+vec3 applyAtmosphere(vec3 col, vec3 wpos) {
+  vec3 v = wpos - cameraPosition; float d = length(v); vec3 rd = v / d;
+  float ry = abs(rd.y) < 1e-4 ? 1e-4 : rd.y;
+  float od = uFogA / uFogB * exp(-max(cameraPosition.y, 0.0) * uFogB) * (1.0 - exp(-d * ry * uFogB)) / ry;
+  float f = 1.0 - exp(-od);
+  float sd = max(dot(rd, uSunDir), 0.0);
+  vec3 fc = uFogCol + uFogSun * (0.18 * pow(sd, 6.0));
+  return mix(col, fc, clamp(f, 0.0, 1.0));
+}
+`;
+
+export const SHADOW_FRAG = /* glsl */`
+float sunShadow(float viewZ) {
+  float s = 1.0;
+  #if defined(USE_SHADOWMAP) && NUM_DIR_LIGHT_SHADOWS >= 3
+  if (viewZ < uSplits.x) s = getShadow(directionalShadowMap[0], directionalLightShadows[0].shadowMapSize, directionalLightShadows[0].shadowIntensity, directionalLightShadows[0].shadowBias, directionalLightShadows[0].shadowRadius, vDirectionalShadowCoord[0]);
+  else if (viewZ < uSplits.y) s = getShadow(directionalShadowMap[1], directionalLightShadows[1].shadowMapSize, directionalLightShadows[1].shadowIntensity, directionalLightShadows[1].shadowBias, directionalLightShadows[1].shadowRadius, vDirectionalShadowCoord[1]);
+  else if (viewZ < uSplits.z) {
+    s = getShadow(directionalShadowMap[2], directionalLightShadows[2].shadowMapSize, directionalLightShadows[2].shadowIntensity, directionalLightShadows[2].shadowBias, directionalLightShadows[2].shadowRadius, vDirectionalShadowCoord[2]);
+    s = mix(s, 1.0, smoothstep(uSplits.z * 0.85, uSplits.z, viewZ));
+  }
+  #endif
+  return s;
+}
+`;
+
+const TERRAIN_VERT = /* glsl */`
+attribute float aMorph;
+uniform float uSize;
+varying vec3 vWPos; varying vec3 vN; varying float vViewZ;
+#include <common>
+#include <shadowmap_pars_vertex>
+void main() {
+  vec3 p = position;
+  vec4 wp0 = modelMatrix * vec4(p, 1.0);
+  float d = distance(wp0.xyz, cameraPosition);
+  p.y -= aMorph * clamp((d - 3.3 * uSize) / (0.7 * uSize), 0.0, 1.0);
+  vec4 worldPosition = modelMatrix * vec4(p, 1.0);
+  vWPos = worldPosition.xyz; vN = normal;
+  vec4 mv = viewMatrix * worldPosition; vViewZ = -mv.z;
+  gl_Position = projectionMatrix * mv;
+  vec3 transformedNormal = normalMatrix * normal;
+  #include <shadowmap_vertex>
+}
+`;
+
+const TERRAIN_FRAG = /* glsl */`
+uniform sampler2D uMapA; uniform sampler2D uMapB; uniform sampler2D uRock; uniform sampler2D uNormTex; uniform sampler2D uNoise; uniform sampler2D uNoiseN;
+uniform float uCell; uniform float uWorldSize; uniform float uTreeDist; uniform float uSnowLine;
+varying vec3 vWPos; varying vec3 vN; varying float vViewZ;
+#include <common>
+#include <packing>
+#include <shadowmap_pars_fragment>
+${ATMO}
+${SHADOW_FRAG}
+int rockAt(int base, float z, float off) {
+  if (base != 6) return base;
+  float zs = z - off;
+  if (zs >= 1215.0) return 5; if (zs >= 1090.0) return 6; if (zs >= 990.0) return 7; if (zs >= 905.0) return 6;
+  if (zs >= 770.0) return 7; if (zs >= 650.0) return 3; if (zs >= 520.0) return 7; return 2;
+}
+vec3 rockColor(int rk) {
+  if (rk == 0) return S(vec3(0.40, 0.36, 0.30));
+  if (rk == 1) return S(vec3(0.31, 0.30, 0.28));
+  if (rk == 2) return S(vec3(0.42, 0.41, 0.40));
+  if (rk == 3) return S(vec3(0.56, 0.53, 0.46));
+  if (rk == 4) return S(vec3(0.33, 0.33, 0.32));
+  if (rk == 5) return S(vec3(0.25, 0.23, 0.23));
+  if (rk == 6) return S(vec3(0.53, 0.36, 0.26));
+  return S(vec3(0.50, 0.45, 0.39));
+}
+void main() {
+  vec2 uv = clamp(vWPos.xz / uWorldSize, 0.0005, 0.9995);
+  float dist = distance(vWPos, cameraPosition);
+  vec4 n1 = texture2D(uNoise, vWPos.xz / 5.3);
+  vec4 n2 = texture2D(uNoise, vWPos.xz / 67.0);
+  vec4 n3 = texture2D(uNoise, vWPos.xz / 790.0 + 0.37);
+  vec4 A = texture2D(uMapA, uv); vec4 B = texture2D(uMapB, uv);
+  int base = int(texture2D(uRock, uv + (n2.rg - 0.5) * 0.0022).r * 255.0 + 0.5);
+  vec4 NT = texture2D(uNormTex, uv);
+  vec3 nTex = vec3(NT.r * 2.0 - 1.0, 0.0, NT.g * 2.0 - 1.0); nTex.y = sqrt(max(1.0 - dot(nTex.xz, nTex.xz), 0.02));
+  vec3 N = normalize(mix(normalize(vN), nTex, smoothstep(9.0, 24.0, uCell)));
+  float h = vWPos.y;
+  float tanS = length(N.xz) / max(N.y, 0.05);
+  float precip = A.r * 3.0, forest = A.g, dark = A.b, wet = A.a, sand = B.r, ao = B.g, strat = B.b * 510.0 - 100.0;
+
+  // ---- herb layer and soil -----------------------------------------------------------------
+  float m = precip + 0.35 * wet + (n3.r - 0.5) * 0.2;
+  vec3 lush = S(vec3(0.25, 0.33, 0.14)), dry = S(vec3(0.47, 0.46, 0.27)), steppe = S(vec3(0.55, 0.52, 0.40));
+  vec3 grass = mix(dry, lush, smoothstep(0.42, 0.95, m));
+  grass = mix(steppe, grass, smoothstep(0.26, 0.5, m));
+  grass = mix(grass, S(vec3(0.44, 0.43, 0.24)), smoothstep(1450.0, 2000.0, h));
+  grass *= (0.72 + 0.56 * n2.g) * (0.86 + 0.28 * n1.r) * (0.88 + 0.24 * n3.a);
+  grass = mix(grass, grass * vec3(1.18, 1.08, 0.82), n3.b * 0.5);
+  vec3 soil = mix(S(vec3(0.60, 0.44, 0.31)), S(vec3(0.70, 0.60, 0.45)), n3.g);
+  if (base != 6 && base != 7 && base != 5) soil = mix(S(vec3(0.42, 0.36, 0.27)), S(vec3(0.55, 0.49, 0.38)), n3.g);
+  soil *= 0.85 + 0.3 * n1.g;
+  float veg = smoothstep(0.2, 0.46, m + (n2.r - 0.5) * 0.25 + (n1.b - 0.5) * 0.1);
+  vec3 ground = mix(soil, grass, veg);
+  vec3 litter = mix(S(vec3(0.26, 0.20, 0.12)), S(vec3(0.19, 0.24, 0.10)), n2.b * (0.5 + 0.5 * dark)) * (0.8 + 0.4 * n1.a);
+  float ff = smoothstep(0.3, 0.7, forest + (n2.a - 0.5) * 0.35);
+  ground = mix(ground, litter, ff * 0.9);
+  ground = mix(ground, S(vec3(0.24, 0.29, 0.13)) * (0.8 + 0.4 * n1.r), wet * 0.65);
+  vec3 sandC = mix(S(vec3(0.78, 0.71, 0.55)), S(vec3(0.82, 0.60, 0.40)), smoothstep(100.0, 400.0, h)) * (0.92 + 0.16 * n1.r);
+  ground = mix(ground, sandC, smoothstep(0.25, 0.6, sand + (n2.r - 0.5) * 0.2));
+
+  // ---- bedrock -------------------------------------------------------------------------------
+  float hz = h + (n2.r - 0.5) * 9.0 + (n3.g - 0.5) * 22.0;
+  int rk = rockAt(base, hz + (n1.r - 0.5) * 5.0, strat);
+  vec3 rc = mix(rockColor(rk), rockColor(rockAt(base, hz - 6.0 + (n1.g - 0.5) * 5.0, strat)), 0.5);
+  rc = mix(rc, rc * vec3(1.06, 0.98, 0.9), n3.b) * (0.8 + 0.4 * n3.a);
+  float layered = (rk == 6 || rk == 7 || rk == 3 || rk == 5) ? 1.0 : 0.0;
+  float bands = sin((h + strat * 0.15) * 0.7 + n3.r * 5.0) * 0.5 + sin(h * 2.3 + n2.g * 4.0) * 0.5;
+  rc *= 1.0 + layered * 0.14 * bands;
+  rc *= (0.72 + 0.56 * n2.g) * (0.86 + 0.28 * n1.b);
+  rc = mix(rc, rc * vec3(0.78, 0.84, 0.70), smoothstep(0.9, 1.6, precip) * n2.a * 0.7);     // lichen and moss in wet climates
+  float rockW = smoothstep(0.72, 1.12, tanS + (n2.b - 0.5) * 0.45 + smoothstep(1900.0, 2500.0, h) * 0.45 - sand - forest * 0.3 - smoothstep(0.8, 1.6, precip) * 0.12);
+  rockW = max(rockW, (1.0 - veg) * smoothstep(0.32, 0.65, tanS + (n2.b - 0.5) * 0.3));
+  vec3 col = mix(ground, rc, rockW);
+  // scree and gravel aprons below rock, shingle on shores and in river beds
+  float gravel = smoothstep(0.5, 0.72, tanS + (n1.r - 0.5) * 0.3) * (1.0 - rockW);
+  col = mix(col, rc * 1.12, gravel * 0.6);
+  float shore = smoothstep(1.6, 0.15, h + (n2.r - 0.5) * 0.8) * (1.0 - rockW);
+  col = mix(col, mix(sandC, S(vec3(0.42, 0.40, 0.37)), n2.g) * 0.85, shore);
+  col *= mix(1.0, 0.55, smoothstep(0.3, -2.5, h));
+
+  // ---- snow ----------------------------------------------------------------------------------
+  float sn = smoothstep(-110.0, 110.0, h - uSnowLine + (n3.b - 0.5) * 280.0 + (n2.r - 0.5) * 70.0 - N.z * 160.0) * smoothstep(2.1, 1.2, tanS);
+  col = mix(col, vec3(0.86, 0.90, 0.95), sn);
+
+  // ---- distant forest canopy (trees are instanced geometry up to uTreeDist) ------------------
+  float canopyF = smoothstep(uTreeDist * 0.6, uTreeDist, dist) * smoothstep(0.1, 0.55, forest + (n2.a - 0.5) * 0.3) * (1.0 - sn);
+  vec3 canopy = mix(S(vec3(0.17, 0.26, 0.09)), S(vec3(0.10, 0.18, 0.09)), smoothstep(450.0, 1100.0, h));
+  canopy = mix(canopy, S(vec3(0.06, 0.13, 0.08)), dark);
+  canopy *= (0.45 + 1.0 * n1.g) * (0.75 + 0.5 * n2.r) * (0.85 + 0.3 * n3.a);
+  col = mix(col, canopy, canopyF);
+  col = mix(col, S(vec3(0.16, 0.26, 0.30)), NT.b * smoothstep(300.0, 1200.0, dist) * 0.85);
+
+  // ---- lighting ------------------------------------------------------------------------------
+  float nearF = 1.0 - smoothstep(40.0, 320.0, dist);
+  vec3 dn = (texture2D(uNoiseN, vWPos.xz / 2.7).xyz * 2.0 - 1.0) * nearF + (texture2D(uNoiseN, vWPos.xz / 23.0).xyz * 2.0 - 1.0) * (1.0 - smoothstep(300.0, 2500.0, dist)) * 0.6;
+  N = normalize(N + vec3(dn.x, 0.0, dn.y) * mix(0.28, 0.5, rockW) * (1.0 - sn * 0.7));
+  vec3 dn3 = texture2D(uNoiseN, vWPos.xz / 190.0).xyz * 2.0 - 1.0;
+  vec3 dn4 = texture2D(uNoiseN, vWPos.xz / 9.0).xyz * 2.0 - 1.0;
+  N = normalize(N + vec3(dn3.x, 0.0, dn3.y) * 0.45 * rockW * (1.0 - sn) + vec3(dn4.x, 0.0, dn4.y) * 0.9 * canopyF);
+  float ndl = max(dot(N, uSunDir), 0.0);
+  ndl = mix(ndl, 0.35 + 0.65 * ndl, canopyF * 0.6);
+  float sh = sunShadow(vViewZ);
+  vec3 amb = mix(uAmbGround, uAmbSky, N.y * 0.5 + 0.5) * mix(0.3, 1.0, ao);
+  vec3 lit = col * (uSunCol * ndl * sh + amb);
+  vec3 V = normalize(cameraPosition - vWPos);
+  lit += uSunCol * sh * sn * 0.25 * pow(max(dot(N, normalize(V + uSunDir)), 0.0), 40.0);
+  gl_FragColor = vec4(applyAtmosphere(lit, vWPos), 1.0);
+  #include <tonemapping_fragment>
+  #include <colorspace_fragment>
+}
+`;
+
+const WATER_VERT = /* glsl */`
+attribute float aDepth;
+#ifdef RIVER
+attribute vec3 aFlow;   // along-stream distance, across (-1..1), turbulence
+varying vec3 vFlow;
+#endif
+varying vec3 vWPos; varying float vDepth;
+void main() {
+  vec4 wp = modelMatrix * vec4(position, 1.0);
+  vWPos = wp.xyz; vDepth = aDepth;
+  #ifdef RIVER
+  vFlow = aFlow;
+  #endif
+  gl_Position = projectionMatrix * viewMatrix * wp;
+}
+`;
+const WATER_FRAG = /* glsl */`
+uniform sampler2D uNoiseN; uniform sampler2D uNoise;
+varying vec3 vWPos; varying float vDepth;
+#ifdef RIVER
+varying vec3 vFlow;
+#endif
+${ATMO}
+void main() {
+  float dep = vDepth;
+  if (dep < -0.02) discard;
+  float dist = distance(vWPos, cameraPosition);
+  vec2 p = vWPos.xz;
+  #ifdef RIVER
+  vec2 fuv = vec2(vFlow.y * 6.0, vFlow.x);
+  float sp = 0.5 + vFlow.z * 2.5;
+  vec3 w1 = texture2D(uNoiseN, fuv / 7.0 + vec2(0.0, -uTime * 0.11 * sp)).xyz * 2.0 - 1.0;
+  vec3 w2 = texture2D(uNoiseN, fuv / 2.3 + vec2(0.3, -uTime * 0.19 * sp)).xyz * 2.0 - 1.0;
+  float rough = 0.10 + 0.5 * vFlow.z;
+  #else
+  vec3 w1 = texture2D(uNoiseN, p / 11.0 + uTime * vec2(0.013, 0.021)).xyz * 2.0 - 1.0;
+  vec3 w2 = texture2D(uNoiseN, p / 37.0 - uTime * vec2(0.011, 0.006)).xyz * 2.0 - 1.0;
+  float rough = 0.16 * smoothstep(0.0, 6.0, dep) + 0.05;
+  #endif
+  float fade = 1.0 - 0.75 * smoothstep(200.0, 3000.0, dist);
+  vec3 N = normalize(vec3((w1.x + w2.x) * rough * fade, 1.0, (w1.y + w2.y) * rough * fade));
+  vec3 V = normalize(cameraPosition - vWPos);
+  float fres = 0.02 + 0.98 * pow(1.0 - max(dot(N, V), 0.0), 5.0);
+  vec3 R = reflect(-V, N); R.y = abs(R.y);
+  vec3 refl = skyColor(R);
+  float T = exp(-max(dep, 0.0) * 0.45);
+  vec3 light = uSunCol * max(uSunDir.y, 0.0) * 0.32 + uAmbSky * 0.55;
+  #ifdef RIVER
+  vec3 body = mix(S(vec3(0.10, 0.22, 0.20)), S(vec3(0.30, 0.38, 0.28)), T) * light;
+  #else
+  vec3 body = mix(S(vec3(0.05, 0.18, 0.25)), S(vec3(0.22, 0.42, 0.40)), T) * light;
+  #endif
+  vec3 col = mix(body, refl, fres);
+  col += uSunCol * pow(max(dot(R, uSunDir), 0.0), 220.0) * 2.0;
+  float foam = smoothstep(0.30, 0.0, dep) * smoothstep(0.35, 0.6, texture2D(uNoise, p / 3.0 + uTime * 0.02).r);
+  #ifdef RIVER
+  foam = max(foam, smoothstep(0.25, 0.8, vFlow.z) * smoothstep(0.3, 0.62, texture2D(uNoise, fuv / 4.0 + vec2(0.0, -uTime * 0.3 * sp)).g));
+  #endif
+  col = mix(col, light * 0.9, foam * 0.7);
+  float alpha = mix(1.0 - T * 0.92, 1.0, max(fres, foam));
+  gl_FragColor = vec4(applyAtmosphere(col, vWPos), alpha);
+  #include <tonemapping_fragment>
+  #include <colorspace_fragment>
+}
+`;
+
+const SKY_VERT = /* glsl */`
+varying vec3 vDir;
+void main() { vDir = position; vec4 p = projectionMatrix * vec4(mat3(viewMatrix) * position, 1.0); gl_Position = p.xyww; }
+`;
+const SKY_FRAG = /* glsl */`
+uniform sampler2D uNoise; uniform float uCloud;
+varying vec3 vDir;
+${ATMO}
+void main() {
+  vec3 rd = normalize(vDir);
+  vec3 col = skyColor(rd);
+  float sd = max(dot(rd, uSunDir), 0.0);
+  col += uSunCol * smoothstep(0.99985, 0.99995, sd) * 6.0;
+  if (rd.y > 0.01) {
+    vec2 p = rd.xz / (rd.y + 0.06) * 3000.0 + cameraPosition.xz * 0.6;
+    float n = texture2D(uNoise, p / 23000.0 + uTime * 0.0004).r * 0.55 + texture2D(uNoise, p / 7100.0 - uTime * 0.0006).g * 0.30 + texture2D(uNoise, p / 1900.0).b * 0.15;
+    float dns = smoothstep(1.0 - uCloud, 1.0 - uCloud + 0.22, n) * smoothstep(0.01, 0.16, rd.y);
+    vec3 cc = uSunCol * (0.26 + 0.1 * pow(sd, 4.0)) + uAmbSky * 0.9;
+    cc *= 1.0 - 0.3 * smoothstep(0.5, 0.9, n);
+    col = mix(col, mix(uFogCol, cc, smoothstep(0.02, 0.3, rd.y)), dns * 0.92);
+  }
+  gl_FragColor = vec4(col, 1.0);
+  #include <tonemapping_fragment>
+  #include <colorspace_fragment>
+}
+`;
+
+export function makeShared() {
+  return {
+    uSunDir: { value: new THREE.Vector3(0.3, 0.8, 0.5).normalize() }, uSunCol: { value: new THREE.Color(3, 3, 3) },
+    uAmbSky: { value: new THREE.Color(0.4, 0.5, 0.7) }, uAmbGround: { value: new THREE.Color(0.2, 0.18, 0.15) },
+    uFogCol: { value: new THREE.Color(0.6, 0.7, 0.85) }, uFogSun: { value: new THREE.Color(1, 0.9, 0.7) }, uZenith: { value: new THREE.Color(0.15, 0.3, 0.65) },
+    uFogA: { value: 2.6e-5 }, uFogB: { value: 1 / 1700 }, uSplits: { value: new THREE.Vector3(100, 500, 3000) }, uTime: { value: 0 },
+  };
+}
+
+// Sun/sky state from the sun's elevation (radians) and azimuth.
+export function setSun(sh, elev, azim) {
+  const e = Math.max(elev, -0.05);
+  sh.uSunDir.value.set(Math.cos(e) * Math.sin(azim), Math.sin(e), Math.cos(e) * Math.cos(azim)).normalize();
+  const t = THREE.MathUtils.smoothstep(e, -0.03, 0.45);            // 0 at horizon .. 1 high sun
+  const warm = new THREE.Color(1.0, 0.56, 0.28), white = new THREE.Color(1.0, 0.96, 0.9);
+  const sunI = 3.3 * THREE.MathUtils.smoothstep(e, -0.04, 0.12);
+  sh.uSunCol.value.copy(warm).lerp(white, Math.pow(t, 0.6)).multiplyScalar(sunI);
+  sh.uZenith.value.set(0.10, 0.22, 0.52).multiplyScalar(0.35 + 0.65 * t);
+  sh.uFogCol.value.set(0.50, 0.63, 0.80).lerp(new THREE.Color(0.75, 0.55, 0.42), 1 - t).multiplyScalar(0.3 + 0.75 * t);
+  sh.uFogSun.value.copy(warm).lerp(white, t).multiplyScalar(0.5 + 0.5 * t);
+  sh.uAmbSky.value.set(0.50, 0.62, 0.86).multiplyScalar(0.25 + 0.75 * t);
+  sh.uAmbGround.value.set(0.30, 0.28, 0.23).multiplyScalar(0.25 + 0.75 * t);
+}
+
+export function makeMaterials(shared, tex, opts) {
+  const base = () => ({ ...THREE.UniformsUtils.clone(THREE.UniformsLib.lights), ...shared });
+  const terrainU = { uMapA: { value: tex.mapA }, uMapB: { value: tex.mapB }, uRock: { value: tex.rock }, uNormTex: { value: tex.norm }, uNoise: { value: tex.noise }, uNoiseN: { value: tex.noiseN }, uWorldSize: { value: opts.worldSize }, uTreeDist: opts.uTreeDist, uSnowLine: opts.uSnowLine };
+  const makeTerrain = (cell, size) => new THREE.ShaderMaterial({
+    uniforms: { ...base(), ...terrainU, uCell: { value: cell }, uSize: { value: size } },
+    vertexShader: TERRAIN_VERT, fragmentShader: TERRAIN_FRAG, lights: true,
+  });
+  const waterOpts = (river) => ({
+    uniforms: { ...shared, uNoise: { value: tex.noise }, uNoiseN: { value: tex.noiseN } }, defines: river ? { RIVER: 1 } : {},
+    vertexShader: WATER_VERT, fragmentShader: WATER_FRAG, transparent: true, depthWrite: false,
+    polygonOffset: true, polygonOffsetFactor: river ? -2 : -1, polygonOffsetUnits: river ? -2 : -1,
+  });
+  const water = new THREE.ShaderMaterial(waterOpts(false));
+  const river = new THREE.ShaderMaterial(waterOpts(true));
+  const sky = new THREE.ShaderMaterial({ uniforms: { ...shared, uNoise: { value: tex.noise }, uCloud: opts.uCloud }, vertexShader: SKY_VERT, fragmentShader: SKY_FRAG, side: THREE.BackSide, depthWrite: false, depthTest: true });
+  return { makeTerrain, water, river, sky, base };
+}

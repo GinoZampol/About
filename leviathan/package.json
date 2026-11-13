@@ -1,0 +1,17 @@
+{
+  "name": "leviathan-world",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "The Leviathan - deterministic 50x50 km world generator and streaming terrain client",
+  "scripts": {
+    "generate": "node --max-old-space-size=8192 worldgen/generate.mjs",
+    "validate": "node --max-old-space-size=4096 worldgen/validate.mjs",
+    "start": "node tools/serve.mjs",
+    "shots": "node tools/screenshot.mjs",
+    "perf": "node tools/perf.mjs"
+  },
+  "dependencies": {
+    "three": "0.180.0"
+  }
+}
