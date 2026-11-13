@@ -59,6 +59,17 @@ function build({ id, x0, z0, size }) {
       lv[j * w1 + i] = L; dp[j * w1 + i] = d; if (d > 0) anyWet = true;
     }
     if (anyWet) {
+      // lake levels are stored on a 24 m raster: extend them across the dry vertices of coarse water
+      // grids so a far-LOD lake reaches its shore instead of being cut at the raster edge
+      for (let pass = 0; pass < 2; pass++) {
+        const src = lv.slice();
+        for (let j = 0; j < w1; j++) for (let i = 0; i < w1; i++) {
+          const k = j * w1 + i; if (src[k] !== 0 || H(i * st, j * st) < 0.3) continue;
+          let m = 0;
+          for (let b = -1; b <= 1; b++) for (let a = -1; a <= 1; a++) { const x = i + a, y = j + b; if (x >= 0 && y >= 0 && x < w1 && y < w1 && src[y * w1 + x] > m) m = src[y * w1 + x]; }
+          if (m > 0) { lv[k] = m; dp[k] = m - H(i * st, j * st); }
+        }
+      }
       const idx = [];
       for (let j = 0; j < WN; j++) for (let i = 0; i < WN; i++) {
         const a = j * w1 + i, b = a + 1, c = a + w1, d = c + 1;

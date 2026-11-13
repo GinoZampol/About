@@ -26,14 +26,15 @@ vec3 applyAtmosphere(vec3 col, vec3 wpos) {
 `;
 
 export const SHADOW_FRAG = /* glsl */`
-float sunShadow(float viewZ) {
-  float s = 1.0;
+// far = world-scale terrain shadow (1 = lit); cascades add the near detail
+float sunShadow(float viewZ, float far) {
+  float s = far;
   #if defined(USE_SHADOWMAP) && NUM_DIR_LIGHT_SHADOWS >= 3
-  if (viewZ < uSplits.x) s = getShadow(directionalShadowMap[0], directionalLightShadows[0].shadowMapSize, directionalLightShadows[0].shadowIntensity, directionalLightShadows[0].shadowBias, directionalLightShadows[0].shadowRadius, vDirectionalShadowCoord[0]);
-  else if (viewZ < uSplits.y) s = getShadow(directionalShadowMap[1], directionalLightShadows[1].shadowMapSize, directionalLightShadows[1].shadowIntensity, directionalLightShadows[1].shadowBias, directionalLightShadows[1].shadowRadius, vDirectionalShadowCoord[1]);
+  if (viewZ < uSplits.x) s = min(far, getShadow(directionalShadowMap[0], directionalLightShadows[0].shadowMapSize, directionalLightShadows[0].shadowIntensity, directionalLightShadows[0].shadowBias, directionalLightShadows[0].shadowRadius, vDirectionalShadowCoord[0]));
+  else if (viewZ < uSplits.y) s = min(far, getShadow(directionalShadowMap[1], directionalLightShadows[1].shadowMapSize, directionalLightShadows[1].shadowIntensity, directionalLightShadows[1].shadowBias, directionalLightShadows[1].shadowRadius, vDirectionalShadowCoord[1]));
   else if (viewZ < uSplits.z) {
-    s = getShadow(directionalShadowMap[2], directionalLightShadows[2].shadowMapSize, directionalLightShadows[2].shadowIntensity, directionalLightShadows[2].shadowBias, directionalLightShadows[2].shadowRadius, vDirectionalShadowCoord[2]);
-    s = mix(s, 1.0, smoothstep(uSplits.z * 0.85, uSplits.z, viewZ));
+    float c = getShadow(directionalShadowMap[2], directionalLightShadows[2].shadowMapSize, directionalLightShadows[2].shadowIntensity, directionalLightShadows[2].shadowBias, directionalLightShadows[2].shadowRadius, vDirectionalShadowCoord[2]);
+    s = min(far, mix(c, 1.0, smoothstep(uSplits.z * 0.85, uSplits.z, viewZ)));
   }
   #endif
   return s;
@@ -61,7 +62,7 @@ void main() {
 `;
 
 const TERRAIN_FRAG = /* glsl */`
-uniform sampler2D uMapA; uniform sampler2D uMapB; uniform sampler2D uRock; uniform sampler2D uNormTex; uniform sampler2D uNoise; uniform sampler2D uNoiseN;
+uniform sampler2D uMapA; uniform sampler2D uMapB; uniform sampler2D uFlow; uniform sampler2D uShadowTex; uniform sampler2D uRock; uniform sampler2D uNormTex; uniform sampler2D uNoise; uniform sampler2D uNoiseN;
 uniform float uCell; uniform float uWorldSize; uniform float uTreeDist; uniform float uSnowLine;
 varying vec3 vWPos; varying vec3 vN; varying float vViewZ;
 #include <common>
@@ -78,8 +79,8 @@ int rockAt(int base, float z, float off) {
 vec3 rockColor(int rk) {
   if (rk == 0) return S(vec3(0.40, 0.36, 0.30));
   if (rk == 1) return S(vec3(0.31, 0.30, 0.28));
-  if (rk == 2) return S(vec3(0.42, 0.41, 0.40));
-  if (rk == 3) return S(vec3(0.56, 0.53, 0.46));
+  if (rk == 2) return S(vec3(0.38, 0.37, 0.36));
+  if (rk == 3) return S(vec3(0.47, 0.45, 0.40));
   if (rk == 4) return S(vec3(0.33, 0.33, 0.32));
   if (rk == 5) return S(vec3(0.25, 0.23, 0.23));
   if (rk == 6) return S(vec3(0.53, 0.36, 0.26));
@@ -92,6 +93,7 @@ void main() {
   vec4 n2 = texture2D(uNoise, vWPos.xz / 67.0);
   vec4 n3 = texture2D(uNoise, vWPos.xz / 790.0 + 0.37);
   vec4 A = texture2D(uMapA, uv); vec4 B = texture2D(uMapB, uv);
+  float flow = texture2D(uFlow, uv).r;
   int base = int(texture2D(uRock, uv + (n2.rg - 0.5) * 0.0022).r * 255.0 + 0.5);
   vec4 NT = texture2D(uNormTex, uv);
   vec3 nTex = vec3(NT.r * 2.0 - 1.0, 0.0, NT.g * 2.0 - 1.0); nTex.y = sqrt(max(1.0 - dot(nTex.xz, nTex.xz), 0.02));
@@ -99,55 +101,75 @@ void main() {
   float h = vWPos.y;
   float tanS = length(N.xz) / max(N.y, 0.05);
   float precip = A.r * 3.0, forest = A.g, dark = A.b, wet = A.a, sand = B.r, ao = B.g, strat = B.b * 510.0 - 100.0;
+  float curv = clamp((NT.a - 0.5) * 2.0, -1.0, 1.0);                      // + hollows, - spurs and crests
+  float mesa = smoothstep(0.38, 0.62, B.a + (n2.g - 0.5) * 0.12);        // the layered plateau province, and only it
+  float sunny = N.z * min(tanS, 1.0);                                    // + on south-facing slopes
 
-  // ---- herb layer and soil -----------------------------------------------------------------
-  float m = precip + 0.35 * wet + (n3.r - 0.5) * 0.2;
-  vec3 lush = S(vec3(0.25, 0.33, 0.14)), dry = S(vec3(0.47, 0.46, 0.27)), steppe = S(vec3(0.55, 0.52, 0.40));
-  vec3 grass = mix(dry, lush, smoothstep(0.42, 0.95, m));
+  // ---- soil moisture: climate, then where water actually collects on the landform ------------
+  float m = precip * (1.0 + 0.42 * curv + 0.28 * flow - 0.28 * sunny + (n3.r - 0.5) * 0.3 + (n2.r - 0.5) * 0.16) + 0.35 * wet;
+  float detailF = 1.0 - smoothstep(120.0, 700.0, dist);                   // fine speckle only where it can be resolved
+
+  // ---- herb layer -------------------------------------------------------------------------------
+  vec3 lush = S(vec3(0.20, 0.27, 0.11)), mid = S(vec3(0.31, 0.34, 0.16)), dry = S(vec3(0.46, 0.42, 0.25)), steppe = S(vec3(0.50, 0.46, 0.36));
+  vec3 grass = mix(dry, mid, smoothstep(0.42, 0.72, m));
+  grass = mix(grass, lush, smoothstep(0.72, 1.25, m));
   grass = mix(steppe, grass, smoothstep(0.26, 0.5, m));
-  grass = mix(grass, S(vec3(0.44, 0.43, 0.24)), smoothstep(1450.0, 2000.0, h));
-  grass *= (0.72 + 0.56 * n2.g) * (0.86 + 0.28 * n1.r) * (0.88 + 0.24 * n3.a);
-  grass = mix(grass, grass * vec3(1.18, 1.08, 0.82), n3.b * 0.5);
-  vec3 soil = mix(S(vec3(0.60, 0.44, 0.31)), S(vec3(0.70, 0.60, 0.45)), n3.g);
-  if (base != 6 && base != 7 && base != 5) soil = mix(S(vec3(0.42, 0.36, 0.27)), S(vec3(0.55, 0.49, 0.38)), n3.g);
-  soil *= 0.85 + 0.3 * n1.g;
-  float veg = smoothstep(0.2, 0.46, m + (n2.r - 0.5) * 0.25 + (n1.b - 0.5) * 0.1);
-  vec3 ground = mix(soil, grass, veg);
+  grass = mix(grass, S(vec3(0.38, 0.36, 0.22)), smoothstep(1450.0, 2050.0, h));
+  grass *= (0.70 + 0.60 * n2.g) * (0.82 + 0.36 * n1.r) * (0.88 + 0.24 * n3.a);
+  grass = mix(grass, grass * vec3(1.16, 1.06, 0.82), n3.b * 0.5);                     // cured, seeding patches
+  grass = mix(grass, grass * vec3(0.78, 0.94, 0.80), smoothstep(0.55, 0.8, n2.a) * 0.5); // rank, darker swards
+  vec3 soil = mix(S(vec3(0.38, 0.32, 0.24)), S(vec3(0.52, 0.46, 0.36)), n3.g);
+  soil = mix(soil, mix(S(vec3(0.55, 0.40, 0.29)), S(vec3(0.66, 0.56, 0.42)), n3.g), mesa);
+  soil *= 0.82 + 0.36 * n1.g;
+  float veg = smoothstep(0.2, 0.48, m + (n2.r - 0.5) * 0.25 * mix(0.4, 1.0, detailF) + (n1.b - 0.5) * 0.14 * detailF);
+  float bare = mix(0.12, smoothstep(0.62, 0.8, n1.g * 0.45 + n2.b * 0.55 + tanS * 0.22 - curv * 0.12), detailF);  // slips, trails, thin soil on spurs
+  vec3 ground = mix(soil, grass, veg * (1.0 - bare * 0.65));
   vec3 litter = mix(S(vec3(0.26, 0.20, 0.12)), S(vec3(0.19, 0.24, 0.10)), n2.b * (0.5 + 0.5 * dark)) * (0.8 + 0.4 * n1.a);
   float ff = smoothstep(0.3, 0.7, forest + (n2.a - 0.5) * 0.35);
   ground = mix(ground, litter, ff * 0.9);
-  ground = mix(ground, S(vec3(0.24, 0.29, 0.13)) * (0.8 + 0.4 * n1.r), wet * 0.65);
-  vec3 sandC = mix(S(vec3(0.78, 0.71, 0.55)), S(vec3(0.82, 0.60, 0.40)), smoothstep(100.0, 400.0, h)) * (0.92 + 0.16 * n1.r);
+  ground = mix(ground, S(vec3(0.22, 0.27, 0.13)) * (0.8 + 0.4 * n1.r), wet * 0.65);
+  // watercourses: green ribbons in humid country, pale gravel washes in dry country
+  float course = smoothstep(0.22, 0.5, flow + (n2.g - 0.5) * 0.12);
+  float arid = 1.0 - smoothstep(0.32, 0.6, precip);
+  ground = mix(ground, lush * (0.8 + 0.4 * n1.r), course * (1.0 - arid) * 0.45 * (1.0 - ff));
+  ground = mix(ground, S(vec3(0.60, 0.56, 0.48)) * (0.8 + 0.4 * n1.b), course * arid * 0.75);
+  vec3 sandC = mix(S(vec3(0.76, 0.69, 0.54)), S(vec3(0.78, 0.60, 0.42)), smoothstep(100.0, 400.0, h)) * (0.90 + 0.2 * n1.r) * (0.92 + 0.16 * n2.b);
   ground = mix(ground, sandC, smoothstep(0.25, 0.6, sand + (n2.r - 0.5) * 0.2));
 
   // ---- bedrock -------------------------------------------------------------------------------
   float hz = h + (n2.r - 0.5) * 9.0 + (n3.g - 0.5) * 22.0;
-  int rk = rockAt(base, hz + (n1.r - 0.5) * 5.0, strat);
-  vec3 rc = mix(rockColor(rk), rockColor(rockAt(base, hz - 6.0 + (n1.g - 0.5) * 5.0, strat)), 0.5);
+  vec3 rc;
+  if (base == 6) {
+    // plateau stratigraphy: colour bands follow the beds; outside the plateau mask it is plain grey rock
+    vec3 st = mix(rockColor(rockAt(6, hz + (n1.r - 0.5) * 5.0, strat)), rockColor(rockAt(6, hz - 6.0 + (n1.g - 0.5) * 5.0, strat)), 0.5);
+    float bands = sin((h + strat * 0.15) * 0.7 + n3.r * 5.0) * 0.5 + sin(h * 2.3 + n2.g * 4.0) * 0.5;
+    rc = mix(rockColor(4), st * (1.0 + 0.12 * bands), mesa);
+  } else rc = rockColor(base);
   rc = mix(rc, rc * vec3(1.06, 0.98, 0.9), n3.b) * (0.8 + 0.4 * n3.a);
-  float layered = (rk == 6 || rk == 7 || rk == 3 || rk == 5) ? 1.0 : 0.0;
-  float bands = sin((h + strat * 0.15) * 0.7 + n3.r * 5.0) * 0.5 + sin(h * 2.3 + n2.g * 4.0) * 0.5;
-  rc *= 1.0 + layered * 0.14 * bands;
   rc *= (0.72 + 0.56 * n2.g) * (0.86 + 0.28 * n1.b);
-  rc = mix(rc, rc * vec3(0.78, 0.84, 0.70), smoothstep(0.9, 1.6, precip) * n2.a * 0.7);     // lichen and moss in wet climates
-  float rockW = smoothstep(0.72, 1.12, tanS + (n2.b - 0.5) * 0.45 + smoothstep(1900.0, 2500.0, h) * 0.45 - sand - forest * 0.3 - smoothstep(0.8, 1.6, precip) * 0.12);
-  rockW = max(rockW, (1.0 - veg) * smoothstep(0.32, 0.65, tanS + (n2.b - 0.5) * 0.3));
+  // water stains and joints run down the face
+  vec2 perp = normalize(vec2(-N.z, N.x) + 1e-4);
+  float streak = texture2D(uNoise, vec2(dot(vWPos.xz, perp) / 9.0, h / 75.0)).r;
+  rc *= mix(1.0, 0.66 + 0.62 * streak, smoothstep(0.7, 1.5, tanS));
+  rc = mix(rc, rc * vec3(0.78, 0.84, 0.70), smoothstep(0.9, 1.6, precip) * n2.a * 0.7);
+  float rockW = smoothstep(0.72, 1.12, tanS + (n2.b - 0.5) * 0.45 + (n1.a - 0.5) * 0.2 - curv * 0.22 + smoothstep(1900.0, 2500.0, h) * 0.45 - sand - forest * 0.3 - smoothstep(0.8, 1.6, precip) * 0.12);
+  rockW = max(rockW, (1.0 - veg) * smoothstep(0.32, 0.65, tanS + (n2.b - 0.5) * 0.3) * (1.0 - smoothstep(0.2, 0.5, sand)));
   vec3 col = mix(ground, rc, rockW);
-  // scree and gravel aprons below rock, shingle on shores and in river beds
-  float gravel = smoothstep(0.5, 0.72, tanS + (n1.r - 0.5) * 0.3) * (1.0 - rockW);
-  col = mix(col, rc * 1.12, gravel * 0.6);
+  // scree and debris aprons gather in the hollows below rock; shingle on shores
+  float scree = smoothstep(0.48, 0.74, tanS + (n1.r - 0.5) * 0.3 + curv * 0.18 + smoothstep(1700.0, 2300.0, h) * 0.25) * (1.0 - rockW) * (1.0 - ff * 0.8);
+  col = mix(col, rc * 1.05 * (0.85 + 0.3 * n1.g), scree * 0.7);
   float shore = smoothstep(1.6, 0.15, h + (n2.r - 0.5) * 0.8) * (1.0 - rockW);
   col = mix(col, mix(sandC, S(vec3(0.42, 0.40, 0.37)), n2.g) * 0.85, shore);
   col *= mix(1.0, 0.55, smoothstep(0.3, -2.5, h));
 
-  // ---- snow ----------------------------------------------------------------------------------
-  float sn = smoothstep(-110.0, 110.0, h - uSnowLine + (n3.b - 0.5) * 280.0 + (n2.r - 0.5) * 70.0 - N.z * 160.0) * smoothstep(2.1, 1.2, tanS);
+  // ---- snow: lingers in shaded hollows, strips from spurs and steep faces ---------------------
+  float sn = smoothstep(-110.0, 110.0, h - uSnowLine + (n3.b - 0.5) * 280.0 + (n2.r - 0.5) * 70.0 - N.z * 160.0 + curv * 140.0) * smoothstep(2.1, 1.2, tanS);
   col = mix(col, vec3(0.86, 0.90, 0.95), sn);
 
-  // ---- distant forest canopy (trees are instanced geometry up to uTreeDist) ------------------
-  float canopyF = smoothstep(uTreeDist * 0.6, uTreeDist, dist) * smoothstep(0.1, 0.55, forest + (n2.a - 0.5) * 0.3) * (1.0 - sn);
-  vec3 canopy = mix(S(vec3(0.17, 0.26, 0.09)), S(vec3(0.10, 0.18, 0.09)), smoothstep(450.0, 1100.0, h));
-  canopy = mix(canopy, S(vec3(0.06, 0.13, 0.08)), dark);
+  // ---- distant forest canopy -------------------------------------------------------------------
+  float canopyF = smoothstep(uTreeDist * 0.6, uTreeDist, dist) * smoothstep(0.1, 0.55, forest + (n2.a - 0.5) * 0.14 + (n3.a - 0.5) * 0.3) * (1.0 - sn);
+  vec3 canopy = mix(S(vec3(0.15, 0.22, 0.09)), S(vec3(0.10, 0.17, 0.09)), smoothstep(450.0, 1100.0, h));
+  canopy = mix(canopy, S(vec3(0.06, 0.12, 0.08)), dark);
   canopy *= (0.45 + 1.0 * n1.g) * (0.75 + 0.5 * n2.r) * (0.85 + 0.3 * n3.a);
   col = mix(col, canopy, canopyF);
   col = mix(col, S(vec3(0.16, 0.26, 0.30)), NT.b * smoothstep(300.0, 1200.0, dist) * 0.85);
@@ -155,14 +177,15 @@ void main() {
   // ---- lighting ------------------------------------------------------------------------------
   float nearF = 1.0 - smoothstep(40.0, 320.0, dist);
   vec3 dn = (texture2D(uNoiseN, vWPos.xz / 2.7).xyz * 2.0 - 1.0) * nearF + (texture2D(uNoiseN, vWPos.xz / 23.0).xyz * 2.0 - 1.0) * (1.0 - smoothstep(300.0, 2500.0, dist)) * 0.6;
-  N = normalize(N + vec3(dn.x, 0.0, dn.y) * mix(0.28, 0.5, rockW) * (1.0 - sn * 0.7));
+  N = normalize(N + vec3(dn.x, 0.0, dn.y) * mix(0.3, 0.55, rockW) * (1.0 - sn * 0.7));
   vec3 dn3 = texture2D(uNoiseN, vWPos.xz / 190.0).xyz * 2.0 - 1.0;
   vec3 dn4 = texture2D(uNoiseN, vWPos.xz / 9.0).xyz * 2.0 - 1.0;
-  N = normalize(N + vec3(dn3.x, 0.0, dn3.y) * 0.45 * rockW * (1.0 - sn) + vec3(dn4.x, 0.0, dn4.y) * 0.9 * canopyF);
+  N = normalize(N + vec3(dn3.x, 0.0, dn3.y) * (0.45 * rockW + 0.18) * (1.0 - sn) + vec3(dn4.x, 0.0, dn4.y) * 0.9 * canopyF);
   float ndl = max(dot(N, uSunDir), 0.0);
   ndl = mix(ndl, 0.35 + 0.65 * ndl, canopyF * 0.6);
-  float sh = sunShadow(vViewZ);
-  vec3 amb = mix(uAmbGround, uAmbSky, N.y * 0.5 + 0.5) * mix(0.3, 1.0, ao);
+  float sh = sunShadow(vViewZ, texture2D(uShadowTex, uv).r);
+  float occ = mix(0.3, 1.0, ao) * (1.0 - 0.3 * max(curv, 0.0));
+  vec3 amb = mix(uAmbGround, uAmbSky, N.y * 0.5 + 0.5) * occ;
   vec3 lit = col * (uSunCol * ndl * sh + amb);
   vec3 V = normalize(cameraPosition - vWPos);
   lit += uSunCol * sh * sn * 0.25 * pow(max(dot(N, normalize(V + uSunDir)), 0.0), 40.0);
@@ -291,7 +314,7 @@ export function setSun(sh, elev, azim) {
 
 export function makeMaterials(shared, tex, opts) {
   const base = () => ({ ...THREE.UniformsUtils.clone(THREE.UniformsLib.lights), ...shared });
-  const terrainU = { uMapA: { value: tex.mapA }, uMapB: { value: tex.mapB }, uRock: { value: tex.rock }, uNormTex: { value: tex.norm }, uNoise: { value: tex.noise }, uNoiseN: { value: tex.noiseN }, uWorldSize: { value: opts.worldSize }, uTreeDist: opts.uTreeDist, uSnowLine: opts.uSnowLine };
+  const terrainU = { uMapA: { value: tex.mapA }, uMapB: { value: tex.mapB }, uRock: { value: tex.rock }, uFlow: { value: tex.flow }, uShadowTex: { value: tex.shadow }, uNormTex: { value: tex.norm }, uNoise: { value: tex.noise }, uNoiseN: { value: tex.noiseN }, uWorldSize: { value: opts.worldSize }, uTreeDist: opts.uTreeDist, uSnowLine: opts.uSnowLine };
   const makeTerrain = (cell, size) => new THREE.ShaderMaterial({
     uniforms: { ...base(), ...terrainU, uCell: { value: cell }, uSize: { value: size } },
     vertexShader: TERRAIN_VERT, fragmentShader: TERRAIN_FRAG, lights: true,

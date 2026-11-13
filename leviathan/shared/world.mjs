@@ -2,12 +2,23 @@
 // in every terrain worker (meshing). It turns the generated data set into a continuous, deterministic
 // ground function:   ground(x, z) = eroded base (bicubic) + geology-driven detail + river channels + edits
 // Coordinates: x east, z south, y up, metres. Origin = north-west corner of the world.
-import { noise2, fbm, ridged, smoothstep, sat } from './noise.mjs';
+import { noise2, fbm, ridged, smoothstep, sat, hash2 } from './noise.mjs';
 import { ROCK, rockAt } from './geology.mjs';
 import { decodeU16 } from './codec.mjs';
 
-export const MAP = { ROCK: 0, STRAT: 1, PRECIP: 2, FOREST: 3, DARK: 4, WET: 5, SAND: 6, AO: 7 };
+export const MAP = { ROCK: 0, STRAT: 1, PRECIP: 2, FOREST: 3, DARK: 4, WET: 5, SAND: 6, AO: 7, MESA: 8, FLOW: 9 };
 const RIVER_CELL = 128;
+// value noise with analytic derivatives (for erosion-style fractal relief)
+const _nd = { dx: 0, dz: 0 };
+function vnd(x, z, seed) {
+  const ix = Math.floor(x), iz = Math.floor(z), fx = x - ix, fz = z - iz;
+  const u = fx * fx * fx * (fx * (fx * 6 - 15) + 10), w = fz * fz * fz * (fz * (fz * 6 - 15) + 10);
+  const du = 30 * fx * fx * (fx - 1) * (fx - 1), dw = 30 * fz * fz * (fz - 1) * (fz - 1);
+  const a = hash2(ix, iz, seed), b = hash2(ix + 1, iz, seed), c = hash2(ix, iz + 1, seed), d = hash2(ix + 1, iz + 1, seed);
+  const k1 = b - a, k2 = c - a, k4 = a - b - c + d;
+  _nd.dx = du * (k1 + k4 * w); _nd.dz = dw * (k2 + k4 * u);
+  return a + k1 * u + k2 * w + k4 * u * w;
+}
 
 async function gunzip(buf) {
   if (typeof DecompressionStream !== 'undefined') {
@@ -118,6 +129,25 @@ export class World {
     const seed = this.seed, s = this.slope(x, z);
     const band = (wl) => { const t = wl / (2.6 * cell + 1e-6) - 0.45; return t < 0 ? 0 : t > 1 ? 1 : t; };
     let d = 0;
+    // slope relief: spurs, rills and gullies. Octaves are damped where the accumulated gradient
+    // is already steep, which gives the branching, water-worn look of real hillsides.
+    const sandHere = this.map(MAP.SAND, x, z);
+    let relief = smoothstep(0.10, 0.55, s) * (1 - sandHere);
+    relief *= 1 - smoothstep(0.03, 0.12, this.map(MAP.FLOW, x, z));     // valley floors and river banks stay as eroded
+    // keep lake rims and shores intact
+    { const LN = this.LN, li = Math.floor(x / this.S * LN), lj = Math.floor(z / this.S * LN); const lv = li >= 0 && lj >= 0 && li < LN && lj < LN ? this.lakes[lj * LN + li] : -32768; relief *= smoothstep(1, 22, h - (lv === -32768 ? 0 : lv / 10)); }
+    if (relief > 0.01) {
+      let a = 0, b = 1, gx = 0, gz = 0, px = x / 230, pz = z / 230, wl = 230;
+      for (let o = 0; o < 6; o++) {
+        const bw = band(wl); if (bw <= 0) break;
+        const n = vnd(px, pz, seed + 230 + o);
+        gx += _nd.dx; gz += _nd.dz;
+        a += bw * b * n / (1 + gx * gx + gz * gz);
+        b *= 0.5; wl *= 0.5;
+        const tx = px * 1.6 - pz * 1.2; pz = px * 1.2 + pz * 1.6; px = tx;
+      }
+      d += relief * 30 * (a - 0.72);
+    }
     const steep = smoothstep(0.5, 0.95, s) + smoothstep(2050, 2500, h) * 0.5;
     const rocky = steep > 1 ? 1 : steep;
     // soil-mantled ground: gentle swales and hummocks, nearly absent on floodplains
@@ -135,12 +165,12 @@ export class World {
       const b1 = band(90), b2 = band(22), b3 = band(5);
       const amp = rocky * (rk === ROCK.SHALE ? 0.45 : rk === ROCK.GRANITE || rk === ROCK.LIMESTONE ? 1.25 : 1);
       if (amp > 0.01) {
-        if (b1 > 0) d += amp * b1 * 9 * (ridged(x / 90, z / 90, 2, seed + 203) - 0.55);
+        if (b1 > 0) d += amp * b1 * 5 * (ridged(x / 90, z / 90, 2, seed + 203) - 0.55);
         if (b2 > 0) d += amp * b2 * 2.6 * (ridged(x / 22, z / 22, 2, seed + 204) - 0.5);
         if (b3 > 0) d += amp * b3 * 0.55 * fbm(x / 5, z / 5, 2, seed + 205);
       }
       // bedding: sedimentary and lava layers weather into ledges and risers
-      if (layered && rk !== ROCK.SHALE) {
+      if (layered && rk !== ROCK.SHALE && this.map(MAP.MESA, x, z) > 0.5) {
         const T = rk === ROCK.BASALT ? 22 : 17;
         const bt = band(T) * smoothstep(0.45, 0.8, s) * 0.8;
         if (bt > 0) {
@@ -153,14 +183,14 @@ export class World {
       }
     }
     // dunes
-    const sand = this.map(MAP.SAND, x, z);
+    const sand = sandHere;
     if (sand > 0.03 && h > 6) {
       const b1 = band(150), b2 = band(16);
       if (b1 > 0) {
         const ph = (x * 0.94 + z * 0.34) / 150 + 1.3 * fbm(x / 420, z / 420, 2, seed + 207);
         const p = ph - Math.floor(ph);
         const prof = p < 0.72 ? p / 0.72 : (1 - p) / 0.28;
-        d += sand * b1 * (10 + 6 * noise2(x / 800, z / 800, seed + 208)) * (prof * prof * (3 - 2 * prof) - 0.4);
+        d += sand * b1 * (17 + 9 * noise2(x / 800, z / 800, seed + 208)) * (prof * prof * (3 - 2 * prof) - 0.4);
       }
       if (b2 > 0) d += sand * b2 * 0.45 * Math.sin((x * 0.9 + z * 0.43) / 16 * 6.283 + 3 * noise2(x / 40, z / 40, seed + 209));
     }

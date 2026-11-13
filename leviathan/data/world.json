@@ -10,9 +10,9 @@
  "hOffset": 300,
  "hScale": 0.0625,
  "seaLevel": 0,
- "maxElevation": 3147,
+ "maxElevation": 3551,
  "landKm2": 2143,
- "riverKm": 1019,
+ "riverKm": 992,
  "mapChannels": [
   "rock",
   "strat",
@@ -21,42 +21,63 @@
   "dark",
   "wet",
   "sand",
-  "ao"
+  "ao",
+  "mesa",
+  "flow"
  ],
  "lakes": [
   {
-   "level": 340.95,
-   "areaKm2": 11.79,
-   "x": 31313,
-   "z": 5877
+   "level": 453.72,
+   "areaKm2": 11.3,
+   "x": 31177,
+   "z": 6028
   },
   {
-   "level": 331.8,
-   "areaKm2": 0.49,
-   "x": 28993,
-   "z": 16575
+   "level": 82.79,
+   "areaKm2": 0.97,
+   "x": 18580,
+   "z": 3592
   },
   {
-   "level": 166.44,
-   "areaKm2": 0.29,
-   "x": 10392,
-   "z": 34736
+   "level": 311.06,
+   "areaKm2": 0.47,
+   "x": 30009,
+   "z": 23679
+  },
+  {
+   "level": 165.46,
+   "areaKm2": 0.33,
+   "x": 10344,
+   "z": 34674
+  },
+  {
+   "level": 1079.41,
+   "areaKm2": 0.27,
+   "x": 47648,
+   "z": 36756
   }
  ],
  "landmarks": [
   {
    "name": "Mount Leviathan",
-   "x": 32294,
-   "z": 38739,
-   "h": 2940,
-   "note": "stratovolcano, the highest point of the world"
+   "x": 34723,
+   "z": 13678,
+   "h": 3093,
+   "note": "highest summit of the Spine, the granite core of the alpine chain"
   },
   {
-   "name": "The Spine (high crest)",
-   "x": 35406,
-   "z": 18842,
-   "h": 2725,
-   "note": "granite core of the alpine range"
+   "name": "Ashfall Peak",
+   "x": 31329,
+   "z": 39264,
+   "h": 2475,
+   "note": "stratovolcano on the western shoulder of the Spine"
+  },
+  {
+   "name": "The Erg",
+   "x": 46400,
+   "z": 34800,
+   "h": 0,
+   "note": "dune sea on the plateau interior"
   },
   {
    "name": "Great River delta",
@@ -74,9 +95,9 @@
   },
   {
    "name": "The Tor",
-   "x": 20428,
-   "z": 36359,
-   "h": 909,
+   "x": 20490,
+   "z": 36383,
+   "h": 985,
    "note": "granite monadnock above the Central Valley"
   },
   {
@@ -88,9 +109,9 @@
   },
   {
    "name": "Coast Range",
-   "x": 10248,
-   "z": 29242,
-   "h": 564,
+   "x": 10260,
+   "z": 29205,
+   "h": 560,
    "note": "rain-forested fold belt"
   },
   {
@@ -102,9 +123,9 @@
   },
   {
    "name": "Northern Highlands",
-   "x": 16132,
-   "z": 1117,
-   "h": 1682,
+   "x": 14630,
+   "z": 6,
+   "h": 2130,
    "note": "fjord-cut schist uplands"
   },
   {
@@ -123,24 +144,38 @@
   },
   {
    "name": "Longwater (largest lake)",
-   "x": 31313,
-   "z": 5877,
-   "h": 341,
-   "note": "11.8 km2, up to 117 m deep"
+   "x": 31177,
+   "z": 6028,
+   "h": 454,
+   "note": "11.3 km2, up to 114 m deep"
   },
   {
    "name": "Lake 2",
-   "x": 28993,
-   "z": 16575,
-   "h": 332,
-   "note": "0.5 km2, up to 32 m deep"
+   "x": 18580,
+   "z": 3592,
+   "h": 83,
+   "note": "1.0 km2, up to 4 m deep"
   },
   {
    "name": "Lake 3",
-   "x": 10392,
-   "z": 34736,
-   "h": 166,
-   "note": "0.3 km2, up to 22 m deep"
+   "x": 30009,
+   "z": 23679,
+   "h": 311,
+   "note": "0.5 km2, up to 33 m deep"
+  },
+  {
+   "name": "Lake 4",
+   "x": 10344,
+   "z": 34674,
+   "h": 165,
+   "note": "0.3 km2, up to 24 m deep"
+  },
+  {
+   "name": "Lake 5",
+   "x": 47648,
+   "z": 36756,
+   "h": 1079,
+   "note": "0.3 km2, up to 14 m deep"
   }
  ],
  "config": {
@@ -163,13 +198,13 @@
    ],
    [
     2048,
-    20,
-    9000
+    30,
+    8000
    ],
    [
     4096,
-    12,
-    8000
+    18,
+    7000
    ]
   ],
   "ELA": 1700,

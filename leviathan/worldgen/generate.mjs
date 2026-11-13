@@ -17,7 +17,7 @@ export const CFG = {
   sizeM: WORLD_KM * 1000,
   K0: 5.2e-6,
   // multigrid schedule: [resolution, iterations, dt years]
-  levels: [[256, 110, 20000], [512, 60, 10000], [1024, 40, 6000], [2048, 20, 9000], [4096, 12, 8000]],
+  levels: [[256, 110, 20000], [512, 60, 10000], [1024, 40, 6000], [2048, 30, 8000], [4096, 18, 7000]],
 };
 const CACHE = path.join(ROOT, '.cache'); fs.mkdirSync(CACHE, { recursive: true });
 const T0 = Date.now(); const log = (...a) => console.log(`[${((Date.now() - T0) / 1000).toFixed(1)}s]`, ...a);
@@ -26,7 +26,7 @@ function fieldsFor(design, N) {
   const R = design.R;
   const g = {
     land: resample(design.land, R, N), U: resample(design.U, R, N), rock: resample(design.rock, R, N, true),
-    kmod: resample(design.kmod, R, N), strat: resample(design.strat, R, N), h0: resample(design.h0, R, N), gorge: resample(design.gorge, R, N),
+    kmod: resample(design.kmod, R, N), strat: resample(design.strat, R, N), h0: resample(design.h0, R, N), gorge: resample(design.gorge, R, N), mesa: resample(design.mesa, R, N), erg: resample(design.erg, R, N),
   };
   const sea = new Uint8Array(N * N);
   for (let c = 0; c < N * N; c++) {

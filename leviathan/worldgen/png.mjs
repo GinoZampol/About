@@ -13,3 +13,14 @@ export function writePNG(path, rgb, w, h) {
   const ihdr = Buffer.alloc(13); ihdr.writeUInt32BE(w, 0); ihdr.writeUInt32BE(h, 4); ihdr[8] = 8; ihdr[9] = 2;
   fs.writeFileSync(path, Buffer.concat([Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]), chunk('IHDR', ihdr), chunk('IDAT', zlib.deflateSync(raw, { level: 6 })), chunk('IEND', Buffer.alloc(0))]));
 }
+// 8-bit or 16-bit greyscale PNG (16-bit is what Unreal's Landscape importer expects for heightmaps)
+export function writeGrayPNG(path, data, w, h, bits = 8) {
+  const bpp = bits / 8, raw = Buffer.alloc((w * bpp + 1) * h);
+  for (let y = 0; y < h; y++) {
+    const o = y * (w * bpp + 1); raw[o] = 0;
+    if (bits === 8) Buffer.from(data.buffer, data.byteOffset + y * w, w).copy(raw, o + 1);
+    else for (let x = 0; x < w; x++) raw.writeUInt16BE(data[y * w + x], o + 1 + x * 2);
+  }
+  const ihdr = Buffer.alloc(13); ihdr.writeUInt32BE(w, 0); ihdr.writeUInt32BE(h, 4); ihdr[8] = bits; ihdr[9] = 0;
+  fs.writeFileSync(path, Buffer.concat([Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]), chunk('IHDR', ihdr), chunk('IDAT', zlib.deflateSync(raw, { level: 6 })), chunk('IEND', Buffer.alloc(0))]));
+}

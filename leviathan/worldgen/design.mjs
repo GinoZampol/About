@@ -34,7 +34,7 @@ const gauss = (d, s) => Math.exp(-(d * d) / (2 * s * s));
 export const SPINE = [[35, -3], [33.8, 9], [35.6, 19], [34.9, 28], [33.2, 35.5], [29.2, 41.5], [22.5, 46.3], [12, 49.3], [3, 51]];
 export const SPINE_N = [[33.2, 35.5], [35.4, 42.5], [37.2, 52]];
 export const GORGE = [[43.5, 23.2], [39.5, 22.2], [35, 23], [31.5, 22.4], [28, 22]];
-export const VOLCANO = { x: 31.6, y: 11.2, h: 3320, r0: 3.5 };
+export const VOLCANO = { x: 30.9, y: 11.0, h: 2550, r0: 2.9 };
 // the Sound: polylines [x, y, radius] (km)
 const SOUND = [
   [[0, 39.0, 1.7], [4, 39.3, 1.3], [7.5, 39.9, 1.15], [10.5, 39.5, 1.9], [13.5, 39.3, 3.0], [16.5, 38.9, 2.7], [18.6, 38.4, 2.0]], // Strait + inner basin
@@ -70,8 +70,8 @@ export function designAt(xk, yk, seed) {
   if (northBranch) { dS = dN; sS = 20; }
   // amplitude along the arc: full alpine height in the main N-S section, lower in the highland arc
   let ampS = northBranch ? 0.86 : 1.0 - 0.5 * smoothstep(38, 50, sS);
-  ampS *= 0.8 + 0.3 * noise2(sS / 5.5, 3.7, seed + 21) + 0.12 * noise2(sS / 1.9, 9.1, seed + 22);
-  const gS = gauss(dS, 4.1 - 0.7 * smoothstep(38, 50, sS));
+  ampS *= 0.94 + 0.14 * noise2(sS / 5.5, 3.7, seed + 21) + 0.07 * noise2(sS / 1.9, 9.1, seed + 22);
+  const gS = gauss(dS, 4.8 - 1.2 * smoothstep(38, 50, sS));
   const [dG] = polyDist(xk + 0.35 * noise2(xk / 3, yk / 3, seed + 23), yk + 0.5 * noise2(xk / 3.5, yk / 3.5, seed + 24), GORGE);
   const gG = gauss(dG, 1.05);
 
@@ -83,7 +83,7 @@ export function designAt(xk, yk, seed) {
   // ---- uplift (mm/yr) -------------------------------------------------------------------------
   let U = 0.012 + 0.034 * smoothstep(0.1, 0.65, fbm(xk / 7.5, yk / 7.5, 3, seed + 31)) * (1 - plateau);
   U += 0.27 * gCR;
-  U += 0.95 * gS * ampS;
+  U += 1.02 * gS * ampS * (1 - 0.75 * plateau);    // the chain ends where the resistant plateau begins
   U += 0.05 * plateau + 0.10 * smoothstep(47.3, 50, wx) + 0.08 * smoothstep(47.5, 50, wy) * plateau;
   U += 0.012 * (0.5 + 0.5 * noise2(xk / 1.1, yk / 1.1, seed + 35)) * (1 - plateau);
   U += 0.24 * smoothstep(3.2, 0, wy) * smoothstep(8, 12, wx);
@@ -131,7 +131,9 @@ export function designAt(xk, yk, seed) {
   // stratigraphic offset for the layered plateau (dip + undulation)
   const strat = 6 * dGorgeMouth + 70 * fbm(xk / 8, yk / 8, 2, seed + 44) + 14 * noise2(xk / 1.2, yk / 1.2, seed + 45);
 
-  return { land, U: U * 1e-3, h0, rock, kmod, strat, gG, plateau };
+  // the erg: a sand sea banked against the plateau interior, downwind of the badlands
+  const erg = plateau * smoothstep(1.0, 0.5, Math.hypot((wx - 46.4) / 2.5, (wy - 15.2) / 4.3) + 0.28 * fbm(xk / 1.6, yk / 1.6, 2, seed + 47));
+  return { land, U: U * 1e-3, h0, rock, kmod, strat, gG, plateau, erg };
 }
 
 // volcanic cone, applied late so that only its youngest erosion is modelled
@@ -146,12 +148,12 @@ export function buildDesign(R, seed) {
   const n = R * R;
   const d = {
     R, land: new Float32Array(n), U: new Float32Array(n), h0: new Float32Array(n), rock: new Uint8Array(n),
-    kmod: new Float32Array(n), strat: new Float32Array(n), gorge: new Float32Array(n),
+    kmod: new Float32Array(n), strat: new Float32Array(n), gorge: new Float32Array(n), mesa: new Float32Array(n), erg: new Float32Array(n),
   };
   for (let j = 0; j < R; j++) for (let i = 0; i < R; i++) {
     const p = designAt((i + 0.5) / R * WORLD_KM, (j + 0.5) / R * WORLD_KM, seed);
     const c = j * R + i;
-    d.land[c] = p.land; d.U[c] = p.U; d.h0[c] = p.h0; d.rock[c] = p.rock; d.kmod[c] = p.kmod; d.strat[c] = p.strat; d.gorge[c] = p.gG;
+    d.land[c] = p.land; d.U[c] = p.U; d.h0[c] = p.h0; d.rock[c] = p.rock; d.kmod[c] = p.kmod; d.strat[c] = p.strat; d.gorge[c] = p.gG; d.mesa[c] = p.plateau; d.erg[c] = p.erg;
   }
   return d;
 }

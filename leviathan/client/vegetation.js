@@ -287,7 +287,7 @@ void main() {
   float ao = vCol.r;
   float ndl = max(dot(N, uSunDir), 0.0);
   ndl = mix(ndl, 0.4 + 0.6 * ndl, trans);
-  float sh = sunShadow(vViewZ);
+  float sh = sunShadow(vViewZ, 1.0);
   vec3 V = normalize(cameraPosition - vWPos);
   float back = pow(max(dot(-V, uSunDir), 0.0), 3.0) * trans;
   vec3 amb = mix(uAmbGround, uAmbSky, N.y * 0.5 + 0.5) * ao;

@@ -18,6 +18,11 @@ export async function finishWorld(world, cfg, ROOT, log) {
   const { h, N, g } = world;
   const n = N * N, dx = cfg.sizeM / N, sea = g.sea, seed = cfg.seed;
   const ctx = makeCtx(N);
+  // wind-blown sand buries the fine drainage of the erg
+  {
+    const r = Math.max(1, Math.round(130 / dx)), hb = boxBlur(boxBlur(h, N, r), N, r);
+    for (let c = 0; c < n; c++) if (!sea[c] && g.erg[c] > 0.01) h[c] += (hb[c] - h[c]) * Math.min(1, g.erg[c] * 1.3);
+  }
   let P = computePrecip(h, sea, N, dx);
 
   // ---- A. ice flux from a mass-balance accumulation --------------------------------------------
@@ -266,7 +271,7 @@ export async function finishWorld(world, cfg, ROOT, log) {
   // ---- H. map-resolution environmental rasters ------------------------------------------------
   const M = Math.min(1024, N), st = N / M, mdx = cfg.sizeM / M, mn = M * M;
   const mh = new Float32Array(mn), mP = new Float32Array(mn), mQ = new Float32Array(mn), mSlope = new Float32Array(mn);
-  const mRock = new Uint8Array(mn), mStrat = new Float32Array(mn), mWater = new Uint8Array(mn);
+  const mRock = new Uint8Array(mn), mStrat = new Float32Array(mn), mWater = new Uint8Array(mn), mMesa = new Uint8Array(mn), mFlow = new Uint8Array(mn), mErg = new Float32Array(mn);
   for (let j = 0; j < M; j++) for (let i = 0; i < M; i++) {
     let sh = 0, sp = 0, q = 0, ss = 0, wat = 0;
     for (let b = 0; b < st; b++) for (let a = 0; a < st; a++) {
@@ -277,7 +282,7 @@ export async function finishWorld(world, cfg, ROOT, log) {
       if (sea[c] || lakeId[c]) wat++;
     }
     const k = st * st, m = j * M + i, cc = Math.floor((j + 0.5) * st) * N + Math.floor((i + 0.5) * st);
-    mh[m] = sh / k; mP[m] = sp / k; mQ[m] = q; mSlope[m] = ss / k; mRock[m] = g.rock[cc]; mStrat[m] = g.strat[cc]; mWater[m] = wat * 2 > k ? 1 : 0;
+    mh[m] = sh / k; mP[m] = sp / k; mQ[m] = q; mSlope[m] = ss / k; mRock[m] = g.rock[cc]; mStrat[m] = g.strat[cc]; mMesa[m] = Math.round(255 * sat(g.mesa[cc])); mErg[m] = g.erg[cc]; mFlow[m] = Math.round(255 * sat(Math.log10(q / 1e6 + 1) / 3)); mWater[m] = wat * 2 > k ? 1 : 0;
   }
   // ambient occlusion from horizon angles
   const mAO = new Uint8Array(mn);
@@ -338,6 +343,7 @@ export async function finishWorld(world, cfg, ROOT, log) {
     // sand: beaches, and dune fields on dry, flat, low-lying plateau ground
     let sand = smoothstep(2.6, 0.8, z) * smoothstep(0.08, 0.03, sl);
     if (p < 0.34 && mRock[m] !== ROCK.ALLUVIUM) sand = Math.max(sand, smoothstep(0.34, 0.26, p) * smoothstep(0.05, 0.02, sl) * smoothstep(-0.1, 0.2, fbm(xk / 4.5, yk / 4.5, 2, seed + 73)) * smoothstep(40, 8, qk));
+    sand = Math.max(sand, sat(mErg[m] * 1.4) * smoothstep(0.45, 0.15, sl));
     mSand[m] = Math.round(255 * sat(sand));
   }
 
@@ -358,8 +364,8 @@ export async function finishWorld(world, cfg, ROOT, log) {
     if (id) lvl[j * LN + i] = Math.round(lakes[id - 1].level * 10);
   }
   fs.writeFileSync(path.join(out, 'lakes.bin'), gz(flip(lvl, LN, Int16Array)));
-  const maps = new Uint8Array(mn * 8);
-  [mRock, mStratB, mPrec, mForest, mDark, mWet, mSand, mAO].forEach((a, k) => maps.set(flip(a, M, Uint8Array), k * mn));
+  const maps = new Uint8Array(mn * 10);
+  [mRock, mStratB, mPrec, mForest, mDark, mWet, mSand, mAO, mMesa, mFlow].forEach((a, k) => maps.set(flip(a, M, Uint8Array), k * mn));
   fs.writeFileSync(path.join(out, 'maps.bin'), gz(maps));
   // rivers
   const S = cfg.sizeM;
@@ -395,8 +401,9 @@ export async function finishWorld(world, cfg, ROOT, log) {
   const lm = (name, p, note) => ({ name, x: Math.round(p.x), z: Math.round(p.z), h: Math.round(p.h ?? 0), note });
   const km = (x, y) => ({ x: x * 1000, z: S - y * 1000 });
   const landmarks = [
-    lm('Mount Leviathan', peak(VOLCANO.x - 1.5, VOLCANO.x + 1.5, VOLCANO.y - 1.5, VOLCANO.y + 1.5), 'stratovolcano, the highest point of the world'),
-    lm('The Spine (high crest)', peak(31, 39, 16, 40, (c) => g.rock[c] === ROCK.GRANITE), 'granite core of the alpine range'),
+    lm('Mount Leviathan', peak(30, 39, 4, 40, (c) => g.rock[c] === ROCK.GRANITE), 'highest summit of the Spine, the granite core of the alpine chain'),
+    lm('Ashfall Peak', peak(VOLCANO.x - 1.5, VOLCANO.x + 1.5, VOLCANO.y - 1.5, VOLCANO.y + 1.5), 'stratovolcano on the western shoulder of the Spine'),
+    lm('The Erg', km(46.4, 15.2), 'dune sea on the plateau interior'),
     lm('Great River delta', { x: mouth.x, z: S - mouth.y }, 'mouth of the Great River at the head of the Sound'),
     lm('The Gorge', km(GORGE[2][0], GORGE[2][1]), 'antecedent water gap through the Spine: the low-level route east'),
     lm('The Tor', peak(19.4, 21.4, 12.6, 14.6), 'granite monadnock above the Central Valley'),
@@ -413,7 +420,7 @@ export async function finishWorld(world, cfg, ROOT, log) {
     name: 'The Leviathan', version: 1, seed, sizeM: S, heightRes: N, mapRes: M, lakeRes: LN, riverMaskRes: RN,
     hOffset: H_OFFSET, hScale: H_SCALE, seaLevel: 0, maxElevation: Math.round(hmax),
     landKm2: Math.round(landCells * dx * dx / 1e6), riverKm: Math.round(totalLen / 1000),
-    mapChannels: ['rock', 'strat', 'precip', 'forest', 'dark', 'wet', 'sand', 'ao'],
+    mapChannels: ['rock', 'strat', 'precip', 'forest', 'dark', 'wet', 'sand', 'ao', 'mesa', 'flow'],
     lakes: lakes.map((l) => ({ level: +l.level.toFixed(2), areaKm2: +l.areaKm2.toFixed(2), x: Math.round(l.x), z: Math.round(S - l.y) })),
     landmarks, config: { K0: cfg.K0, levels: cfg.levels.filter((l) => l[0] <= N), ELA, Q_RIVER },
   };

@@ -4,7 +4,7 @@ import { CSM } from 'three/addons/csm/CSM.js';
 import { loadWorldData, World, MAP } from '../shared/world.mjs';
 import { materialAt } from '../shared/subsurface.mjs';
 import { ROCK_NAMES } from '../shared/geology.mjs';
-import { buildTextures } from './textures.js';
+import { buildTextures, terrainShadow } from './textures.js';
 import { makeShared, makeMaterials, setSun } from './materials.js';
 import { Terrain } from './terrain.js';
 import { buildRivers } from './rivers.js';
@@ -57,6 +57,9 @@ const camera = new THREE.PerspectiveCamera(num('fov', 62), innerWidth / innerHei
 
 progress(0.7, 'building textures');
 const tex = buildTextures(data, Math.min(8, renderer.capabilities.getMaxAnisotropy()));
+tex.shadowData = new Uint8Array(tex.hgridRes * tex.hgridRes).fill(255);
+tex.shadow = new THREE.DataTexture(tex.shadowData, tex.hgridRes, tex.hgridRes, THREE.RedFormat, THREE.UnsignedByteType);
+tex.shadow.magFilter = tex.shadow.minFilter = THREE.LinearFilter; tex.shadow.needsUpdate = true;
 const shared = makeShared();
 const opts = { worldSize: S, uTreeDist: { value: quality.treeDist }, uSnowLine: { value: num('snow', 2450) }, uCloud: { value: num('cloud', 0.42) } };
 const mats = makeMaterials(shared, tex, opts);
@@ -100,6 +103,7 @@ function updateSun() {
   setSun(shared, elev, 0);
   shared.uSunDir.value.set(Math.cos(Math.max(elev, -0.05)) * Math.sin(az), Math.sin(Math.max(elev, -0.05)), -Math.cos(Math.max(elev, -0.05)) * Math.cos(az)).normalize();
   if (csm) { csm.lightDirection.copy(shared.uSunDir.value).multiplyScalar(-1); }
+  terrainShadow(tex, shared.uSunDir.value, tex.shadowData); tex.shadow.needsUpdate = true;
 }
 updateSun();
 

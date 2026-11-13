@@ -30,12 +30,42 @@ function dataTex(arr, w, h, fmt, opts = {}) {
   return t;
 }
 
+function blurBox(src, N, r) {
+  const tmp = new Float32Array(N * N), out = new Float32Array(N * N), inv = 1 / (2 * r + 1), cl = (v) => (v < 0 ? 0 : v > N - 1 ? N - 1 : v);
+  for (let j = 0; j < N; j++) { let s = 0; for (let i = -r; i <= r; i++) s += src[j * N + cl(i)]; for (let i = 0; i < N; i++) { tmp[j * N + i] = s * inv; s += src[j * N + cl(i + r + 1)] - src[j * N + cl(i - r)]; } }
+  for (let i = 0; i < N; i++) { let s = 0; for (let j = -r; j <= r; j++) s += tmp[cl(j) * N + i]; for (let j = 0; j < N; j++) { out[j * N + i] = s * inv; s += tmp[cl(j + r + 1) * N + i] - tmp[cl(j - r) * N + i]; } }
+  return out;
+}
+
+// World-scale terrain shadows: one linear sweep across the height grid away from the sun, carrying
+// the shadow ceiling along each sun ray. Recomputed when the sun moves (a few tens of ms).
+export function terrainShadow(tex, sunDir, out) {
+  const T = tex.hgridRes, hg = tex.hgrid, sea = tex.seaH, cell = tex.cell;
+  const hl = Math.hypot(sunDir.x, sunDir.z) || 1e-6, dx = -sunDir.x / hl, dz = -sunDir.z / hl, tanE = Math.max(0.02, sunDir.y / hl);
+  const xDom = Math.abs(dx) >= Math.abs(dz), r = xDom ? dz / Math.abs(dx) : dx / Math.abs(dz);
+  const fwd = xDom ? dx > 0 : dz > 0, drop = cell * Math.sqrt(1 + r * r) * tanE;
+  for (let l0 = -T; l0 < 2 * T; l0++) {
+    let s = -1e9;
+    for (let k = 0; k < T; k++) {
+      const a = fwd ? k : T - 1 - k, b = Math.round(l0 + k * r);
+      s -= drop;
+      if (b < 0 || b >= T) continue;
+      const c = xDom ? b * T + a : a * T + b;
+      let h = hg[c]; if (h < sea) h = sea;
+      if (h >= s - 1.5) { out[c] = 255; if (h > s) s = h; }
+      else { const t = (s - h - 1.5) / 14; out[c] = t >= 1 ? 0 : Math.round(255 * (1 - t)); }
+    }
+  }
+  return out;
+}
+
 export function buildTextures(data, aniso) {
   const meta = data.meta, M = meta.mapRes, mn = M * M, maps = data.maps;
   const A = new Uint8Array(mn * 4), B = new Uint8Array(mn * 4), R = new Uint8Array(mn);
+  const FL = maps.slice(MAP.FLOW * mn, MAP.FLOW * mn + mn);
   for (let k = 0; k < mn; k++) {
     A[k * 4] = maps[MAP.PRECIP * mn + k]; A[k * 4 + 1] = maps[MAP.FOREST * mn + k]; A[k * 4 + 2] = maps[MAP.DARK * mn + k]; A[k * 4 + 3] = maps[MAP.WET * mn + k];
-    B[k * 4] = maps[MAP.SAND * mn + k]; B[k * 4 + 1] = maps[MAP.AO * mn + k]; B[k * 4 + 2] = maps[MAP.STRAT * mn + k]; B[k * 4 + 3] = 255;
+    B[k * 4] = maps[MAP.SAND * mn + k]; B[k * 4 + 1] = maps[MAP.AO * mn + k]; B[k * 4 + 2] = maps[MAP.STRAT * mn + k]; B[k * 4 + 3] = maps[MAP.MESA * mn + k];
     R[k] = maps[MAP.ROCK * mn + k];
   }
   // global normal map at half height resolution (max 2048), river coverage in B
@@ -49,7 +79,12 @@ export function buildTextures(data, aniso) {
     const gx = (hg[j * T + Math.min(T - 1, i + 1)] - hg[j * T + Math.max(0, i - 1)]) / (2 * cell), gz = (hg[Math.min(T - 1, j + 1) * T + i] - hg[Math.max(0, j - 1) * T + i]) / (2 * cell);
     const l = 1 / Math.sqrt(gx * gx + gz * gz + 1), k = (j * T + i) * 4;
     nt[k] = Math.round((-gx * l * 0.5 + 0.5) * 255); nt[k + 1] = Math.round((-gz * l * 0.5 + 0.5) * 255);
-    nt[k + 2] = data.rivermask[Math.floor(j * RM / T) * RM + Math.floor(i * RM / T)]; nt[k + 3] = 255;
+    nt[k + 2] = data.rivermask[Math.floor(j * RM / T) * RM + Math.floor(i * RM / T)];
+  }
+  // landform curvature (concave = hollows and gullies, convex = spurs and crests) at two scales
+  {
+    const b1 = blurBox(hg, T, 2), b2 = blurBox(hg, T, 9);
+    for (let k = 0; k < T * T; k++) nt[k * 4 + 3] = Math.max(0, Math.min(255, Math.round(127.5 + (b1[k] - hg[k]) * 14 + (b2[k] - hg[k]) * 2.2)));
   }
   // noise
   const NS = 512, ch = [tileFbm(NS, 4, 6, 1), tileFbm(NS, 6, 5, 2), tileFbm(NS, 8, 5, 3), tileFbm(NS, 5, 6, 4)];
@@ -63,7 +98,7 @@ export function buildTextures(data, aniso) {
   }
   return {
     mapA: dataTex(A, M, M, THREE.RGBAFormat, { aniso }), mapB: dataTex(B, M, M, THREE.RGBAFormat, { aniso }),
-    rock: dataTex(R, M, M, THREE.RedFormat, { nearest: true }), norm: dataTex(nt, T, T, THREE.RGBAFormat, { aniso }),
+    rock: dataTex(R, M, M, THREE.RedFormat, { nearest: true }), flow: dataTex(FL, M, M, THREE.RedFormat, {}), seaH: meta.hOffset, cell, norm: dataTex(nt, T, T, THREE.RGBAFormat, { aniso }),
     noise: dataTex(nz, NS, NS, THREE.RGBAFormat, { repeat: true, aniso }), noiseN: dataTex(nn, NS, NS, THREE.RGBAFormat, { repeat: true, aniso }),
     hgrid: hg, hgridRes: T,
   };

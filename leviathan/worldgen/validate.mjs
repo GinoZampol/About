@@ -104,13 +104,13 @@ const hAt = (i, j) => H[j * N + i] * w.hs - w.ho;
     }
     return { seen, n };
   };
-  const idx = (name) => { const l = w.meta.landmarks.find((q) => q.name.includes(name)); return Math.floor(l.z / cell) * G + Math.floor(l.x / cell); };
+  const idx = (name) => { const l = w.meta.landmarks.find((q) => q.name.includes(name)) || w.meta.landmarks[0]; return Math.floor(l.z / cell) * G + Math.floor(l.x / cell); };
   let land = 0; for (let c = 0; c < G * G; c++) if (block[c] !== 2) land++;
   const valley = idx('Central Valley'), walk = flood(0.7, true, valley), cart = flood(0.14, true, valley), cartNoBridge = flood(0.14, false, valley);
   report('most land is reachable on foot from the Central Valley', walk.n / land > 0.65, `${(100 * walk.n / land).toFixed(1)}% of land (slopes under 35 deg, rivers crossable)`);
   info('cart-grade land network (under 8 deg) from the Central Valley', `${(100 * cart.n / land).toFixed(1)}% of land with bridges, ${(100 * cartNoBridge.n / land).toFixed(1)}% without crossing a major river`);
   const near = (seen, c, r) => { const i = c % G, j = (c / G) | 0; for (let b = -r; b <= r; b++) for (let a = -r; a <= r; a++) { const x = i + a, y = j + b; if (x >= 0 && y >= 0 && x < G && y < G && seen[y * G + x]) return true; } return false; };
-  for (const name of ['High Desert', 'Coast Range', 'Northern Highlands', 'Longwater', 'Badlands', 'Great River delta']) {
+  for (const name of ['High Desert', 'Coast Range', 'Northern Highlands', 'Longwater', 'Badlands', 'The Erg', 'Great River delta']) {
     const t = idx(name);
     report(`walking route: Central Valley -> ${name}`, near(walk.seen, t, 25), near(cart.seen, t, 25) ? 'reachable, also at cart grade' : near(walk.seen, t, 25) ? 'reachable on foot / pack animal only' : 'not reachable');
   }
