@@ -37,7 +37,8 @@ export class Terrain {
     this.frame = 0; this.pending = 0; this.visible = [];
     this.stats = { chunks: 0, tris: 0, built: 0, buildMs: 0 };
     this.roots = [];
-    for (let j = -1; j <= 1; j++) for (let i = -1; i <= 1; i++) this.roots.push(this._node(0, i * this.S, j * this.S, this.S, null, i !== 0 || j !== 0));
+    // the world ends at its border: only the playable square is meshed
+    this.roots.push(this._node(0, 0, 0, this.S, null, false));
     this.workers = [];
     this.ready = new Promise((res) => {
       let n = 0;

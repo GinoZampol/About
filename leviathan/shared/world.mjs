@@ -132,7 +132,7 @@ export class World {
     // slope relief: spurs, rills and gullies. Octaves are damped where the accumulated gradient
     // is already steep, which gives the branching, water-worn look of real hillsides.
     const sandHere = this.map(MAP.SAND, x, z);
-    let relief = smoothstep(0.10, 0.55, s) * (1 - sandHere);
+    let relief = smoothstep(0.10, 0.55, s) * (1 - sandHere) * (0.5 + 0.5 * smoothstep(-0.4, 0.3, noise2(x / 1900 + 2.7, z / 1900, seed + 212)));
     relief *= 1 - smoothstep(0.03, 0.12, this.map(MAP.FLOW, x, z));     // valley floors and river banks stay as eroded
     // keep lake rims and shores intact
     { const LN = this.LN, li = Math.floor(x / this.S * LN), lj = Math.floor(z / this.S * LN); const lv = li >= 0 && lj >= 0 && li < LN && lj < LN ? this.lakes[lj * LN + li] : -32768; relief *= smoothstep(1, 22, h - (lv === -32768 ? 0 : lv / 10)); }
@@ -162,7 +162,11 @@ export class World {
     const soilAmp = (1 - rocky) * (1 - 0.8 * wet) * smoothstep(0.004, 0.06, s + 0.012);
     if (soilAmp > 0.01) {
       const b1 = band(60), b2 = band(9);
-      if (b1 > 0) d += soilAmp * b1 * 0.9 * fbm(x / 60, z / 60, 2, seed + 201);
+      // amplitude and grain of the ground swell change from place to place, so no texture of bumps repeats
+      const vary = 0.2 + 0.8 * smoothstep(-0.35, 0.4, noise2(x / 740, z / 740, seed + 210));
+      const b0 = band(170);
+      if (b0 > 0) d += soilAmp * b0 * 1.5 * (1.2 - vary) * fbm(x / 170 + 5.3, z / 170, 2, seed + 211);
+      if (b1 > 0) d += soilAmp * b1 * 0.8 * vary * fbm(x / 60, z / 60, 2, seed + 201);
       if (b2 > 0) d += soilAmp * b2 * 0.16 * fbm(x / 9, z / 9, 2, seed + 202);
     }
     if (rocky > 0.02 || s > 0.22) {
@@ -194,12 +198,17 @@ export class World {
     if (sand > 0.03 && h > 6) {
       const b1 = band(150), b2 = band(16);
       if (b1 > 0) {
-        const ph = (x * 0.94 + z * 0.34) / 150 + 1.3 * fbm(x / 420, z / 420, 2, seed + 207);
+        // dune crests bend, split and die out along their length; a second, smaller train crosses the first
+        const bend = 2.2 * noise2(x / 520, z / 190, seed + 217) + 1.1 * noise2(x / 150, z / 150, seed + 218);
+        const ph = (x * 0.94 + z * 0.34) / (150 + 45 * noise2(x / 2300, z / 2300, seed + 213)) + 1.9 * fbm(x / 420, z / 420, 2, seed + 207) + 2.4 * noise2(x / 1300, z / 1300, seed + 214) + bend;
         const p = ph - Math.floor(ph);
         const prof = p < 0.72 ? p / 0.72 : (1 - p) / 0.28;
-        d += sand * b1 * (17 + 9 * noise2(x / 800, z / 800, seed + 208)) * (prof * prof * (3 - 2 * prof) - 0.4);
+        const along = 0.35 + 0.65 * smoothstep(-0.45, 0.35, noise2(x / 310 + 9.1, z / 310, seed + 219));
+        d += sand * Math.sqrt(sand) * b1 * (17 + 9 * noise2(x / 800, z / 800, seed + 208)) * along * (prof * prof * (3 - 2 * prof) - 0.4);
+        const ph2 = (x * 0.55 - z * 0.83) / 88 + 1.6 * noise2(x / 240, z / 240, seed + 220), p2 = ph2 - Math.floor(ph2), pr2 = p2 < 0.7 ? p2 / 0.7 : (1 - p2) / 0.3;
+        d += sand * Math.sqrt(sand) * b1 * 5 * (1.2 - along) * (pr2 * pr2 * (3 - 2 * pr2) - 0.4);
       }
-      if (b2 > 0) d += sand * b2 * 0.45 * Math.sin((x * 0.9 + z * 0.43) / 16 * 6.283 + 3 * noise2(x / 40, z / 40, seed + 209));
+      if (b2 > 0) d += sand * b2 * (0.25 + 0.3 * noise2(x / 130, z / 130, seed + 215)) * Math.sin((x * 0.9 + z * 0.43) / 16 * 6.283 + 7 * noise2(x / 55, z / 55, seed + 209) + 5 * noise2(x / 210, z / 210, seed + 216));
     }
     return d;
   }

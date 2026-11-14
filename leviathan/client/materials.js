@@ -160,7 +160,8 @@ void main() {
   ground = mix(ground, lush * (0.8 + 0.4 * n1.r), course * (1.0 - arid) * 0.45 * (1.0 - ff));
   ground = mix(ground, S(vec3(0.60, 0.56, 0.48)) * (0.8 + 0.4 * n1.b), course * arid * 0.75);
   vec3 sandC = mix(S(vec3(0.76, 0.69, 0.54)), S(vec3(0.78, 0.60, 0.42)), mesa) * (0.90 + 0.2 * n1.r) * (0.92 + 0.16 * n2.b);
-  ground = mix(ground, sandC, smoothstep(0.25, 0.6, sand + (n2.r - 0.5) * 0.2));
+  // sand thins out over a broad, ragged margin and lingers in hollows, so dunes grade into the plateau
+  ground = mix(ground, sandC, smoothstep(0.06, 0.72, sand + ((n2.r - 0.5) * 0.25 + (n3.r - 0.5) * 0.35 + curv * 0.18) * smoothstep(0.0, 0.25, sand)));
 
   // ---- bedrock -------------------------------------------------------------------------------
   float hz = h + (n2.r - 0.5) * 9.0 + (n3.g - 0.5) * 22.0;
@@ -333,7 +334,7 @@ export function makeShared() {
     uSunDir: { value: new THREE.Vector3(0.3, 0.8, 0.5).normalize() }, uSunCol: { value: new THREE.Color(3, 3, 3) },
     uAmbSky: { value: new THREE.Color(0.4, 0.5, 0.7) }, uAmbGround: { value: new THREE.Color(0.2, 0.18, 0.15) },
     uFogCol: { value: new THREE.Color(0.6, 0.7, 0.85) }, uFogSun: { value: new THREE.Color(1, 0.9, 0.7) }, uZenith: { value: new THREE.Color(0.15, 0.3, 0.65) },
-    uFogA: { value: 2.6e-5 }, uFogB: { value: 1 / 1700 }, uSplits: { value: new THREE.Vector3(100, 500, 3000) }, uTime: { value: 0 }, uCloud: { value: 0.42 },
+    uFogA: { value: 0.55e-5 }, uFogB: { value: 1 / 1700 }, uSplits: { value: new THREE.Vector3(100, 500, 3000) }, uTime: { value: 0 }, uCloud: { value: 0.42 },
   };
 }
 

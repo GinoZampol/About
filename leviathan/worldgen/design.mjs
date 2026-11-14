@@ -136,7 +136,7 @@ export function designAt(xk, yk, seed) {
   const strat = 6 * dGorgeMouth + 70 * fbm(xk / 8, yk / 8, 2, seed + 44) + 14 * noise2(xk / 1.2, yk / 1.2, seed + 45);
 
   // the erg: a sand sea banked against the plateau interior, downwind of the badlands
-  const erg = plateau * smoothstep(1.0, 0.5, Math.hypot((wx - 46.4) / 2.5, (wy - 15.2) / 4.3) + 0.28 * fbm(xk / 1.6, yk / 1.6, 2, seed + 47));
+  const erg = plateau * smoothstep(1.2, 0.3, Math.hypot((wx - 46.4) / 2.5, (wy - 15.2) / 4.3) + 0.28 * fbm(xk / 1.6, yk / 1.6, 2, seed + 47));
   return { land, U: U * 1e-3, h0, rock, kmod, strat, gG, plateau, erg };
 }
 

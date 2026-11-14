@@ -160,7 +160,7 @@ target machine for real frame times.
 - **Trees are placeholders** by request; distant forest is shaded terrain.
 - **Performance figures above predate the Crown, cloud and life passes**, and no frame rate on a
   real GPU has been measured.
-- **Edges.** Beyond the 50 km square the land falls away to an encircling sea over about 5 km; it is scenery only.
+- **Edges.** The world is cut off hard at the 50 km border; nothing is drawn beyond it.
 - No night sky, no networking.
 
 ## Next priorities

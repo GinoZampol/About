@@ -1,7 +1,7 @@
-PASS  river profiles never climb: 0 uphill steps in 75315 (max gradient 142%, 4546 waterfall/cascade steps)
+PASS  river profiles never climb: 0 uphill steps in 75360 (max gradient 142%, 4547 waterfall/cascade steps)
 PASS  river network is connected: 85 segments end in a lake or the sea, 412 at confluences, 0 orphaned
-PASS  channel beds lie below the water surface: 0.00% of 8317 cross-sections dry
-PASS  rivers are not perched above both banks: 0.47% of cross-sections
+PASS  channel beds lie below the water surface: 0.00% of 8321 cross-sections dry
+PASS  rivers are not perched above both banks: 0.28% of cross-sections
 INFO  river network: 497 reaches, 967 km, 7 lakes
 PASS  no unintended closed basins: 0 single-cell hollows under 1 m (quantisation), 0 deeper
 PASS  no terrain discontinuities: largest step between adjacent 12 m samples 50.4 m (cliff limit 73 m)
@@ -17,9 +17,7 @@ FAIL  walking route: Central Valley -> Longwater: not reachable
 PASS  walking route: Central Valley -> Badlands: reachable on foot / pack animal only
 PASS  walking route: Central Valley -> The Erg: reachable on foot / pack animal only
 PASS  walking route: Central Valley -> Great River delta: reachable, also at cart grade
-INFO  buildable land (slope under 8%): 282 km2, of which 77 km2 lies within 400 m of a major river, lake or the sea
+INFO  buildable land (slope under 8%): 282 km2, of which 76 km2 lies within 400 m of a major river, lake or the sea
 INFO  land cover: water 371 km2, grassland 270 km2, parkland 313 km2, forest 665 km2, dark forest 25 km2, steppe/desert 523 km2, alpine 151 km2, snow 182 km2
-PASS  forest never on cliffs or above the treeline: 20 of 289390 forest cells
-PASS  every subsurface cell resolves to a material: schist 27.6%, granite 14.7%, topsoil 14.1%, limestone 13.7%, greywacke 10.3%, gravel 8.0%, shale 2.9%, subsoil 2.6%, iron ore 2.3%, clay 1.6%, sandstone 0.8%, copper ore 0.6%, sand 0.3%, coal 0.2%, salt 0.1%, peat 0.1%, gold-bearing quartz 0.0%, snow 0.0%
-PASS  generation is deterministic: two independent runs of the erosion core hash to bec5407699c8fc0a / bec5407699c8fc0a
-INFO  data set: height.bin sha256:b4fda30b5990  lakes.bin sha256:3c15eade92ae  maps.bin sha256:e6248c829c02  rivermask.bin sha256:c99fd1e2db56  rivers.bin sha256:9bf702f57303  world.json sha256:027b39545a90
+PASS  forest never on cliffs or above the treeline: 20 of 289373 forest cells
+PASS  every subsurface cell resolves to a material: schist 27.7%, granite 14.7%, topsoil 14.1%, limestone 13.7%, greywacke 10.3%, gravel 8.0%, shale 2.9%, subsoil 2.6%, iron ore 2.3%, clay 1.6%, sandstone 0.8%, copper ore 0.6%, sand 0.3%, coal 0.2%, salt 0.1%, peat 0.1%, gold-bearing quartz 0.0%, snow 0.0%
