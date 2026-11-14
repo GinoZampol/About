@@ -173,8 +173,6 @@ void main() {
   } else rc = rockColor(base);
   rc = mix(rc, rc * vec3(1.06, 0.98, 0.9), n3.b) * (0.8 + 0.4 * n3.a);
   rc *= (0.72 + 0.56 * n2.g) * (0.86 + 0.28 * n1.b);
-  // the massif's stronger and weaker beds show as lighter and darker bands across the faces
-  if (base == 2 || base == 3 || base == 4) { float tb = (hz + strat * 1.6) * 0.0285; rc *= 1.0 + 0.13 * clamp((sin(tb) + 0.6 * sin(tb * 2.63 + 1.3) + 0.3 * sin(tb * 5.9 + 0.4)) * 1.4, -1.0, 1.0); }
   // water stains and joints run down the face
   vec2 perp = normalize(vec2(-N.z, N.x) + 1e-4);
   float streak = texture2D(uNoise, vec2(dot(vWPos.xz, perp) / 9.0, h / 75.0)).r;
@@ -183,7 +181,7 @@ void main() {
   vec4 n4 = noTile(uNoise, vWPos.xz / 23.0 + 0.61, tk);
   // rock shows through gradually: thin soils on spurs and steep, high ground, in ragged patches
   float rockArg = tanS + (n2.b - 0.5) * 0.6 + (n3.a - 0.5) * 0.55 + (n4.g - 0.5) * 0.35 - curv * 0.3 + smoothstep(1300.0, 2700.0, h) * 0.75
-    - sand - forest * 0.75 - smoothstep(0.8, 1.6, precip) * 0.12 - 0.35 * (1.0 - smoothstep(1100.0, 2300.0, h)) * smoothstep(0.45, 0.9, precip);
+    - sand - forest * 1.15 - smoothstep(0.8, 1.6, precip) * 0.12 - 0.35 * (1.0 - smoothstep(1100.0, 2300.0, h)) * smoothstep(0.45, 0.9, precip);
   float rockW = smoothstep(0.85, 1.75, rockArg);
   rockW = max(rockW, (1.0 - veg) * smoothstep(0.32, 0.65, tanS + (n2.b - 0.5) * 0.3) * (1.0 - smoothstep(0.2, 0.5, sand)));
   vec3 col = mix(ground, rc, rockW);

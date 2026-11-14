@@ -45,8 +45,7 @@ export function rockAt(base, z, off) {
 // Hard massifs are not uniform: stronger and weaker bands, a couple of hundred metres thick and
 // gently dipping, make faces break into cliff bands, ledges and benches instead of one even slope.
 export function strengthBand(rk, z, off) {
-  if (rk !== ROCK.GRANITE && rk !== ROCK.LIMESTONE && rk !== ROCK.SCHIST) return 1;
-  const t = (z + off * 1.6) * 0.0285;
-  const v = Math.sin(t) + 0.6 * Math.sin(t * 2.63 + 1.3) + 0.3 * Math.sin(t * 5.9 + 0.4);
-  return 1.3 + 0.6 * Math.max(-1, Math.min(1, v * 1.4));
+  // Elevation-banded strength was tried and removed: it drew horizontal stripes of ledges and
+  // vegetation across mountain faces. Hard massifs just get a uniform strength bonus.
+  return rk === ROCK.GRANITE || rk === ROCK.LIMESTONE || rk === ROCK.SCHIST ? 1.05 : 1;
 }

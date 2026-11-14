@@ -10,9 +10,9 @@
  "hOffset": 300,
  "hScale": 0.125,
  "seaLevel": 0,
- "maxElevation": 6196,
+ "maxElevation": 5778,
  "landKm2": 2143,
- "riverKm": 943,
+ "riverKm": 967,
  "mapChannels": [
   "rock",
   "strat",
@@ -28,48 +28,54 @@
  ],
  "lakes": [
   {
-   "level": 660.61,
-   "areaKm2": 7.5,
-   "x": 30421,
-   "z": 5009
+   "level": 585.99,
+   "areaKm2": 8.26,
+   "x": 30604,
+   "z": 5279
   },
   {
-   "level": 432.33,
-   "areaKm2": 3.6,
-   "x": 46329,
-   "z": 24844
+   "level": 76.05,
+   "areaKm2": 2.62,
+   "x": 18406,
+   "z": 4093
   },
   {
-   "level": 72.37,
-   "areaKm2": 2.82,
-   "x": 18297,
-   "z": 4402
+   "level": 291.8,
+   "areaKm2": 0.61,
+   "x": 30992,
+   "z": 15382
   },
   {
-   "level": 297.11,
-   "areaKm2": 0.59,
-   "x": 30319,
-   "z": 15917
+   "level": 410.3,
+   "areaKm2": 0.58,
+   "x": 45051,
+   "z": 25493
   },
   {
-   "level": 164.68,
-   "areaKm2": 0.32,
-   "x": 10341,
-   "z": 34670
+   "level": 173.54,
+   "areaKm2": 0.44,
+   "x": 38288,
+   "z": 29678
   },
   {
-   "level": 1033.49,
-   "areaKm2": 0.25,
-   "x": 47648,
-   "z": 34671
+   "level": 165.06,
+   "areaKm2": 0.33,
+   "x": 10344,
+   "z": 34675
+  },
+  {
+   "level": 1048.35,
+   "areaKm2": 0.18,
+   "x": 47672,
+   "z": 34680
   }
  ],
  "landmarks": [
   {
    "name": "Mount Leviathan",
-   "x": 36591,
-   "z": 10004,
-   "h": 5296,
+   "x": 36224,
+   "z": 10272,
+   "h": 4688,
    "note": "highest summit of the Spine, the granite core of the alpine chain"
   },
   {
@@ -81,9 +87,9 @@
   },
   {
    "name": "The Crown",
-   "x": 38568,
-   "z": 8441,
-   "h": 6196,
+   "x": 39374,
+   "z": 7635,
+   "h": 5778,
    "note": "the great ice massif of the north-east, the roof of the world"
   },
   {
@@ -123,9 +129,9 @@
   },
   {
    "name": "Northern Highlands",
-   "x": 14764,
+   "x": 14362,
    "z": 6,
-   "h": 2368,
+   "h": 2365,
    "note": "fjord-cut schist uplands"
   },
   {
@@ -144,38 +150,38 @@
   },
   {
    "name": "Longwater (largest lake)",
-   "x": 30421,
-   "z": 5009,
-   "h": 661,
-   "note": "7.5 km2, up to 102 m deep"
+   "x": 30604,
+   "z": 5279,
+   "h": 586,
+   "note": "8.3 km2, up to 96 m deep"
   },
   {
    "name": "Lake 2",
-   "x": 46329,
-   "z": 24844,
-   "h": 432,
-   "note": "3.6 km2, up to 32 m deep"
+   "x": 18406,
+   "z": 4093,
+   "h": 76,
+   "note": "2.6 km2, up to 26 m deep"
   },
   {
    "name": "Lake 3",
-   "x": 18297,
-   "z": 4402,
-   "h": 72,
-   "note": "2.8 km2, up to 34 m deep"
+   "x": 30992,
+   "z": 15382,
+   "h": 292,
+   "note": "0.6 km2, up to 42 m deep"
   },
   {
    "name": "Lake 4",
-   "x": 30319,
-   "z": 15917,
-   "h": 297,
-   "note": "0.6 km2, up to 40 m deep"
+   "x": 45051,
+   "z": 25493,
+   "h": 410,
+   "note": "0.6 km2, up to 9 m deep"
   },
   {
    "name": "Lake 5",
-   "x": 10341,
-   "z": 34670,
-   "h": 165,
-   "note": "0.3 km2, up to 24 m deep"
+   "x": 38288,
+   "z": 29678,
+   "h": 174,
+   "note": "0.4 km2, up to 8 m deep"
   }
  ],
  "config": {

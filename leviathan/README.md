@@ -36,12 +36,12 @@ One coherent convergent-margin transect, west to east, drained by a single river
 | Coast Range | folded greywacke ridges striking N–S, rain forest; the wettest lowlands hold the ancient dark forest |
 | The Sound | a glacially scoured sea inlet with islands and fjords cutting into the Northern Highlands; the Great River delta lies at its head |
 | Central Valley | prairie and parkland in the Coast Range rain shadow |
-| The Spine | a continuous alpine chain, crest 2,700–4,200 m: granite and limestone with cliff bands, cirques and ribbed faces; forest thins through a ragged treeline zone into rock and snow |
-| The Crown | the ice massif of the north-east, 6,196 m, with present-day glaciers in its valleys |
+| The Spine | a continuous alpine chain, crest 2,300–4,100 m: granite and limestone faces furrowed by gullies, with cirques at the valley heads; forest thins through a ragged treeline zone into rock and snow |
+| The Crown | the ice massif of the north-east, 5,778 m, with present-day glaciers in its valleys |
 | The Gorge | the antecedent water gap where the Great River crosses the Spine: the one low-level route east |
 | High Desert | a tilted, layered plateau (cream caprock over red sandstone, shale and limestone on granite) cut into mesas and canyons; badlands in the south-east and the Erg, a dune sea, on its interior |
 
-Land 2,126 km², water 374 km²; 943 km of rivers in 506 reaches; 6 lakes; highest point 6,196 m.
+Land 2,128 km², water 372 km²; 967 km of rivers in 497 reaches; 7 lakes; highest point 5,778 m.
 Maps: `docs/map_relief.png`, `docs/map_ecology.png`. Screenshots: `docs/screenshots/`.
 
 The plateau's strata, red soils and red sand are confined by an explicit province mask, so mesa
