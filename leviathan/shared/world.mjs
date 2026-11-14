@@ -151,7 +151,7 @@ export class World {
       if (alpine > 0.01) {
         const b0 = band(640), b1 = band(210);
         // rock ribs and the couloirs between them; sharper teeth along the crests
-        if (b0 > 0) d += alpine * b0 * 120 * (ridged(x / 640 + 3.1, z / 640 - 1.7, 3, seed + 240) - 0.52);
+        if (b0 > 0) d += alpine * b0 * 60 * (ridged(x / 640 + 3.1, z / 640 - 1.7, 3, seed + 240) - 0.52);
         if (b1 > 0) d += alpine * b1 * 34 * (ridged(x / 210, z / 210, 2, seed + 241) - 0.5) * smoothstep(1500, 2400, h);
       }
     }
@@ -275,6 +275,11 @@ export class World {
     const S = this.S;
     const cx = x < 0 ? 0 : x > S ? S : x, cz = z < 0 ? 0 : z > S ? S : z;
     let h = this.baseHeight(cx, cz);
+    if (cx !== x || cz !== z) {
+      // outside the playable square: the edge terrain descends in ragged spurs to the sea
+      const d = Math.hypot(x - cx, z - cz), t = smoothstep(0, 5200, d + 900 * noise2(x / 2600, z / 2600, this.seed + 260));
+      return h * Math.pow(1 - t, 1.6) - 70 * t + 260 * t * (1 - t) * fbm(x / 1500, z / 1500, 3, this.seed + 261);
+    }
     if (cell < 40) h += this.detail(cx, cz, h, cell);
     if (cell < 30) h = this._carve(cx, cz, h);
     if (this.edits.size && cell < 2) h += this._edit(x, z);

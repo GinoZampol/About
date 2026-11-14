@@ -112,7 +112,8 @@ void main() {
   int base = int(texture2D(uRock, uv + (n2.rg - 0.5) * 0.0022).r * 255.0 + 0.5);
   vec4 NT = texture2D(uNormTex, uv);
   vec3 nTex = vec3(NT.r * 2.0 - 1.0, 0.0, NT.g * 2.0 - 1.0); nTex.y = sqrt(max(1.0 - dot(nTex.xz, nTex.xz), 0.02));
-  vec3 N = normalize(mix(normalize(vN), nTex, smoothstep(9.0, 24.0, uCell)));
+  float outside = step(0.5, step(vWPos.x, 0.0) + step(uWorldSize, vWPos.x) + step(vWPos.z, 0.0) + step(uWorldSize, vWPos.z));
+  vec3 N = normalize(mix(normalize(vN), nTex, smoothstep(9.0, 24.0, uCell) * (1.0 - outside)));
   float h = vWPos.y;
   float tanS = length(N.xz) / max(N.y, 0.05);
   float precip = A.r * 3.0, forest = A.g, dark = A.b, wet = A.a, sand = B.r, ao = B.g, strat = B.b * 510.0 - 100.0;
@@ -162,6 +163,8 @@ void main() {
   } else rc = rockColor(base);
   rc = mix(rc, rc * vec3(1.06, 0.98, 0.9), n3.b) * (0.8 + 0.4 * n3.a);
   rc *= (0.72 + 0.56 * n2.g) * (0.86 + 0.28 * n1.b);
+  // the massif's stronger and weaker beds show as lighter and darker bands across the faces
+  if (base == 2 || base == 3 || base == 4) { float tb = (hz + strat * 1.6) * 0.0285; rc *= 1.0 + 0.13 * clamp((sin(tb) + 0.6 * sin(tb * 2.63 + 1.3) + 0.3 * sin(tb * 5.9 + 0.4)) * 1.4, -1.0, 1.0); }
   // water stains and joints run down the face
   vec2 perp = normalize(vec2(-N.z, N.x) + 1e-4);
   float streak = texture2D(uNoise, vec2(dot(vWPos.xz, perp) / 9.0, h / 75.0)).r;
@@ -182,7 +185,8 @@ void main() {
   col *= mix(1.0, 0.55, smoothstep(0.3, -2.5, h));
 
   // ---- snow: lingers in shaded hollows, strips from spurs and steep faces ---------------------
-  float sn = smoothstep(-110.0, 110.0, h - uSnowLine + (n3.b - 0.5) * 280.0 + (n2.r - 0.5) * 70.0 - N.z * 160.0 + curv * 140.0) * smoothstep(2.1, 1.2, tanS);
+  float sn = smoothstep(-110.0, 110.0, h - uSnowLine + (n3.b - 0.5) * 280.0 + (n2.r - 0.5) * 70.0 - N.z * 160.0 + curv * 260.0) * mix(smoothstep(2.1, 1.2, tanS), smoothstep(5.0, 3.0, tanS), smoothstep(250.0, 800.0, h - uSnowLine));
+  sn = max(sn, smoothstep(650.0, 1100.0, h - uSnowLine + (n2.r - 0.5) * 120.0) * smoothstep(6.0, 3.5, tanS));   // summits are white
   col = mix(col, vec3(0.86, 0.90, 0.95), sn);
 
   // ---- glaciers: snow-covered above the snowline, bare blue-grey ice with moraine stripes below ---

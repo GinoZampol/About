@@ -8,6 +8,7 @@ import { ROCK, ROCK_COLOR } from '../shared/geology.mjs';
 
 export const T = { BROADLEAF: 0, CONIFER: 1, GIANT: 2, PINE: 3, BIRCH: 4, SNAG: 5, BUSH: 6, SAGE: 7, ROCK_ROUND: 8, ROCK_SLAB: 9, LOG: 10, FERN: 11, GRASS: 12 };
 export const TYPE_COUNT = 13;
+const LOOSE_ROCKS = false;
 const TREE_G = 4.6, ROCK_G = 9, GRASS_G = 0.62;
 const rq = {};
 
@@ -92,7 +93,8 @@ function placeTrees(world, { key, x0, z0, size, lod }) {
     bins.add(type, px, h - 0.25, pz, s, rot, tintV * tintH, tintV, tintV * (2 - tintH), s * (0.9 + 0.25 * hash2(i, j, seed + 413)), lean);
     if (lod === 0) { const tr = type === T.GIANT ? 0.95 : type === T.BIRCH ? 0.18 : 0.33; bins.col.push(px, pz, tr * s, h + 30); }
   }
-  if (lod < 2) placeRocks(world, bins, x0, z0, size, lod);
+  // loose boulders are switched off for now (set LOOSE_ROCKS to bring them back)
+  if (LOOSE_ROCKS && lod < 2) placeRocks(world, bins, x0, z0, size, lod);
   return bins.pack(key);
 }
 

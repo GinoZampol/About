@@ -162,6 +162,28 @@ export async function finishWorld(world, cfg, ROOT, log) {
   }
   { let mx = 0, cnt = 0; for (let j = 0; j < N - 1; j++) for (let i = 0; i < N - 1; i++) { const c = j * N + i; if (sea[c] || sea[c + 1] || sea[c + N]) continue; const d = Math.max(Math.abs(h[c + 1] - h[c]), Math.abs(h[c + N] - h[c])); if (d > mx) mx = d; if (d > 60) cnt++; } log(`talus relaxation done: max step ${mx.toFixed(1)} m, ${cnt} steps over 60 m`); }
 
+  // ---- D2. slope dissection: every hillside is drained by rills that gather into gullies. Cut them
+  // along the actual flow lines, deeper as drainage gathers, so faces are furrowed like real mountains.
+  {
+    flood(ctx, h, sea, dx); route(ctx, sea, dx, seed + 903, 1.0); accumulate(ctx, sea, null, dx);
+    const { Q, rec, recD } = ctx, cut = new Float32Array(n), a = dx * dx;
+    const rockF = [0.2, 0.3, 1, 1, 0.9, 0.7, 0.35, 0.6];
+    for (let c = 0; c < n; c++) {
+      if (sea[c]) continue;
+      const A = Q[c] / a; if (A < 2.5 || A > 5000) continue;
+      const r = rec[c], sl = (h[c] - (sea[r] ? 0 : h[r])) / recD[c];
+      const sf = smoothstep(0.22, 0.7, sl); if (sf <= 0) continue;
+      cut[c] = Math.min(42, 2.7 * Math.pow(A, 0.42)) * sf * smoothstep(5000, 1800, A) * rockF[g.rock[c]];
+    }
+    let total = 0;
+    for (let j = 1; j < N - 1; j++) for (let i = 1; i < N - 1; i++) {
+      const c = j * N + i; if (sea[c]) continue;
+      const v = cut[c] * 0.5 + (cut[c - 1] + cut[c + 1] + cut[c - N] + cut[c + N]) * 0.125;
+      if (v > 0) { h[c] -= v; total++; }
+    }
+    log(`slope dissection: ${total} cells incised`);
+  }
+
   // ---- E. lakes: keep the significant basins, silt up the rest ---------------------------------
   flood(ctx, h, sea, dx);
   const lakeId = new Int32Array(n), lakes = [];

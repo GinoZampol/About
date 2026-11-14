@@ -147,14 +147,14 @@ target machine for real frame times.
 
 ## Known limitations
 
-- **Steep world.** 22% of land is under 15% slope and 264 km² under 8%. 53% of land is reachable
+- **Steep world.** 22% of land is under 15% slope and 264 km² under 8%. 52% of land is reachable
   on foot from the Central Valley on slopes under 35°; Longwater and the Northern Highlands are
   not, and 13.6% is connected at cart grade.
 - **Heightfield only.** No overhangs, caves, arches or sea stacks.
 - **Trees are placeholders** by request; distant forest is shaded terrain.
 - **Performance figures above predate the Crown, cloud and life passes**, and no frame rate on a
   real GPU has been measured.
-- **Edges.** Beyond the 50 km square the terrain is extruded from the border.
+- **Edges.** Beyond the 50 km square the land falls away to an encircling sea over about 5 km; it is scenery only.
 - No night sky, no networking.
 
 ## Next priorities

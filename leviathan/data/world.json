@@ -12,7 +12,7 @@
  "seaLevel": 0,
  "maxElevation": 6235,
  "landKm2": 2143,
- "riverKm": 969,
+ "riverKm": 972,
  "mapChannels": [
   "rock",
   "strat",
@@ -29,9 +29,9 @@
  "lakes": [
   {
    "level": 656.46,
-   "areaKm2": 7.24,
+   "areaKm2": 7.29,
    "x": 30395,
-   "z": 4976
+   "z": 4978
   },
   {
    "level": 431.39,
@@ -47,15 +47,15 @@
   },
   {
    "level": 293.22,
-   "areaKm2": 0.53,
-   "x": 31369,
+   "areaKm2": 0.55,
+   "x": 31373,
    "z": 21485
   },
   {
    "level": 164.95,
    "areaKm2": 0.33,
    "x": 10344,
-   "z": 34674
+   "z": 34675
   },
   {
    "level": 1030.58,
@@ -159,9 +159,9 @@
   {
    "name": "Longwater (largest lake)",
    "x": 30395,
-   "z": 4976,
+   "z": 4978,
    "h": 656,
-   "note": "7.2 km2, up to 100 m deep"
+   "note": "7.3 km2, up to 100 m deep"
   },
   {
    "name": "Lake 2",
@@ -179,15 +179,15 @@
   },
   {
    "name": "Lake 4",
-   "x": 31369,
+   "x": 31373,
    "z": 21485,
    "h": 293,
-   "note": "0.5 km2, up to 37 m deep"
+   "note": "0.6 km2, up to 37 m deep"
   },
   {
    "name": "Lake 5",
    "x": 10344,
-   "z": 34674,
+   "z": 34675,
    "h": 165,
    "note": "0.3 km2, up to 24 m deep"
   }

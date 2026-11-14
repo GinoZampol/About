@@ -68,7 +68,7 @@ export class Terrain {
   }
   _select(n, p, req) {
     n.lastUsed = this.frame;
-    const maxL = n.outer ? 3 : this.maxLevel;
+    const maxL = n.outer ? 5 : this.maxLevel;
     if (n.level < maxL && this._dist(n, p) < SPLIT_K * n.size) {
       if (!n.children) {
         const h = n.size / 2;
