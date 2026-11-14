@@ -12,7 +12,7 @@
  "seaLevel": 0,
  "maxElevation": 5778,
  "landKm2": 2143,
- "riverKm": 967,
+ "riverKm": 969,
  "mapChannels": [
   "rock",
   "strat",
@@ -62,12 +62,6 @@
    "areaKm2": 0.33,
    "x": 10344,
    "z": 34675
-  },
-  {
-   "level": 1044.62,
-   "areaKm2": 0.2,
-   "x": 47668,
-   "z": 34652
   }
  ],
  "landmarks": [

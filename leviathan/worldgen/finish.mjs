@@ -21,7 +21,7 @@ export async function finishWorld(world, cfg, ROOT, log) {
   // wind-blown sand buries the fine drainage of the erg
   {
     const r = Math.max(1, Math.round(130 / dx)), hb = boxBlur(boxBlur(h, N, r), N, r);
-    for (let c = 0; c < n; c++) if (!sea[c] && g.erg[c] > 0.01) h[c] += (hb[c] - h[c]) * Math.min(1, g.erg[c] * 1.3);
+    for (let c = 0; c < n; c++) if (!sea[c] && g.erg[c] > 0.01) h[c] += (hb[c] - h[c]) * Math.min(1, g.erg[c] * 1.3) * smoothstep(22, 5, Math.abs(hb[c] - h[c]));   // sand fills swales, it does not bury cliffs and canyon rims
   }
   let P = computePrecip(h, sea, N, dx);
 
@@ -392,7 +392,12 @@ export async function finishWorld(world, cfg, ROOT, log) {
     // sand: beaches, and dune fields on dry, flat, low-lying plateau ground
     let sand = smoothstep(2.6, 0.8, z) * smoothstep(0.08, 0.03, sl);
     if (p < 0.34 && mRock[m] !== ROCK.ALLUVIUM && mMesa[m] > 140) sand = Math.max(sand, smoothstep(0.34, 0.26, p) * smoothstep(0.05, 0.02, sl) * smoothstep(-0.1, 0.2, fbm(xk / 4.5, yk / 4.5, 2, seed + 73)) * smoothstep(40, 8, qk));
-    sand = Math.max(sand, sat(mErg[m] * 1.4) * smoothstep(0.45, 0.15, sl));
+    {
+      // dunes only on gentle ground, and never on or beside rock walls: use the steepest slope nearby
+      let smax = sl;
+      for (let b = -2; b <= 2; b++) for (let a = -2; a <= 2; a++) { const x = i + a, y = j + b; if (x >= 0 && y >= 0 && x < M && y < M && mSlope[y * M + x] > smax) smax = mSlope[y * M + x]; }
+      sand = Math.max(sand, sat(mErg[m] * 1.4) * smoothstep(0.32, 0.1, sl) * smoothstep(0.75, 0.3, smax));
+    }
     mSand[m] = Math.round(255 * sat(sand));
   }
 

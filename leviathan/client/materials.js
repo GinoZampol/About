@@ -161,7 +161,7 @@ void main() {
   ground = mix(ground, S(vec3(0.60, 0.56, 0.48)) * (0.8 + 0.4 * n1.b), course * arid * 0.75);
   vec3 sandC = mix(S(vec3(0.76, 0.69, 0.54)), S(vec3(0.78, 0.60, 0.42)), mesa) * (0.90 + 0.2 * n1.r) * (0.92 + 0.16 * n2.b);
   // sand thins out over a broad, ragged margin and lingers in hollows, so dunes grade into the plateau
-  ground = mix(ground, sandC, smoothstep(0.06, 0.72, sand + ((n2.r - 0.5) * 0.25 + (n3.r - 0.5) * 0.35 + curv * 0.18) * smoothstep(0.0, 0.25, sand)));
+  ground = mix(ground, sandC, smoothstep(0.06, 0.72, sand + ((n2.r - 0.5) * 0.25 + (n3.r - 0.5) * 0.35 + curv * 0.18) * smoothstep(0.0, 0.25, sand)) * (1.0 - smoothstep(0.4, 0.8, tanS)));
 
   // ---- bedrock -------------------------------------------------------------------------------
   float hz = h + (n2.r - 0.5) * 9.0 + (n3.g - 0.5) * 22.0;

@@ -194,7 +194,7 @@ export class World {
       }
     }
     // dunes
-    const sand = sandHere;
+    const sand = sandHere * (1 - smoothstep(0.16, 0.38, s));   // no dunes on steep rock
     if (sand > 0.03 && h > 6) {
       const b1 = band(150), b2 = band(16);
       if (b1 > 0) {
