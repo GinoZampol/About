@@ -215,7 +215,7 @@ function frame() {
     hudT = 0;
     const p = player.pos, g = world.ground(p.x, p.z), c = world.climate(p.x, p.z, g);
     $('hud').textContent = `${regionName(p.x, p.z, g)}\n` +
-      `E ${(p.x / 1000).toFixed(2)} km  N ${((S - p.z) / 1000).toFixed(2)} km  elev ${g.toFixed(0)} m${player.fly ? `  (fly ${player.flySpeed.toFixed(0)} m/s)` : player.swimming ? '  (swimming)' : player.mount ? '  (mounted)' : ''}\n` +
+      `E ${(p.x / 1000).toFixed(2)} km  N ${((S - p.z) / 1000).toFixed(2)} km  elev ${g.toFixed(0)} m${player.fly ? `  (fly ${(player.flySpeed * (player.altBoost || 1)).toFixed(0)} m/s)` : player.swimming ? '  (swimming)' : player.mount ? '  (mounted)' : ''}\n` +
       `bedrock ${ROCK_NAMES[world.rockAt(p.x, p.z, g)]}  rain ${(c.precip * 1000).toFixed(0)} mm  ${c.temp.toFixed(1)} C  ${String(Math.floor(timeOfDay)).padStart(2, '0')}:${String(Math.round(timeOfDay % 1 * 60)).padStart(2, '0')}\n` +
       `${fps.toFixed(0)} fps  ${terrain.stats.chunks} chunks  ${(renderer.info.render.triangles / 1e6).toFixed(2)} M tris  ${renderer.info.render.calls} draws${lastDig ? '\n' + lastDig : ''}`;
     if (mapOn && mapCv._img) { const ctx = mapCv.getContext('2d'); ctx.putImageData(mapCv._img, 0, 0); ctx.fillStyle = '#fff'; ctx.strokeStyle = '#000'; ctx.beginPath(); ctx.arc(p.x / S * 512, p.z / S * 512, 4, 0, 7); ctx.fill(); ctx.stroke(); }

@@ -44,7 +44,10 @@ export class Player {
     const sy = Math.sin(this.yaw), cy = Math.cos(this.yaw);
     const fx = -sy, fz = -cy, rx = cy, rz = -sy;
     if (this.fly) {
-      const sp = this.flySpeed * (k.ShiftLeft ? 4 : 1), cp = Math.cos(this.pitch);
+      // the higher above the ground, the faster: slow and precise near terrain, quick for crossing the map
+      const agl0 = this.pos.y - w.ground(this.pos.x, this.pos.z);
+      this.altBoost = Math.max(1, Math.min(30, agl0 / 70));
+      const sp = this.flySpeed * this.altBoost * (k.ShiftLeft ? 4 : 1), cp = Math.cos(this.pitch);
       this.pos.x += (fx * cp * f + rx * r) * sp * dt; this.pos.z += (fz * cp * f + rz * r) * sp * dt;
       this.pos.y += (Math.sin(this.pitch) * f + (k.Space ? 1 : 0) - (k.KeyC ? 1 : 0)) * sp * dt;
       const g = w.ground(this.pos.x, this.pos.z);
