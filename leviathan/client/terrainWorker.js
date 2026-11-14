@@ -11,6 +11,12 @@ self.onmessage = (e) => {
   if (m.type === 'init') { world = new World(m.data); self.postMessage({ type: 'ready' }); }
   else if (m.type === 'build') build(m);
   else if (m.type === 'veg') { const r = placeVegetation(world, m); self.postMessage(r.msg, r.transfer); }
+  else if (m.type === 'hgrid') {
+    // strip of the refined height grid (cell-centred samples of the full ground function)
+    const { T, j0, j1 } = m, cell = world.S / T, out = new Float32Array((j1 - j0) * T);
+    for (let j = j0; j < j1; j++) for (let i = 0; i < T; i++) out[(j - j0) * T + i] = world.ground((i + 0.5) * cell, (j + 0.5) * cell, cell) + world.ho;
+    self.postMessage({ type: 'hgrid', j0, j1, out }, [out.buffer]);
+  }
   else if (m.type === 'edit') { for (const [ix, iz, dh] of m.cells) world.setEdit(ix, iz, dh); }
 };
 

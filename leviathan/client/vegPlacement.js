@@ -60,7 +60,7 @@ function placeTrees(world, { key, x0, z0, size, lod }) {
     const h = world.ground(px, pz, 1);
     if (h < 0.7 || h < world.stillLevel(px, pz) + 0.4) continue;
     const rv = world.riverAt(px, pz, rq); if (rv && rv.edge < 1.5 + (isTree ? 1 : 0)) continue;
-    const slope = world.slope(px, pz); if (slope > 1.05) continue;
+    const slope = world.slope(px, pz); if (slope > 1.35) continue;
     const tl = 1930 + 90 * noise2(px / 3000, pz / 3000, seed + 70);
     if (h > tl) continue;
     const stunt = 1 - 0.55 * smoothstep(tl - 260, tl, h);

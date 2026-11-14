@@ -146,7 +146,7 @@ export class World {
         b *= 0.5; wl *= 0.5;
         const tx = px * 1.6 - pz * 1.2; pz = px * 1.2 + pz * 1.6; px = tx;
       }
-      d += relief * 30 * (a - 0.72);
+      d += relief * (30 + 22 * smoothstep(0.7, 1.3, s)) * (a - 0.72);
     }
     const steep = smoothstep(0.5, 0.95, s) + smoothstep(2050, 2500, h) * 0.5;
     const rocky = steep > 1 ? 1 : steep;

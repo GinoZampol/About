@@ -94,7 +94,7 @@ vec3 rockColor(int rk) {
   if (rk == 0) return S(vec3(0.40, 0.36, 0.30));
   if (rk == 1) return S(vec3(0.31, 0.30, 0.28));
   if (rk == 2) return S(vec3(0.38, 0.37, 0.36));
-  if (rk == 3) return S(vec3(0.47, 0.45, 0.40));
+  if (rk == 3) return S(vec3(0.41, 0.40, 0.37));
   if (rk == 4) return S(vec3(0.33, 0.33, 0.32));
   if (rk == 5) return S(vec3(0.25, 0.23, 0.23));
   if (rk == 6) return S(vec3(0.53, 0.36, 0.26));
@@ -167,11 +167,11 @@ void main() {
   float streak = texture2D(uNoise, vec2(dot(vWPos.xz, perp) / 9.0, h / 75.0)).r;
   rc *= mix(1.0, 0.66 + 0.62 * streak, smoothstep(0.7, 1.5, tanS));
   rc = mix(rc, rc * vec3(0.78, 0.84, 0.70), smoothstep(0.9, 1.6, precip) * n2.a * 0.7);
-  float rockW = smoothstep(0.72, 1.12, tanS + (n2.b - 0.5) * 0.45 + (n1.a - 0.5) * 0.2 - curv * 0.22 + smoothstep(1900.0, 2500.0, h) * 0.45 - sand - forest * 0.3 - smoothstep(0.8, 1.6, precip) * 0.12);
+  float rockW = smoothstep(0.95, 1.45, tanS + (n2.b - 0.5) * 0.45 + (n1.a - 0.5) * 0.2 - curv * 0.22 + smoothstep(1900.0, 2500.0, h) * 0.45 - sand - forest * 0.3 - smoothstep(0.8, 1.6, precip) * 0.12 - 0.5 * (1.0 - smoothstep(1450.0, 2150.0, h)) * smoothstep(0.45, 0.9, precip));
   rockW = max(rockW, (1.0 - veg) * smoothstep(0.32, 0.65, tanS + (n2.b - 0.5) * 0.3) * (1.0 - smoothstep(0.2, 0.5, sand)));
   vec3 col = mix(ground, rc, rockW);
   // scree and debris aprons gather in the hollows below rock; shingle on shores
-  float scree = smoothstep(0.48, 0.74, tanS + (n1.r - 0.5) * 0.3 + curv * 0.18 + smoothstep(1700.0, 2300.0, h) * 0.25) * (1.0 - rockW) * (1.0 - ff * 0.8);
+  float scree = smoothstep(0.7, 1.0, tanS + (n1.r - 0.5) * 0.3 + curv * 0.18 + smoothstep(1700.0, 2300.0, h) * 0.25) * (1.0 - rockW) * (1.0 - ff * 0.8);
   col = mix(col, rc * 1.05 * (0.85 + 0.3 * n1.g), scree * 0.7);
   float shore = smoothstep(1.6, 0.15, h + (n2.r - 0.5) * 0.8) * (1.0 - rockW);
   col = mix(col, mix(sandC, S(vec3(0.42, 0.40, 0.37)), n2.g) * 0.85, shore);

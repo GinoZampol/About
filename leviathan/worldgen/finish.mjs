@@ -354,7 +354,7 @@ export async function finishWorld(world, cfg, ROOT, log) {
     // forest canopy cover: moisture, temperature (treeline), slope, with patchiness
     const treeline = 1930 + 90 * noise2(xk / 3, yk / 3, seed + 70);
     const pe = p * (1 + 0.5 * smoothstep(14, 0, wdist[m])) + 0.25 * smoothstep(10, 150, qk) + 0.12 * fbm(xk / 2.4, yk / 2.4, 3, seed + 71);
-    let F = smoothstep(0.42, 0.95, pe) * (1 - smoothstep(treeline - 260, treeline, z)) * (1 - smoothstep(0.85, 1.2, sl));
+    let F = smoothstep(0.42, 0.95, pe) * (1 - smoothstep(treeline - 260, treeline, z)) * (1 - smoothstep(1.0, 1.5, sl));
     F *= 0.75 + 0.25 * smoothstep(-0.25, 0.15, fbm(xk / 0.9, yk / 0.9, 3, seed + 72));   // glades and meadows
     F *= 1 - 0.85 * smoothstep(0.75, 1, wet);                                           // open marsh
     if (z < 3) F *= smoothstep(1.0, 3, z);

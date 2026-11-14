@@ -132,7 +132,7 @@ const hAt = (i, j) => H[j * N + i] * w.hs - w.ho;
     const x = (i + 0.5) * S / M, z = (j + 0.5) * S / M, h = w.baseHeight(x, z);
     const F = w.maps[MAP.FOREST * mn + j * M + i] / 255, D = w.maps[MAP.DARK * mn + j * M + i] / 255, p = w.maps[MAP.PRECIP * mn + j * M + i] / 255 * 3;
     if (h < w.stillLevel(x, z) + 0.2) { cls.water++; continue; }
-    if (F > 0.5) { forestCells++; if (w.slope(x, z) > 1.2 || h > 2100) bad++; }
+    if (F > 0.5) { forestCells++; if (w.slope(x, z) > 1.5 || h > 2100) bad++; }
     if (h > 2450) cls.snow++; else if (h > 1950) cls.alpine++; else if (D > 0.5) cls['dark forest']++; else if (F > 0.5) cls.forest++; else if (p < 0.5) cls['steppe/desert']++; else if (F > 0.18) cls.parkland++; else cls.grassland++;
   }
   info('land cover', Object.entries(cls).map(([k, v]) => `${k} ${(v / mn * 2500).toFixed(0)} km2`).join(', '));

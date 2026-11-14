@@ -4,7 +4,7 @@ import { CSM } from 'three/addons/csm/CSM.js';
 import { loadWorldData, World, MAP } from '../shared/world.mjs';
 import { materialAt } from '../shared/subsurface.mjs';
 import { ROCK_NAMES } from '../shared/geology.mjs';
-import { buildTextures, terrainShadow } from './textures.js';
+import { buildTextures, terrainShadow, refineNormals } from './textures.js';
 import { makeShared, makeMaterials, setSun } from './materials.js';
 import { Terrain } from './terrain.js';
 import { buildRivers } from './rivers.js';
@@ -77,7 +77,11 @@ if (quality.shadows) {
 
 progress(0.8, 'starting terrain workers');
 let vegetation = null;
-const terrain = new Terrain({ scene, data, makeTerrainMaterial: mats.makeTerrain, waterMaterial: mats.water, maxLevel: num('maxLevel', quality.maxLevel), workers: Math.max(2, Math.min(4, (navigator.hardwareConcurrency || 4) - 1)), onWorkerMessage: (m) => vegetation && vegetation.onMessage(m) });
+const terrain = new Terrain({ scene, data, makeTerrainMaterial: mats.makeTerrain, waterMaterial: mats.water, maxLevel: num('maxLevel', quality.maxLevel), workers: Math.max(2, Math.min(4, (navigator.hardwareConcurrency || 4) - 1)), onWorkerMessage: (m) => { if (m.type === 'hgrid') onHgrid(m); else if (vegetation) vegetation.onMessage(m); } });
+// refine the far-field normal map in the background
+let hgLeft = 0, normalsReady = false; const hgNew = new Float32Array(tex.hgridRes * tex.hgridRes);
+function onHgrid(m) { hgNew.set(m.out, m.j0 * tex.hgridRes); if (--hgLeft === 0) { refineNormals(tex, hgNew); updateSun(); normalsReady = true; } }
+{ const T = tex.hgridRes, STRIP = 64; for (let j = 0; j < T; j += STRIP) { hgLeft++; terrain.extraQueue.push({ type: 'hgrid', T, j0: j, j1: Math.min(T, j + STRIP) }); } }
 const rivers = buildRivers(world, mats.river, scene);
 vegetation = new Vegetation({ scene, world, terrain, shared, mats, tex, csm, treeDist: quality.treeDist, grassDist: num('grass', quality.grassDist) });
 await terrain.ready;
@@ -194,7 +198,7 @@ function frame() {
   sky.position.copy(camera.position); sky.scale.setScalar(camera.far * 0.9);
   terrain.update(camera.position);
   vegetation.update(camera.position, dt);
-  const settled = !terrain.busy && !vegetation.busy;
+  const settled = !terrain.busy && !vegetation.busy && normalsReady;
   readyFrames = settled ? readyFrames + 1 : 0;
   if (SHOT && !settled && frames % 20 !== 0) { frames++; return; }       // capture mode: don't waste time drawing while streaming
   if (csm) {

@@ -59,6 +59,20 @@ export function terrainShadow(tex, sunDir, out) {
   return out;
 }
 
+// Re-derive the global normal and curvature map from a refined height grid (workers sample the full
+// ground function, so distant mountains are lit with their spurs and gullies, not just the 12 m base).
+export function refineNormals(tex, hg) {
+  const T = tex.hgridRes, cell = tex.cell, nt = tex.norm.image.data;
+  for (let j = 0; j < T; j++) for (let i = 0; i < T; i++) {
+    const gx = (hg[j * T + Math.min(T - 1, i + 1)] - hg[j * T + Math.max(0, i - 1)]) / (2 * cell), gz = (hg[Math.min(T - 1, j + 1) * T + i] - hg[Math.max(0, j - 1) * T + i]) / (2 * cell);
+    const l = 1 / Math.sqrt(gx * gx + gz * gz + 1), k = (j * T + i) * 4;
+    nt[k] = Math.round((-gx * l * 0.5 + 0.5) * 255); nt[k + 1] = Math.round((-gz * l * 0.5 + 0.5) * 255);
+  }
+  const b1 = blurBox(hg, T, 2), b2 = blurBox(hg, T, 9);
+  for (let k = 0; k < T * T; k++) nt[k * 4 + 3] = Math.max(0, Math.min(255, Math.round(127.5 + (b1[k] - hg[k]) * 14 + (b2[k] - hg[k]) * 2.2)));
+  tex.hgrid = hg; tex.norm.needsUpdate = true;
+}
+
 export function buildTextures(data, aniso) {
   const meta = data.meta, M = meta.mapRes, mn = M * M, maps = data.maps;
   const A = new Uint8Array(mn * 4), B = new Uint8Array(mn * 4), R = new Uint8Array(mn);

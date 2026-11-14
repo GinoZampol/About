@@ -88,7 +88,7 @@ export function designAt(xk, yk, seed) {
   let U = 0.012 + 0.034 * smoothstep(0.1, 0.65, fbm(xk / 7.5, yk / 7.5, 3, seed + 31)) * (1 - plateau);
   U += 0.27 * gCR;
   U += 1.12 * gS * ampS * (1 - 0.75 * plateau);
-  U += 1.9 * gC;    // the chain ends where the resistant plateau begins
+  U += 1.22 * gC;    // the chain ends where the resistant plateau begins
   U += 0.05 * plateau + 0.10 * smoothstep(47.3, 50, wx) + 0.08 * smoothstep(47.5, 50, wy) * plateau;
   U += 0.012 * (0.5 + 0.5 * noise2(xk / 1.1, yk / 1.1, seed + 35)) * (1 - plateau);
   U += 0.24 * smoothstep(3.2, 0, wy) * smoothstep(8, 12, wx);
@@ -102,7 +102,7 @@ export function designAt(xk, yk, seed) {
   let h0;
   if (land < 0) h0 = -Math.min(260, 3 + 55 * Math.pow(-land, 1.3));
   else {
-    h0 = 6 + 24 * sat(land / 3) + 190 * gCR + 950 * gS * ampS + 2300 * gC + 12 * fbm(xk / 2, yk / 2, 3, seed + 33);
+    h0 = 6 + 24 * sat(land / 3) + 190 * gCR + 950 * gS * ampS + 1500 * gC + 12 * fbm(xk / 2, yk / 2, 3, seed + 33);
     h0 += plateau * (1100 + 10 * dGorgeMouth + 45 * fbm(xk / 5, yk / 5, 3, seed + 34));
     const notch = 105 + 40 * Math.max(0, xk - 28);
     h0 = h0 + (Math.min(h0, notch) - h0) * Math.sqrt(gG);
@@ -117,7 +117,7 @@ export function designAt(xk, yk, seed) {
   else if (gS > 0.08) {
     const side = wx - (33.5 + 0); // rough west/east of axis for the main section
     if (dS + wob < 1.9) rock = ROCK.GRANITE;
-    else if (!northBranch && sS < 38 && side < 0 && dS + wob > 2.3 && dS + wob < 4.9) rock = ROCK.LIMESTONE;
+    else if (!northBranch && sS < 38 && side < 0 && dS + wob > 2.9 && dS + wob < 4.5) rock = ROCK.LIMESTONE;
     else rock = ROCK.SCHIST;
     if (!northBranch && sS > 40 && fbm(xk / 4, yk / 4, 2, seed + 42) > 0.22) rock = ROCK.GRANITE;
   } else if (gCR > 0.1 || (wx < 14 && wy < 33)) rock = ROCK.GREYWACKE;
