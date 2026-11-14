@@ -116,7 +116,6 @@ export function designAt(xk, yk, seed) {
   else if (gS > 0.08) {
     const side = wx - (33.5 + 0); // rough west/east of axis for the main section
     if (dS + wob < 1.9) rock = ROCK.GRANITE;
-    else if (!northBranch && sS < 38 && side < 0 && dS + wob > 2.9 && dS + wob < 4.5) rock = ROCK.LIMESTONE;
     else rock = ROCK.SCHIST;
     if (!northBranch && sS > 40 && fbm(xk / 4, yk / 4, 2, seed + 42) > 0.22) rock = ROCK.GRANITE;
   } else if (gCR > 0.1 || (wx < 14 && wy < 33)) rock = ROCK.GREYWACKE;

@@ -196,17 +196,17 @@ export class World {
     // dunes
     const sand = sandHere * (1 - smoothstep(0.16, 0.38, s));   // no dunes on steep rock
     if (sand > 0.03 && h > 6) {
-      const b1 = band(150), b2 = band(16);
+      const b1 = band(230), b2 = band(16);
       if (b1 > 0) {
         // dune crests bend, split and die out along their length; a second, smaller train crosses the first
         const bend = 2.2 * noise2(x / 520, z / 190, seed + 217) + 1.1 * noise2(x / 150, z / 150, seed + 218);
-        const ph = (x * 0.94 + z * 0.34) / (150 + 45 * noise2(x / 2300, z / 2300, seed + 213)) + 1.9 * fbm(x / 420, z / 420, 2, seed + 207) + 2.4 * noise2(x / 1300, z / 1300, seed + 214) + bend;
+        const ph = (x * 0.94 + z * 0.34) / (230 + 60 * noise2(x / 2300, z / 2300, seed + 213)) + 1.9 * fbm(x / 420, z / 420, 2, seed + 207) + 2.4 * noise2(x / 1300, z / 1300, seed + 214) + bend;
         const p = ph - Math.floor(ph);
-        const prof = p < 0.72 ? p / 0.72 : (1 - p) / 0.28;
+        const prof = p < 0.64 ? p / 0.64 : (1 - p) / 0.36;
         const along = 0.35 + 0.65 * smoothstep(-0.45, 0.35, noise2(x / 310 + 9.1, z / 310, seed + 219));
-        d += sand * Math.sqrt(sand) * b1 * (17 + 9 * noise2(x / 800, z / 800, seed + 208)) * along * (prof * prof * (3 - 2 * prof) - 0.4);
+        d += sand * Math.sqrt(sand) * b1 * (7.5 + 3.5 * noise2(x / 800, z / 800, seed + 208)) * along * (prof * prof * (3 - 2 * prof) - 0.4);
         const ph2 = (x * 0.55 - z * 0.83) / 88 + 1.6 * noise2(x / 240, z / 240, seed + 220), p2 = ph2 - Math.floor(ph2), pr2 = p2 < 0.7 ? p2 / 0.7 : (1 - p2) / 0.3;
-        d += sand * Math.sqrt(sand) * b1 * 5 * (1.2 - along) * (pr2 * pr2 * (3 - 2 * pr2) - 0.4);
+        d += sand * Math.sqrt(sand) * b1 * 2.2 * (1.2 - along) * (pr2 * pr2 * (3 - 2 * pr2) - 0.4);
       }
       if (b2 > 0) d += sand * b2 * (0.25 + 0.3 * noise2(x / 130, z / 130, seed + 215)) * Math.sin((x * 0.9 + z * 0.43) / 16 * 6.283 + 7 * noise2(x / 55, z / 55, seed + 209) + 5 * noise2(x / 210, z / 210, seed + 216));
     }
@@ -282,13 +282,10 @@ export class World {
   // ---- the ground ----------------------------------------------------------------------------
   ground(x, z, cell = 0) {
     const S = this.S;
-    const cx = x < 0 ? 0 : x > S ? S : x, cz = z < 0 ? 0 : z > S ? S : z;
+    // beyond the border the land simply continues: the world is reflected across its edge, which keeps
+    // every ridge, valley and river continuous. It is scenery only; the border wall keeps players inside.
+    const cx = x < 0 ? -x : x > S ? 2 * S - x : x, cz = z < 0 ? -z : z > S ? 2 * S - z : z;
     let h = this.baseHeight(cx, cz);
-    if (cx !== x || cz !== z) {
-      // outside the playable square: the edge terrain descends in ragged spurs to the sea
-      const d = Math.hypot(x - cx, z - cz), t = smoothstep(0, 5200, d + 900 * noise2(x / 2600, z / 2600, this.seed + 260));
-      return h * Math.pow(1 - t, 1.6) - 70 * t + 260 * t * (1 - t) * fbm(x / 1500, z / 1500, 3, this.seed + 261);
-    }
     if (cell < 40) h += this.detail(cx, cz, h, cell);
     if (cell < 30) h = this._carve(cx, cz, h);
     if (this.edits.size && cell < 2) h += this._edit(x, z);
@@ -303,7 +300,8 @@ export class World {
 
   // level of standing water (lake or sea) that applies at this position
   stillLevel(x, z) {
-    const LN = this.LN; let i = Math.floor(x / this.S * LN), j = Math.floor(z / this.S * LN);
+    const S = this.S; x = x < 0 ? -x : x > S ? 2 * S - x : x; z = z < 0 ? -z : z > S ? 2 * S - z : z;
+    const LN = this.LN; let i = Math.floor(x / S * LN), j = Math.floor(z / S * LN);
     if (i < 0 || j < 0 || i >= LN || j >= LN) return 0;
     const v = this.lakes[j * LN + i];
     return v === -32768 ? 0 : v / 10;

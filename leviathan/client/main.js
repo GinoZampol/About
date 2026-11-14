@@ -69,6 +69,34 @@ const mats = makeMaterials(shared, tex, opts);
 const sky = new THREE.Mesh(new THREE.SphereGeometry(1, 32, 16), mats.sky);
 sky.frustumCulled = false; sky.renderOrder = -10; scene.add(sky);
 
+// ---- world border: a translucent barrier that only shows as you approach the edge ----------------
+{
+  const y0 = -600, y1 = 9000, P = [], U = [];
+  const side = (ax, az, bx, bz) => { P.push(ax, y0, az, bx, y0, bz, bx, y1, bz, ax, y0, az, bx, y1, bz, ax, y1, az); U.push(0, S, S, 0, S, 0); };
+  side(0, 0, S, 0); side(S, 0, S, S); side(S, S, 0, S); side(0, S, 0, 0);
+  const g = new THREE.BufferGeometry();
+  g.setAttribute('position', new THREE.Float32BufferAttribute(P, 3)); g.setAttribute('aU', new THREE.Float32BufferAttribute(U, 1));
+  const wall = new THREE.Mesh(g, new THREE.ShaderMaterial({
+    uniforms: { uTime: shared.uTime }, transparent: true, depthWrite: false, side: THREE.DoubleSide,
+    vertexShader: 'attribute float aU; varying vec3 vP; varying float vU; void main() { vP = position; vU = aU; gl_Position = projectionMatrix * viewMatrix * vec4(position, 1.0); }',
+    fragmentShader: `uniform float uTime; varying vec3 vP; varying float vU;
+      void main() {
+        float d = distance(vP, cameraPosition);
+        float far = 1.0 - smoothstep(1500.0, 7500.0, d), near = 1.0 - smoothstep(60.0, 900.0, d);
+        if (far <= 0.0) discard;
+        vec2 big = vec2(vU, vP.y) / 128.0, small = vec2(vU, vP.y) / 8.0;
+        float gridB = max(step(0.965, fract(big.x)), step(0.965, fract(big.y)));
+        float gridS = max(step(0.93, fract(small.x)), step(0.93, fract(small.y)));
+        float stripes = 0.5 + 0.5 * sin((vU + vP.y) * 0.05 + uTime * 1.6);
+        float a = far * far * (0.05 + 0.10 * stripes + 0.22 * gridB) + near * (0.12 + 0.18 * stripes + 0.4 * gridS);
+        gl_FragColor = vec4(mix(vec3(0.20, 0.55, 1.0), vec3(0.65, 0.9, 1.0), stripes * 0.5 + gridS * near * 0.5), min(a, 0.8));
+        #include <tonemapping_fragment>
+        #include <colorspace_fragment>
+      }`,
+  }));
+  wall.frustumCulled = false; wall.renderOrder = 9; scene.add(wall);
+}
+
 let csm = null;
 if (quality.shadows) {
   csm = new CSM({ maxFar: 2600, cascades: 3, mode: 'practical', parent: scene, shadowMapSize: quality.shadows, lightDirection: new THREE.Vector3(-1, -1, -1).normalize(), camera, lightMargin: 3500, lightFar: 12000, lightIntensity: 1 });

@@ -111,7 +111,9 @@ vec3 noTileN(sampler2D t, vec2 uv, float k) {
 }
 vec3 strataColor(int rk) { return rk == 3 ? S(vec3(0.66, 0.58, 0.46)) : rockColor(rk); }   // cream cap and ledge-forming beds
 void main() {
-  vec2 uv = clamp(vWPos.xz / uWorldSize, 0.0005, 0.9995);
+  float outDist = max(max(-vWPos.x, vWPos.x - uWorldSize), max(-vWPos.z, vWPos.z - uWorldSize));
+  if (outDist > 8000.0) discard;
+  vec2 uv = clamp(1.0 - abs(1.0 - abs(vWPos.xz / uWorldSize)), 0.0005, 0.9995);
   float dist = distance(vWPos, cameraPosition);
   vec4 n3 = (texture2D(uNoise, vWPos.xz / 790.0 + 0.37) + texture2D(uNoise, TILE_R * vWPos.xz / 1130.0 + 0.11) - 1.0) * 0.72 + 0.5;
   float tk = smoothstep(0.3, 0.7, texture2D(uNoise, vWPos.xz / 2310.0 + 0.19).a + (n3.g - 0.5) * 0.6);
@@ -136,19 +138,20 @@ void main() {
   float detailF = 1.0 - smoothstep(120.0, 700.0, dist);                   // fine speckle only where it can be resolved
 
   // ---- herb layer -------------------------------------------------------------------------------
-  vec3 lush = S(vec3(0.20, 0.27, 0.11)), mid = S(vec3(0.31, 0.34, 0.16)), dry = S(vec3(0.46, 0.42, 0.25)), steppe = S(vec3(0.50, 0.46, 0.36));
-  vec3 grass = mix(dry, mid, smoothstep(0.42, 0.72, m));
-  grass = mix(grass, lush, smoothstep(0.72, 1.25, m));
-  grass = mix(steppe, grass, smoothstep(0.26, 0.5, m));
+  vec3 lush = S(vec3(0.19, 0.28, 0.10)), mid = S(vec3(0.25, 0.34, 0.13)), dry = S(vec3(0.36, 0.39, 0.19)), steppe = S(vec3(0.50, 0.46, 0.36));
+  // open grassland is green; only truly dry country (the plateau side) cures to straw and steppe
+  vec3 grass = mix(dry, mid, smoothstep(0.34, 0.52, m));
+  grass = mix(grass, lush, smoothstep(0.6, 1.2, m));
+  grass = mix(steppe, grass, smoothstep(0.32, 0.5, m));
   grass = mix(grass, S(vec3(0.38, 0.36, 0.22)), smoothstep(1450.0, 2050.0, h));
   grass *= (0.70 + 0.60 * n2.g) * (0.82 + 0.36 * n1.r) * (0.88 + 0.24 * n3.a);
-  grass = mix(grass, grass * vec3(1.16, 1.06, 0.82), n3.b * 0.5);                     // cured, seeding patches
+  grass = mix(grass, grass * vec3(1.12, 1.05, 0.86), n3.b * 0.3);                     // cured, seeding patches
   grass = mix(grass, grass * vec3(0.78, 0.94, 0.80), smoothstep(0.55, 0.8, n2.a) * 0.5); // rank, darker swards
   vec3 soil = mix(S(vec3(0.38, 0.32, 0.24)), S(vec3(0.52, 0.46, 0.36)), n3.g);
   soil = mix(soil, mix(S(vec3(0.55, 0.40, 0.29)), S(vec3(0.66, 0.56, 0.42)), n3.g), mesa);
   soil *= 0.82 + 0.36 * n1.g;
   float veg = smoothstep(0.2, 0.48, m + (n2.r - 0.5) * 0.25 * mix(0.4, 1.0, detailF) + (n1.b - 0.5) * 0.14 * detailF);
-  float bare = mix(0.12, smoothstep(0.62, 0.8, n1.g * 0.45 + n2.b * 0.55 + tanS * 0.22 - curv * 0.12), detailF);  // slips, trails, thin soil on spurs
+  float bare = (1.0 - 0.7 * smoothstep(0.4, 0.6, m)) * mix(0.12, smoothstep(0.62, 0.8, n1.g * 0.45 + n2.b * 0.55 + tanS * 0.22 - curv * 0.12), detailF);  // slips, trails, thin soil on spurs
   vec3 ground = mix(soil, grass, veg * (1.0 - bare * 0.65));
   vec3 litter = mix(S(vec3(0.26, 0.20, 0.12)), S(vec3(0.19, 0.24, 0.10)), n2.b * (0.5 + 0.5 * dark)) * (0.8 + 0.4 * n1.a);
   float ff = smoothstep(0.3, 0.7, forest + (n2.a - 0.5) * 0.35);
@@ -252,6 +255,7 @@ void main() {
 `;
 const WATER_FRAG = /* glsl */`
 uniform sampler2D uNoiseN; uniform sampler2D uNoise;
+uniform float uWorldSize;
 varying vec3 vWPos; varying float vDepth;
 #ifdef RIVER
 varying vec3 vFlow;
@@ -260,6 +264,7 @@ ${ATMO}
 void main() {
   float dep = vDepth;
   if (dep < -0.02) discard;
+  if (max(max(-vWPos.x, vWPos.x - uWorldSize), max(-vWPos.z, vWPos.z - uWorldSize)) > 8000.0) discard;
   float dist = distance(vWPos, cameraPosition);
   vec2 p = vWPos.xz;
   #ifdef RIVER
@@ -334,7 +339,7 @@ export function makeShared() {
     uSunDir: { value: new THREE.Vector3(0.3, 0.8, 0.5).normalize() }, uSunCol: { value: new THREE.Color(3, 3, 3) },
     uAmbSky: { value: new THREE.Color(0.4, 0.5, 0.7) }, uAmbGround: { value: new THREE.Color(0.2, 0.18, 0.15) },
     uFogCol: { value: new THREE.Color(0.6, 0.7, 0.85) }, uFogSun: { value: new THREE.Color(1, 0.9, 0.7) }, uZenith: { value: new THREE.Color(0.15, 0.3, 0.65) },
-    uFogA: { value: 0.55e-5 }, uFogB: { value: 1 / 1700 }, uSplits: { value: new THREE.Vector3(100, 500, 3000) }, uTime: { value: 0 }, uCloud: { value: 0.42 },
+    uFogA: { value: 0.55e-5 }, uFogB: { value: 1 / 1700 }, uSplits: { value: new THREE.Vector3(100, 500, 3000) }, uTime: { value: 0 }, uCloud: { value: 0.42 }, uWorldSize: { value: 50000 },
   };
 }
 

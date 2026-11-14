@@ -41,7 +41,7 @@ One coherent convergent-margin transect, west to east, drained by a single river
 | The Gorge | the antecedent water gap where the Great River crosses the Spine: the one low-level route east |
 | High Desert | a tilted, layered plateau (cream caprock over red sandstone, shale and limestone on granite) cut into mesas and canyons; badlands in the south-east and the Erg, a dune sea, on its interior |
 
-Land 2,128 km², water 372 km²; 967 km of rivers in 497 reaches; 7 lakes; highest point 5,778 m.
+Land 2,128 km², water 372 km²; 967 km of rivers in 510 reaches; 6 lakes; highest point 5,779 m.
 Maps: `docs/map_relief.png`, `docs/map_ecology.png`. Screenshots: `docs/screenshots/`.
 
 The plateau's strata, red soils and red sand are confined by an explicit province mask, so mesa
@@ -160,7 +160,7 @@ target machine for real frame times.
 - **Trees are placeholders** by request; distant forest is shaded terrain.
 - **Performance figures above predate the Crown, cloud and life passes**, and no frame rate on a
   real GPU has been measured.
-- **Edges.** The world is cut off hard at the 50 km border; nothing is drawn beyond it.
+- **Edges.** Play is confined to the 50 km square by a translucent border wall that fades in as you approach. For 8 km beyond it the world continues as scenery (the terrain mirrored across the edge, without trees or river water).
 - No night sky, no networking.
 
 ## Next priorities

@@ -4,7 +4,8 @@
 import * as THREE from 'three';
 
 export const C = 64;
-const SPLIT_K = 2.0;      // a node splits when the camera is closer than SPLIT_K * size
+const SPLIT_K = 2.0;
+export const EXT = 8000;   // how far the visible world extends beyond the playable border (m)      // a node splits when the camera is closer than SPLIT_K * size
 
 function makeIndex() {
   const n1 = C + 1, idx = [];
@@ -38,7 +39,8 @@ export class Terrain {
     this.stats = { chunks: 0, tris: 0, built: 0, buildMs: 0 };
     this.roots = [];
     // the world ends at its border: only the playable square is meshed
-    this.roots.push(this._node(0, 0, 0, this.S, null, false));
+    // the playable square, plus a ring of scenery EXT metres wide around it
+    for (let j = -1; j <= 1; j++) for (let i = -1; i <= 1; i++) this.roots.push(this._node(0, i * this.S, j * this.S, this.S, null, i !== 0 || j !== 0));
     this.workers = [];
     this.ready = new Promise((res) => {
       let n = 0;
@@ -69,7 +71,8 @@ export class Terrain {
   }
   _select(n, p, req) {
     n.lastUsed = this.frame;
-    const maxL = n.outer ? 5 : this.maxLevel;
+    if (n.outer && Math.max(-(n.x0 + n.size), n.x0 - this.S, -(n.z0 + n.size), n.z0 - this.S) > EXT) return;
+    const maxL = n.outer ? Math.min(8, this.maxLevel) : this.maxLevel;
     if (n.level < maxL && this._dist(n, p) < SPLIT_K * n.size) {
       if (!n.children) {
         const h = n.size / 2;
