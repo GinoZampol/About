@@ -13,6 +13,19 @@ vec3 skyColor(vec3 rd) {
   c += uFogSun * (0.18 * pow(sd, 6.0) + 0.5 * pow(sd, 48.0));
   return c;
 }
+// one cloud deck, drifting with the wind; the sky draws it and everything below is shaded by it
+uniform float uCloud;
+const float CLOUD_H = 4300.0;
+float cloudDensity(vec2 p) {
+  vec2 q = p + uTime * vec2(15.0, 6.0);
+  float n = texture2D(uNoise, q / 23000.0).r * 0.55 + texture2D(uNoise, q / 7100.0 + 0.3).g * 0.30 + texture2D(uNoise, q / 1900.0).b * 0.15;
+  return smoothstep(1.0 - uCloud, 1.0 - uCloud + 0.22, n);
+}
+float cloudShadow(vec3 wpos) {
+  if (wpos.y > CLOUD_H) return 1.0;
+  vec2 p = wpos.xz + uSunDir.xz * ((CLOUD_H - wpos.y) / max(uSunDir.y, 0.1));
+  return 1.0 - 0.6 * cloudDensity(p);
+}
 // height-attenuated haze with analytic integration along the view ray
 vec3 applyAtmosphere(vec3 col, vec3 wpos) {
   vec3 v = wpos - cameraPosition; float d = length(v); vec3 rd = v / d;
@@ -70,10 +83,11 @@ varying vec3 vWPos; varying vec3 vN; varying float vViewZ;
 #include <shadowmap_pars_fragment>
 ${ATMO}
 ${SHADOW_FRAG}
+vec3 strataColor(int rk);
 int rockAt(int base, float z, float off) {
   if (base != 6) return base;
   float zs = z - off;
-  if (zs >= 1215.0) return 5; if (zs >= 1090.0) return 6; if (zs >= 990.0) return 7; if (zs >= 905.0) return 6;
+  if (zs >= 1215.0) return 3; if (zs >= 1090.0) return 6; if (zs >= 990.0) return 7; if (zs >= 905.0) return 6;
   if (zs >= 770.0) return 7; if (zs >= 650.0) return 3; if (zs >= 520.0) return 7; return 2;
 }
 vec3 rockColor(int rk) {
@@ -86,6 +100,7 @@ vec3 rockColor(int rk) {
   if (rk == 6) return S(vec3(0.53, 0.36, 0.26));
   return S(vec3(0.50, 0.45, 0.39));
 }
+vec3 strataColor(int rk) { return rk == 3 ? S(vec3(0.66, 0.58, 0.46)) : rockColor(rk); }   // cream cap and ledge-forming beds
 void main() {
   vec2 uv = clamp(vWPos.xz / uWorldSize, 0.0005, 0.9995);
   float dist = distance(vWPos, cameraPosition);
@@ -93,7 +108,7 @@ void main() {
   vec4 n2 = texture2D(uNoise, vWPos.xz / 67.0);
   vec4 n3 = texture2D(uNoise, vWPos.xz / 790.0 + 0.37);
   vec4 A = texture2D(uMapA, uv); vec4 B = texture2D(uMapB, uv);
-  float flow = texture2D(uFlow, uv).r;
+  vec2 FI = texture2D(uFlow, uv).rg; float flow = FI.r, ice = FI.g;
   int base = int(texture2D(uRock, uv + (n2.rg - 0.5) * 0.0022).r * 255.0 + 0.5);
   vec4 NT = texture2D(uNormTex, uv);
   vec3 nTex = vec3(NT.r * 2.0 - 1.0, 0.0, NT.g * 2.0 - 1.0); nTex.y = sqrt(max(1.0 - dot(nTex.xz, nTex.xz), 0.02));
@@ -133,7 +148,7 @@ void main() {
   float arid = 1.0 - smoothstep(0.32, 0.6, precip);
   ground = mix(ground, lush * (0.8 + 0.4 * n1.r), course * (1.0 - arid) * 0.45 * (1.0 - ff));
   ground = mix(ground, S(vec3(0.60, 0.56, 0.48)) * (0.8 + 0.4 * n1.b), course * arid * 0.75);
-  vec3 sandC = mix(S(vec3(0.76, 0.69, 0.54)), S(vec3(0.78, 0.60, 0.42)), smoothstep(100.0, 400.0, h)) * (0.90 + 0.2 * n1.r) * (0.92 + 0.16 * n2.b);
+  vec3 sandC = mix(S(vec3(0.76, 0.69, 0.54)), S(vec3(0.78, 0.60, 0.42)), mesa) * (0.90 + 0.2 * n1.r) * (0.92 + 0.16 * n2.b);
   ground = mix(ground, sandC, smoothstep(0.25, 0.6, sand + (n2.r - 0.5) * 0.2));
 
   // ---- bedrock -------------------------------------------------------------------------------
@@ -141,7 +156,7 @@ void main() {
   vec3 rc;
   if (base == 6) {
     // plateau stratigraphy: colour bands follow the beds; outside the plateau mask it is plain grey rock
-    vec3 st = mix(rockColor(rockAt(6, hz + (n1.r - 0.5) * 5.0, strat)), rockColor(rockAt(6, hz - 6.0 + (n1.g - 0.5) * 5.0, strat)), 0.5);
+    vec3 st = mix(strataColor(rockAt(6, hz + (n1.r - 0.5) * 5.0, strat)), strataColor(rockAt(6, hz - 6.0 + (n1.g - 0.5) * 5.0, strat)), 0.5);
     float bands = sin((h + strat * 0.15) * 0.7 + n3.r * 5.0) * 0.5 + sin(h * 2.3 + n2.g * 4.0) * 0.5;
     rc = mix(rockColor(4), st * (1.0 + 0.12 * bands), mesa);
   } else rc = rockColor(base);
@@ -166,6 +181,12 @@ void main() {
   float sn = smoothstep(-110.0, 110.0, h - uSnowLine + (n3.b - 0.5) * 280.0 + (n2.r - 0.5) * 70.0 - N.z * 160.0 + curv * 140.0) * smoothstep(2.1, 1.2, tanS);
   col = mix(col, vec3(0.86, 0.90, 0.95), sn);
 
+  // ---- glaciers: snow-covered above the snowline, bare blue-grey ice with moraine stripes below ---
+  float gl = smoothstep(0.35, 0.65, ice + (n2.b - 0.5) * 0.2) * smoothstep(1.6, 0.9, tanS) * smoothstep(2100.0, 2600.0, h);
+  vec3 iceC = mix(S(vec3(0.60, 0.70, 0.76)), S(vec3(0.80, 0.86, 0.90)), n2.g) * (0.8 + 0.3 * n1.r);
+  iceC = mix(iceC, S(vec3(0.36, 0.34, 0.32)), smoothstep(0.62, 0.8, texture2D(uNoise, vec2(dot(vWPos.xz, perp) / 40.0, dot(vWPos.xz, vec2(perp.y, -perp.x)) / 900.0)).a) * 0.7);
+  col = mix(col, mix(iceC, vec3(0.86, 0.90, 0.95), sn), gl);
+
   // ---- distant forest canopy -------------------------------------------------------------------
   float canopyF = smoothstep(uTreeDist * 0.6, uTreeDist, dist) * smoothstep(0.1, 0.55, forest + (n2.a - 0.5) * 0.14 + (n3.a - 0.5) * 0.3) * (1.0 - sn);
   vec3 canopy = mix(S(vec3(0.15, 0.22, 0.09)), S(vec3(0.10, 0.17, 0.09)), smoothstep(450.0, 1100.0, h));
@@ -177,13 +198,13 @@ void main() {
   // ---- lighting ------------------------------------------------------------------------------
   float nearF = 1.0 - smoothstep(40.0, 320.0, dist);
   vec3 dn = (texture2D(uNoiseN, vWPos.xz / 2.7).xyz * 2.0 - 1.0) * nearF + (texture2D(uNoiseN, vWPos.xz / 23.0).xyz * 2.0 - 1.0) * (1.0 - smoothstep(300.0, 2500.0, dist)) * 0.6;
-  N = normalize(N + vec3(dn.x, 0.0, dn.y) * mix(0.3, 0.55, rockW) * (1.0 - sn * 0.7));
+  N = normalize(N + vec3(dn.x, 0.0, dn.y) * mix(0.3, 0.55, rockW) * (1.0 - sn * 0.45));
   vec3 dn3 = texture2D(uNoiseN, vWPos.xz / 190.0).xyz * 2.0 - 1.0;
   vec3 dn4 = texture2D(uNoiseN, vWPos.xz / 9.0).xyz * 2.0 - 1.0;
-  N = normalize(N + vec3(dn3.x, 0.0, dn3.y) * (0.45 * rockW + 0.18) * (1.0 - sn) + vec3(dn4.x, 0.0, dn4.y) * 0.9 * canopyF);
+  N = normalize(N + vec3(dn3.x, 0.0, dn3.y) * (0.45 * rockW + 0.18 + 0.3 * sn) + vec3(dn4.x, 0.0, dn4.y) * 0.9 * canopyF);
   float ndl = max(dot(N, uSunDir), 0.0);
   ndl = mix(ndl, 0.35 + 0.65 * ndl, canopyF * 0.6);
-  float sh = sunShadow(vViewZ, texture2D(uShadowTex, uv).r);
+  float sh = sunShadow(vViewZ, texture2D(uShadowTex, uv).r) * cloudShadow(vWPos);
   float occ = mix(0.3, 1.0, ao) * (1.0 - 0.3 * max(curv, 0.0));
   vec3 amb = mix(uAmbGround, uAmbSky, N.y * 0.5 + 0.5) * occ;
   vec3 lit = col * (uSunCol * ndl * sh + amb);
@@ -241,14 +262,15 @@ void main() {
   vec3 R = reflect(-V, N); R.y = abs(R.y);
   vec3 refl = skyColor(R);
   float T = exp(-max(dep, 0.0) * 0.45);
-  vec3 light = uSunCol * max(uSunDir.y, 0.0) * 0.32 + uAmbSky * 0.55;
+  float csh = cloudShadow(vWPos);
+  vec3 light = uSunCol * max(uSunDir.y, 0.0) * 0.32 * csh + uAmbSky * 0.55;
   #ifdef RIVER
   vec3 body = mix(S(vec3(0.10, 0.22, 0.20)), S(vec3(0.30, 0.38, 0.28)), T) * light;
   #else
   vec3 body = mix(S(vec3(0.05, 0.18, 0.25)), S(vec3(0.22, 0.42, 0.40)), T) * light;
   #endif
   vec3 col = mix(body, refl, fres);
-  col += uSunCol * pow(max(dot(R, uSunDir), 0.0), 220.0) * 2.0;
+  col += uSunCol * pow(max(dot(R, uSunDir), 0.0), 220.0) * 2.0 * csh;
   float foam = smoothstep(0.30, 0.0, dep) * smoothstep(0.35, 0.6, texture2D(uNoise, p / 3.0 + uTime * 0.02).r);
   #ifdef RIVER
   foam = max(foam, smoothstep(0.25, 0.8, vFlow.z) * smoothstep(0.3, 0.62, texture2D(uNoise, fuv / 4.0 + vec2(0.0, -uTime * 0.3 * sp)).g));
@@ -266,7 +288,7 @@ varying vec3 vDir;
 void main() { vDir = position; vec4 p = projectionMatrix * vec4(mat3(viewMatrix) * position, 1.0); gl_Position = p.xyww; }
 `;
 const SKY_FRAG = /* glsl */`
-uniform sampler2D uNoise; uniform float uCloud;
+uniform sampler2D uNoise;
 varying vec3 vDir;
 ${ATMO}
 void main() {
@@ -274,12 +296,13 @@ void main() {
   vec3 col = skyColor(rd);
   float sd = max(dot(rd, uSunDir), 0.0);
   col += uSunCol * smoothstep(0.99985, 0.99995, sd) * 6.0;
-  if (rd.y > 0.01) {
-    vec2 p = rd.xz / (rd.y + 0.06) * 3000.0 + cameraPosition.xz * 0.6;
-    float n = texture2D(uNoise, p / 23000.0 + uTime * 0.0004).r * 0.55 + texture2D(uNoise, p / 7100.0 - uTime * 0.0006).g * 0.30 + texture2D(uNoise, p / 1900.0).b * 0.15;
-    float dns = smoothstep(1.0 - uCloud, 1.0 - uCloud + 0.22, n) * smoothstep(0.01, 0.16, rd.y);
+  if (rd.y > 0.01 && cameraPosition.y < CLOUD_H - 50.0) {
+    float tc = (CLOUD_H - cameraPosition.y) / rd.y;
+    vec2 p = cameraPosition.xz + rd.xz * tc;
+    float n = cloudDensity(p);
+    float dns = n * smoothstep(0.01, 0.10, rd.y) * (1.0 - smoothstep(60000.0, 140000.0, tc));
     vec3 cc = uSunCol * (0.26 + 0.1 * pow(sd, 4.0)) + uAmbSky * 0.9;
-    cc *= 1.0 - 0.3 * smoothstep(0.5, 0.9, n);
+    cc *= 1.0 - 0.25 * n;
     col = mix(col, mix(uFogCol, cc, smoothstep(0.02, 0.3, rd.y)), dns * 0.92);
   }
   gl_FragColor = vec4(col, 1.0);
@@ -293,7 +316,7 @@ export function makeShared() {
     uSunDir: { value: new THREE.Vector3(0.3, 0.8, 0.5).normalize() }, uSunCol: { value: new THREE.Color(3, 3, 3) },
     uAmbSky: { value: new THREE.Color(0.4, 0.5, 0.7) }, uAmbGround: { value: new THREE.Color(0.2, 0.18, 0.15) },
     uFogCol: { value: new THREE.Color(0.6, 0.7, 0.85) }, uFogSun: { value: new THREE.Color(1, 0.9, 0.7) }, uZenith: { value: new THREE.Color(0.15, 0.3, 0.65) },
-    uFogA: { value: 2.6e-5 }, uFogB: { value: 1 / 1700 }, uSplits: { value: new THREE.Vector3(100, 500, 3000) }, uTime: { value: 0 },
+    uFogA: { value: 2.6e-5 }, uFogB: { value: 1 / 1700 }, uSplits: { value: new THREE.Vector3(100, 500, 3000) }, uTime: { value: 0 }, uCloud: { value: 0.42 },
   };
 }
 
@@ -326,6 +349,6 @@ export function makeMaterials(shared, tex, opts) {
   });
   const water = new THREE.ShaderMaterial(waterOpts(false));
   const river = new THREE.ShaderMaterial(waterOpts(true));
-  const sky = new THREE.ShaderMaterial({ uniforms: { ...shared, uNoise: { value: tex.noise }, uCloud: opts.uCloud }, vertexShader: SKY_VERT, fragmentShader: SKY_FRAG, side: THREE.BackSide, depthWrite: false, depthTest: true });
+  const sky = new THREE.ShaderMaterial({ uniforms: { ...shared, uNoise: { value: tex.noise } }, vertexShader: SKY_VERT, fragmentShader: SKY_FRAG, side: THREE.BackSide, depthWrite: false, depthTest: true });
   return { makeTerrain, water, river, sky, base };
 }

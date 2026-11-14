@@ -33,6 +33,8 @@ const gauss = (d, s) => Math.exp(-(d * d) / (2 * s * s));
 
 export const SPINE = [[35, -3], [33.8, 9], [35.6, 19], [34.9, 28], [33.2, 35.5], [29.2, 41.5], [22.5, 46.3], [12, 49.3], [3, 51]];
 export const SPINE_N = [[33.2, 35.5], [35.4, 42.5], [37.2, 52]];
+// the Crown: a Himalaya-scale massif in the north-east, where the Spine meets the plateau margin
+export const CROWN = [[33.5, 38.5], [37.5, 43], [42.5, 46.3], [48.5, 48.2]];
 export const GORGE = [[43.5, 23.2], [39.5, 22.2], [35, 23], [31.5, 22.4], [28, 22]];
 export const VOLCANO = { x: 30.9, y: 11.0, h: 2550, r0: 2.9 };
 // the Sound: polylines [x, y, radius] (km)
@@ -77,13 +79,16 @@ export function designAt(xk, yk, seed) {
 
   const xcr = 9.6 + 1.0 * Math.sin(wy / 6.0);
   const gCR = gauss(wx - xcr, 2.5) * (1 - smoothstep(29.5, 34, wy)) * (0.75 + 0.35 * noise2(wy / 4.5, 1.3, seed + 25));
-  const plateau = smoothstep(38.2, 41.2, wx);
+  const [dCr, sCr] = polyDist(wx, wy, CROWN);
+  const gC = gauss(dCr, 4.1) * (0.86 + 0.26 * noise2(sCr / 4.2, 5.3, seed + 28) + 0.1 * noise2(sCr / 1.6, 2.2, seed + 29));
+  const plateau = smoothstep(38.2, 41.2, wx) * (1 - smoothstep(0.08, 0.4, gC));
   const dGorgeMouth = Math.hypot(xk - 43.5, yk - 23.2);
 
   // ---- uplift (mm/yr) -------------------------------------------------------------------------
   let U = 0.012 + 0.034 * smoothstep(0.1, 0.65, fbm(xk / 7.5, yk / 7.5, 3, seed + 31)) * (1 - plateau);
   U += 0.27 * gCR;
-  U += 1.02 * gS * ampS * (1 - 0.75 * plateau);    // the chain ends where the resistant plateau begins
+  U += 1.12 * gS * ampS * (1 - 0.75 * plateau);
+  U += 1.9 * gC;    // the chain ends where the resistant plateau begins
   U += 0.05 * plateau + 0.10 * smoothstep(47.3, 50, wx) + 0.08 * smoothstep(47.5, 50, wy) * plateau;
   U += 0.012 * (0.5 + 0.5 * noise2(xk / 1.1, yk / 1.1, seed + 35)) * (1 - plateau);
   U += 0.24 * smoothstep(3.2, 0, wy) * smoothstep(8, 12, wx);
@@ -97,7 +102,7 @@ export function designAt(xk, yk, seed) {
   let h0;
   if (land < 0) h0 = -Math.min(260, 3 + 55 * Math.pow(-land, 1.3));
   else {
-    h0 = 6 + 24 * sat(land / 3) + 190 * gCR + 950 * gS * ampS + 12 * fbm(xk / 2, yk / 2, 3, seed + 33);
+    h0 = 6 + 24 * sat(land / 3) + 190 * gCR + 950 * gS * ampS + 2300 * gC + 12 * fbm(xk / 2, yk / 2, 3, seed + 33);
     h0 += plateau * (1100 + 10 * dGorgeMouth + 45 * fbm(xk / 5, yk / 5, 3, seed + 34));
     const notch = 105 + 40 * Math.max(0, xk - 28);
     h0 = h0 + (Math.min(h0, notch) - h0) * Math.sqrt(gG);
@@ -108,10 +113,11 @@ export function designAt(xk, yk, seed) {
   let rock = ROCK.ALLUVIUM;
   const wob = 0.9 * noise2(xk / 2.6, yk / 2.6, seed + 41);
   if (plateau > 0.5) rock = ROCK.SANDSTONE;
+  else if (gC > 0.1) rock = dCr + wob < 2.7 ? ROCK.GRANITE : ROCK.SCHIST;
   else if (gS > 0.08) {
     const side = wx - (33.5 + 0); // rough west/east of axis for the main section
     if (dS + wob < 1.9) rock = ROCK.GRANITE;
-    else if (!northBranch && sS < 38 && side < 0 && dS + wob > 3.0 && dS + wob < 4.7) rock = ROCK.LIMESTONE;
+    else if (!northBranch && sS < 38 && side < 0 && dS + wob > 2.3 && dS + wob < 4.9) rock = ROCK.LIMESTONE;
     else rock = ROCK.SCHIST;
     if (!northBranch && sS > 40 && fbm(xk / 4, yk / 4, 2, seed + 42) > 0.22) rock = ROCK.GRANITE;
   } else if (gCR > 0.1 || (wx < 14 && wy < 33)) rock = ROCK.GREYWACKE;

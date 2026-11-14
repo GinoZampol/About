@@ -62,7 +62,8 @@ export function terrainShadow(tex, sunDir, out) {
 export function buildTextures(data, aniso) {
   const meta = data.meta, M = meta.mapRes, mn = M * M, maps = data.maps;
   const A = new Uint8Array(mn * 4), B = new Uint8Array(mn * 4), R = new Uint8Array(mn);
-  const FL = maps.slice(MAP.FLOW * mn, MAP.FLOW * mn + mn);
+  const FL = new Uint8Array(mn * 2);
+  for (let k = 0; k < mn; k++) { FL[k * 2] = maps[MAP.FLOW * mn + k]; FL[k * 2 + 1] = maps[MAP.ICE * mn + k]; }
   for (let k = 0; k < mn; k++) {
     A[k * 4] = maps[MAP.PRECIP * mn + k]; A[k * 4 + 1] = maps[MAP.FOREST * mn + k]; A[k * 4 + 2] = maps[MAP.DARK * mn + k]; A[k * 4 + 3] = maps[MAP.WET * mn + k];
     B[k * 4] = maps[MAP.SAND * mn + k]; B[k * 4 + 1] = maps[MAP.AO * mn + k]; B[k * 4 + 2] = maps[MAP.STRAT * mn + k]; B[k * 4 + 3] = maps[MAP.MESA * mn + k];
@@ -98,7 +99,7 @@ export function buildTextures(data, aniso) {
   }
   return {
     mapA: dataTex(A, M, M, THREE.RGBAFormat, { aniso }), mapB: dataTex(B, M, M, THREE.RGBAFormat, { aniso }),
-    rock: dataTex(R, M, M, THREE.RedFormat, { nearest: true }), flow: dataTex(FL, M, M, THREE.RedFormat, {}), seaH: meta.hOffset, cell, norm: dataTex(nt, T, T, THREE.RGBAFormat, { aniso }),
+    rock: dataTex(R, M, M, THREE.RedFormat, { nearest: true }), flow: dataTex(FL, M, M, THREE.RGFormat, {}), seaH: meta.hOffset, cell, norm: dataTex(nt, T, T, THREE.RGBAFormat, { aniso }),
     noise: dataTex(nz, NS, NS, THREE.RGBAFormat, { repeat: true, aniso }), noiseN: dataTex(nn, NS, NS, THREE.RGBAFormat, { repeat: true, aniso }),
     hgrid: hg, hgridRes: T,
   };

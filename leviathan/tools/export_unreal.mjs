@@ -31,12 +31,12 @@ if (arg('mesh')) {
 }
 
 const N = +arg('size', 4033), cell = S / (N - 1);
-// Unreal height encoding: Z_cm = (value - 32768) / 128 * ZScale. ZScale 800 spans 4096 m at 6.25 cm steps.
-const Z_SCALE = 800, Z_MID = 1550;
+// Unreal height encoding: Z_cm = (value - 32768) / 128 * ZScale. ZScale 1600 spans 8192 m at 12.5 cm steps.
+const Z_SCALE = 1600, Z_MID = 3700;
 const hq = new Uint16Array(N * N), hf = new Float32Array(N * N);
 for (let j = 0; j < N; j++) for (let i = 0; i < N; i++) {
   const h = w.ground(i * cell, j * cell, cell); hf[j * N + i] = h;
-  hq[j * N + i] = Math.max(0, Math.min(65535, Math.round(32768 + (h - Z_MID) * 16)));
+  hq[j * N + i] = Math.max(0, Math.min(65535, Math.round(32768 + (h - Z_MID) * 8)));
 }
 writeGrayPNG(path.join(OUT, `height_${N}.png`), hq, N, N, 16);
 

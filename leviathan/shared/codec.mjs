@@ -25,4 +25,4 @@ export function decodeU16(bytes, N) {
   }
   return out;
 }
-export const H_OFFSET = 300, H_SCALE = 1 / 16; // metres = u16 * H_SCALE - H_OFFSET
+export const H_OFFSET = 300, H_SCALE = 1 / 8; // metres = u16 * H_SCALE - H_OFFSET

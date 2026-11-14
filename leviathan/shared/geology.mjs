@@ -18,7 +18,7 @@ export const ROCK_NAMES = ['alluvium', 'greywacke', 'granite', 'limestone', 'sch
 // Relative erodibility (multiplies the stream-power K).
 export const ROCK_K = [2.2, 1.3, 0.32, 0.55, 0.8, 0.6, 0.8, 2.3];
 // Tangent of the steepest slope the rock holds at ~10 m scale.
-export const ROCK_TALUS = [0.45, 0.5, 0.98, 1.4, 0.62, 0.72, 1.6, 0.5];
+export const ROCK_TALUS = [0.45, 0.5, 1.25, 2.2, 0.78, 0.72, 1.6, 0.5];
 // Hillslope diffusion strength (soil creep), 0..0.2.
 export const ROCK_DIFF = [0.16, 0.15, 0.03, 0.03, 0.09, 0.04, 0.015, 0.06];
 // Linear albedo-ish colours used by the renderer (sRGB 0..255).
@@ -32,7 +32,7 @@ export const ROCK_COLOR = [
 export function rockAt(base, z, off) {
   if (base !== ROCK.SANDSTONE) return base;
   const zs = z - off;
-  if (zs >= 1215) return ROCK.BASALT;
+  if (zs >= 1215) return ROCK.LIMESTONE;   // pale caprock that rims the mesas
   if (zs >= 1090) return ROCK.SANDSTONE;
   if (zs >= 990) return ROCK.SHALE;
   if (zs >= 905) return ROCK.SANDSTONE;

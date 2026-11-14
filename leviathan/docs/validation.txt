@@ -1,15 +1,15 @@
-PASS  river profiles never climb: 0 uphill steps in 77014 (max gradient 128%, 4377 waterfall/cascade steps)
-PASS  river network is connected: 108 segments end in a lake or the sea, 414 at confluences, 0 orphaned
-PASS  channel beds lie below the water surface: 0.00% of 8494 cross-sections dry
-PASS  rivers are not perched above both banks: 0.59% of cross-sections
-INFO  river network: 522 reaches, 991 km, 7 lakes
+PASS  river profiles never climb: 0 uphill steps in 76478 (max gradient 187%, 4704 waterfall/cascade steps)
+PASS  river network is connected: 93 segments end in a lake or the sea, 458 at confluences, 0 orphaned
+PASS  channel beds lie below the water surface: 0.00% of 8426 cross-sections dry
+PASS  rivers are not perched above both banks: 0.57% of cross-sections
+INFO  river network: 551 reaches, 980 km, 6 lakes
 PASS  no unintended closed basins: 0 single-cell hollows under 1 m (quantisation), 0 deeper
-PASS  no terrain discontinuities: largest step between adjacent 12 m samples 31.3 m (cliff limit 49 m)
-INFO  slope classes (land): <5% 7.3%  5-15% 14.1%  15-45% 25.0%  45-100% 45.0%  cliffs 8.6%
-INFO  land area: 2125 km2 of 2500, highest point 4123 m
+PASS  no terrain discontinuities: largest step between adjacent 12 m samples 44.0 m (cliff limit 73 m)
+INFO  slope classes (land): <5% 7.5%  5-15% 14.8%  15-45% 25.1%  45-100% 36.9%  cliffs 15.7%
+INFO  land area: 2127 km2 of 2500, highest point 6727 m
 PASS  chunk seams are bit-exact: 0 mismatches in 360 shared edge vertices across LOD levels 3-11
-PASS  most land is reachable on foot from the Central Valley: 66.9% of land (slopes under 35 deg, rivers crossable)
-INFO  cart-grade land network (under 8 deg) from the Central Valley: 13.7% of land with bridges, 5.0% without crossing a major river
+FAIL  most land is reachable on foot from the Central Valley: 53.1% of land (slopes under 35 deg, rivers crossable)
+INFO  cart-grade land network (under 8 deg) from the Central Valley: 13.7% of land with bridges, 13.5% without crossing a major river
 PASS  walking route: Central Valley -> High Desert: reachable on foot / pack animal only
 PASS  walking route: Central Valley -> Coast Range: reachable on foot / pack animal only
 FAIL  walking route: Central Valley -> Northern Highlands: not reachable
@@ -17,9 +17,9 @@ FAIL  walking route: Central Valley -> Longwater: not reachable
 PASS  walking route: Central Valley -> Badlands: reachable on foot / pack animal only
 PASS  walking route: Central Valley -> The Erg: reachable on foot / pack animal only
 PASS  walking route: Central Valley -> Great River delta: reachable, also at cart grade
-INFO  buildable land (slope under 8%): 259 km2, of which 78 km2 lies within 400 m of a major river, lake or the sea
-INFO  land cover: water 374 km2, grassland 260 km2, parkland 305 km2, forest 691 km2, dark forest 22 km2, steppe/desert 584 km2, alpine 171 km2, snow 94 km2
-PASS  forest never on cliffs or above the treeline: 14 of 298735 forest cells
-PASS  every subsurface cell resolves to a material: schist 19.3%, basalt 17.8%, topsoil 15.2%, granite 14.2%, greywacke 10.2%, gravel 8.0%, shale 3.3%, iron ore 2.9%, limestone 2.6%, subsoil 2.4%, clay 1.6%, sandstone 1.3%, copper ore 0.6%, sand 0.2%, coal 0.2%, salt 0.1%, peat 0.1%, gold-bearing quartz 0.0%, snow 0.0%
-PASS  generation is deterministic: two independent runs of the erosion core hash to 3d3bd7c75a15b5b9 / 3d3bd7c75a15b5b9
-INFO  data set: height.bin sha256:fd1315871651  lakes.bin sha256:c12d567bd36b  maps.bin sha256:47402cf81c37  rivermask.bin sha256:6bad179a0c4b  rivers.bin sha256:c3d11eab1274  world.json sha256:abf7d3646054
+INFO  buildable land (slope under 8%): 268 km2, of which 78 km2 lies within 400 m of a major river, lake or the sea
+INFO  land cover: water 372 km2, grassland 304 km2, parkland 269 km2, forest 657 km2, dark forest 25 km2, steppe/desert 519 km2, alpine 136 km2, snow 217 km2
+PASS  forest never on cliffs or above the treeline: 22 of 286218 forest cells
+PASS  every subsurface cell resolves to a material: schist 24.9%, topsoil 14.1%, limestone 14.1%, granite 13.8%, greywacke 10.2%, gravel 7.9%, basalt 3.5%, shale 3.0%, subsoil 2.5%, iron ore 2.3%, clay 1.5%, copper ore 0.7%, sandstone 0.7%, sand 0.2%, coal 0.2%, salt 0.1%, peat 0.1%, gold-bearing quartz 0.0%, snow 0.0%
+PASS  generation is deterministic: two independent runs of the erosion core hash to ddfe75a705230723 / ddfe75a705230723
+INFO  data set: height.bin sha256:056b12c3a2d3  lakes.bin sha256:ac7624212ee0  maps.bin sha256:7968c2f4f47e  rivermask.bin sha256:12e44f5c2879  rivers.bin sha256:5c0ca82e2186  world.json sha256:4d0b6b1ef0a4

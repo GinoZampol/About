@@ -10,6 +10,7 @@ import { Terrain } from './terrain.js';
 import { buildRivers } from './rivers.js';
 import { Vegetation } from './vegetation.js';
 import { Player } from './player.js';
+import { Life } from './life.js';
 
 const fail = (e) => { const el = document.getElementById('lmsg'); if (el) el.textContent = 'Could not start: ' + (e.reason?.message || e.message || e); };
 addEventListener('error', fail); addEventListener('unhandledrejection', fail);
@@ -61,7 +62,8 @@ tex.shadowData = new Uint8Array(tex.hgridRes * tex.hgridRes).fill(255);
 tex.shadow = new THREE.DataTexture(tex.shadowData, tex.hgridRes, tex.hgridRes, THREE.RedFormat, THREE.UnsignedByteType);
 tex.shadow.magFilter = tex.shadow.minFilter = THREE.LinearFilter; tex.shadow.needsUpdate = true;
 const shared = makeShared();
-const opts = { worldSize: S, uTreeDist: { value: quality.treeDist }, uSnowLine: { value: num('snow', 2450) }, uCloud: { value: num('cloud', 0.42) } };
+const opts = { worldSize: S, uTreeDist: { value: quality.treeDist }, uSnowLine: { value: num('snow', 2450) } };
+shared.uCloud.value = num('cloud', 0.42);
 const mats = makeMaterials(shared, tex, opts);
 
 const sky = new THREE.Mesh(new THREE.SphereGeometry(1, 32, 16), mats.sky);
@@ -92,7 +94,8 @@ player.colliders = (x, z) => vegetation.collidersNear(x, z);
   player.yaw = -l[0] * Math.PI / 180; player.pitch = l[1] * Math.PI / 180;      // heading: 0 = north, 90 = east
   player.fly = Q.get('walk') !== '1';
 }
-let timeOfDay = num('time', 13.5);
+const life = new Life({ scene, world, camera, shared });
+let timeOfDay = num('time', 13.5), dayCycle = !SHOT && Q.get('cycle') !== '0', sunT = 0;
 function updateSun() {
   const hAng = (timeOfDay - 13) / 12 * Math.PI;                       // solar noon at 13:00
   const lat = 46 * Math.PI / 180, dec = 18 * Math.PI / 180;
@@ -108,7 +111,7 @@ function updateSun() {
 updateSun();
 
 // ---- UI ------------------------------------------------------------------------------------
-$('help').textContent = 'click: capture mouse   WASD: move   Shift: fast\nF: walk / fly   H: mount   Space / C: up / down\nwheel: fly speed   [ ]: time of day\nM: map + places   G / B: dig / fill 1 m3\nU: hide HUD';
+$('help').textContent = 'click: capture mouse   WASD: move   Shift: fast\nF: walk / fly   H: mount   Space / C: up / down\nwheel: fly speed   [ ]: time of day\nM: map + places   G / B: dig / fill 1 m3\nT: day cycle on/off   N: sound on/off\nU: hide HUD';
 const mapCv = $('map');
 function drawMap() {
   const ctx = mapCv.getContext('2d'), W = 512, img = ctx.createImageData(W, W), N = world.N;
@@ -154,6 +157,7 @@ function dig(sign) {
 addEventListener('keydown', (e) => {
   if (e.code === 'BracketLeft') { timeOfDay = (timeOfDay + 23.75) % 24; updateSun(); }
   if (e.code === 'BracketRight') { timeOfDay = (timeOfDay + 0.25) % 24; updateSun(); }
+  if (e.code === 'KeyT') dayCycle = !dayCycle;
   if (e.code === 'KeyM') toggleMap();
   if (e.code === 'KeyU') document.body.classList.toggle('noui');
   if (e.code === 'KeyG') dig(-1);
@@ -181,6 +185,9 @@ function frame() {
   const dt = Math.min(0.1, clock.getDelta());
   shared.uTime.value += dt;
   player.update(dt);
+  // the day turns slowly (one game hour every 75 s); the short night is skipped
+  if (dayCycle) { timeOfDay += dt / 75; if (timeOfDay > 20.6) timeOfDay = 5.4; sunT += dt; if (sunT > 2.5) { sunT = 0; updateSun(); } }
+  life.update(dt, timeOfDay);
   const agl = player.pos.y - world.ground(player.pos.x, player.pos.z);
   camera.near = Math.max(0.3, Math.min(30, agl * 0.04)); camera.updateProjectionMatrix();
   camera.updateMatrixWorld();
