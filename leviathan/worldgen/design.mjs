@@ -92,7 +92,6 @@ export function designAt(xk, yk, seed) {
   U += 0.05 * plateau + 0.10 * smoothstep(47.3, 50, wx) + 0.08 * smoothstep(47.5, 50, wy) * plateau;
   U += 0.012 * (0.5 + 0.5 * noise2(xk / 1.1, yk / 1.1, seed + 35)) * (1 - plateau);
   U += 0.24 * smoothstep(3.2, 0, wy) * smoothstep(8, 12, wx);
-  U += 0.30 * gauss(Math.hypot(wx - 20.4, wy - 13.6), 0.85);          // the Tor: a granite monadnock in the valley
   U += 0.06 * ridged(xk / 3.2, yk / 3.2, 3, seed + 32) * (0.3 + gS + gCR);
   U *= 1 - 0.86 * gG;
   // wave and ice planation: skerries and the immediate shore zone do not build relief
@@ -122,7 +121,6 @@ export function designAt(xk, yk, seed) {
     if (!northBranch && sS > 40 && fbm(xk / 4, yk / 4, 2, seed + 42) > 0.22) rock = ROCK.GRANITE;
   } else if (gCR > 0.1 || (wx < 14 && wy < 33)) rock = ROCK.GREYWACKE;
   else if (wy > 41 || wx < 9) rock = ROCK.SCHIST;
-  if (Math.hypot(wx - 20.4, wy - 13.6) < 1.3) rock = ROCK.GRANITE;
   // badlands basin and a soft belt on the plateau
   const badl = plateau > 0.5 && Math.hypot((wx - 45.3) / 3.4, (wy - 8.6) / 4.2) + 0.5 * fbm(xk / 1.4, yk / 1.4, 3, seed + 46) < 1;
   if (badl) rock = ROCK.SHALE;
@@ -143,7 +141,9 @@ export function designAt(xk, yk, seed) {
 }
 
 // volcanic cone, applied late so that only its youngest erosion is modelled
+export const VOLCANO_ENABLED = false;   // isolated cones read as artificial 'point' mountains; the range stands on its own
 export function volcanoHeight(xk, yk, seed) {
+  if (!VOLCANO_ENABLED) return [-1e9, 1e9];
   const r = Math.hypot(xk - VOLCANO.x, yk - VOLCANO.y) * (1 + 0.07 * noise2(xk / 1.5, yk / 1.5, seed + 51));
   let h = VOLCANO.h * Math.exp(-r / VOLCANO.r0) * (1 + 0.035 * noise2(xk * 0.9, yk * 0.9, seed + 52));
   h -= 170 * Math.exp(-(r * r) / (2 * 0.26 * 0.26));

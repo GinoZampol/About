@@ -451,12 +451,10 @@ export async function finishWorld(world, cfg, ROOT, log) {
   const km = (x, y) => ({ x: x * 1000, z: S - y * 1000 });
   const landmarks = [
     lm('Mount Leviathan', peak(30, 39, 4, 40, (c) => g.rock[c] === ROCK.GRANITE), 'highest summit of the Spine, the granite core of the alpine chain'),
-    lm('Ashfall Peak', peak(VOLCANO.x - 1.5, VOLCANO.x + 1.5, VOLCANO.y - 1.5, VOLCANO.y + 1.5), 'stratovolcano on the western shoulder of the Spine'),
     lm('The Erg', km(46.4, 15.2), 'dune sea on the plateau interior'),
     lm('The Crown', peak(33, 49, 38, 49.5), 'the great ice massif of the north-east, the roof of the world'),
     lm('Great River delta', { x: mouth.x, z: S - mouth.y }, 'mouth of the Great River at the head of the Sound'),
     lm('The Gorge', km(GORGE[2][0], GORGE[2][1]), 'antecedent water gap through the Spine: the low-level route east'),
-    lm('The Tor', peak(19.4, 21.4, 12.6, 14.6), 'granite monadnock above the Central Valley'),
     lm('Central Valley', km(20, 22), 'prairie and parkland lowland'),
     lm('Coast Range', peak(6, 13, 4, 30), 'rain-forested fold belt'),
     lm('The Sound', km(14.5, 38.8), 'glacially scoured marine inlet'),

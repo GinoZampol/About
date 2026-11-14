@@ -100,13 +100,23 @@ vec3 rockColor(int rk) {
   if (rk == 6) return S(vec3(0.53, 0.36, 0.26));
   return S(vec3(0.50, 0.45, 0.39));
 }
+// Anti-tiling: every repeating noise lookup is blended with a second copy of itself that is rotated,
+// rescaled and offset, with the blend weight varying over kilometres, so no pattern repeats in step.
+const mat2 TILE_R = mat2(0.80, -0.60, 0.60, 0.80);
+vec4 noTile(sampler2D t, vec2 uv, float k) { return mix(texture2D(t, uv), texture2D(t, TILE_R * uv * 0.87 + vec2(0.37, 0.71)), k); }
+vec3 noTileN(sampler2D t, vec2 uv, float k) {
+  vec3 a = texture2D(t, uv).xyz * 2.0 - 1.0, b = texture2D(t, TILE_R * uv * 0.87 + vec2(0.37, 0.71)).xyz * 2.0 - 1.0;
+  b.xy = b.xy * TILE_R;
+  return mix(a, b, k);
+}
 vec3 strataColor(int rk) { return rk == 3 ? S(vec3(0.66, 0.58, 0.46)) : rockColor(rk); }   // cream cap and ledge-forming beds
 void main() {
   vec2 uv = clamp(vWPos.xz / uWorldSize, 0.0005, 0.9995);
   float dist = distance(vWPos, cameraPosition);
-  vec4 n1 = texture2D(uNoise, vWPos.xz / 5.3);
-  vec4 n2 = texture2D(uNoise, vWPos.xz / 67.0);
-  vec4 n3 = texture2D(uNoise, vWPos.xz / 790.0 + 0.37);
+  vec4 n3 = (texture2D(uNoise, vWPos.xz / 790.0 + 0.37) + texture2D(uNoise, TILE_R * vWPos.xz / 1130.0 + 0.11) - 1.0) * 0.72 + 0.5;
+  float tk = smoothstep(0.3, 0.7, texture2D(uNoise, vWPos.xz / 2310.0 + 0.19).a + (n3.g - 0.5) * 0.6);
+  vec4 n1 = noTile(uNoise, vWPos.xz / 5.3, tk);
+  vec4 n2 = noTile(uNoise, vWPos.xz / 67.0, 1.0 - tk);
   vec4 A = texture2D(uMapA, uv); vec4 B = texture2D(uMapB, uv);
   vec2 FI = texture2D(uFlow, uv).rg; float flow = FI.r, ice = FI.g;
   int base = int(texture2D(uRock, uv + (n2.rg - 0.5) * 0.0022).r * 255.0 + 0.5);
@@ -170,7 +180,7 @@ void main() {
   float streak = texture2D(uNoise, vec2(dot(vWPos.xz, perp) / 9.0, h / 75.0)).r;
   rc *= mix(1.0, 0.66 + 0.62 * streak, smoothstep(0.7, 1.5, tanS));
   rc = mix(rc, rc * vec3(0.78, 0.84, 0.70), smoothstep(0.9, 1.6, precip) * n2.a * 0.7);
-  vec4 n4 = texture2D(uNoise, vWPos.xz / 23.0 + 0.61);
+  vec4 n4 = noTile(uNoise, vWPos.xz / 23.0 + 0.61, tk);
   // rock shows through gradually: thin soils on spurs and steep, high ground, in ragged patches
   float rockArg = tanS + (n2.b - 0.5) * 0.6 + (n3.a - 0.5) * 0.55 + (n4.g - 0.5) * 0.35 - curv * 0.3 + smoothstep(1300.0, 2700.0, h) * 0.75
     - sand - forest * 0.75 - smoothstep(0.8, 1.6, precip) * 0.12 - 0.35 * (1.0 - smoothstep(1100.0, 2300.0, h)) * smoothstep(0.45, 0.9, precip);
@@ -206,10 +216,10 @@ void main() {
 
   // ---- lighting ------------------------------------------------------------------------------
   float nearF = 1.0 - smoothstep(40.0, 320.0, dist);
-  vec3 dn = (texture2D(uNoiseN, vWPos.xz / 2.7).xyz * 2.0 - 1.0) * nearF + (texture2D(uNoiseN, vWPos.xz / 23.0).xyz * 2.0 - 1.0) * (1.0 - smoothstep(300.0, 2500.0, dist)) * 0.6;
+  vec3 dn = noTileN(uNoiseN, vWPos.xz / 2.7, tk) * nearF + noTileN(uNoiseN, vWPos.xz / 23.0, 1.0 - tk) * (1.0 - smoothstep(300.0, 2500.0, dist)) * 0.6;
   N = normalize(N + vec3(dn.x, 0.0, dn.y) * mix(0.3, 0.55, rockW) * (1.0 - sn * 0.45));
-  vec3 dn3 = texture2D(uNoiseN, vWPos.xz / 190.0).xyz * 2.0 - 1.0;
-  vec3 dn4 = texture2D(uNoiseN, vWPos.xz / 9.0).xyz * 2.0 - 1.0;
+  vec3 dn3 = noTileN(uNoiseN, vWPos.xz / 190.0, tk);
+  vec3 dn4 = noTileN(uNoiseN, vWPos.xz / 9.0, 1.0 - tk);
   N = normalize(N + vec3(dn3.x, 0.0, dn3.y) * (0.45 * rockW + 0.18 + 0.3 * sn) + vec3(dn4.x, 0.0, dn4.y) * 0.9 * canopyF);
   float ndl = max(dot(N, uSunDir), 0.0);
   ndl = mix(ndl, 0.35 + 0.65 * ndl, canopyF * 0.6);

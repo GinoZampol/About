@@ -20,6 +20,12 @@ Controls: click to capture the mouse, WASD, Shift (fast), F walk/fly, H mount, w
 `[` `]` time of day, T day cycle, N sound, M map and place list (click the map to travel), G / B dig or fill 1 m³.
 URL options: `?quality=low|medium|high`, `?pos=x,heightAboveGround,z&look=heading,pitch&time=13.5`.
 
+## Versions
+
+- **Version 5** (drainage-line gullies, snow summits, mesa, erg, life layer; still has Ashfall Peak
+  and the Tor) is commit `eda0fff` on this branch: `git checkout eda0fff` restores code and data
+  exactly. A frozen playable copy is published separately as "The Leviathan v5".
+
 ## The geography
 
 One coherent convergent-margin transect, west to east, drained by a single river system:
@@ -29,13 +35,13 @@ One coherent convergent-margin transect, west to east, drained by a single river
 | Ocean and west coast | open sea, headlands, small islands |
 | Coast Range | folded greywacke ridges striking N–S, rain forest; the wettest lowlands hold the ancient dark forest |
 | The Sound | a glacially scoured sea inlet with islands and fjords cutting into the Northern Highlands; the Great River delta lies at its head |
-| Central Valley | prairie and parkland in the Coast Range rain shadow; the Tor, a granite monadnock, stands in the middle |
-| The Spine | a continuous alpine chain, crest 2,700–4,200 m: granite and limestone with cliff bands, cirques and ribbed faces; forest thins through a ragged treeline zone into rock and snow; Ashfall Peak, a 2,250 m stratovolcano, on its western shoulder |
-| The Crown | the ice massif of the north-east, 6,235 m, with present-day glaciers in its valleys |
+| Central Valley | prairie and parkland in the Coast Range rain shadow |
+| The Spine | a continuous alpine chain, crest 2,700–4,200 m: granite and limestone with cliff bands, cirques and ribbed faces; forest thins through a ragged treeline zone into rock and snow |
+| The Crown | the ice massif of the north-east, 6,196 m, with present-day glaciers in its valleys |
 | The Gorge | the antecedent water gap where the Great River crosses the Spine: the one low-level route east |
 | High Desert | a tilted, layered plateau (cream caprock over red sandstone, shale and limestone on granite) cut into mesas and canyons; badlands in the south-east and the Erg, a dune sea, on its interior |
 
-Land 2,127 km², water 373 km²; 969 km of rivers in 521 reaches; 6 lakes; highest point 6,235 m.
+Land 2,126 km², water 374 km²; 943 km of rivers in 506 reaches; 6 lakes; highest point 6,196 m.
 Maps: `docs/map_relief.png`, `docs/map_ecology.png`. Screenshots: `docs/screenshots/`.
 
 The plateau's strata, red soils and red sand are confined by an explicit province mask, so mesa
@@ -147,7 +153,7 @@ target machine for real frame times.
 
 ## Known limitations
 
-- **Steep world.** 22% of land is under 15% slope and 264 km² under 8%. 52% of land is reachable
+- **Steep world.** 22% of land is under 15% slope and 264 km² under 8%. 58% of land is reachable
   on foot from the Central Valley on slopes under 35°; Longwater and the Northern Highlands are
   not, and 13.6% is connected at cart grade.
 - **Heightfield only.** No overhangs, caves, arches or sea stacks.
