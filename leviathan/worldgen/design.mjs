@@ -87,7 +87,7 @@ export function designAt(xk, yk, seed) {
   // ---- uplift (mm/yr) -------------------------------------------------------------------------
   let U = 0.012 + 0.034 * smoothstep(0.1, 0.65, fbm(xk / 7.5, yk / 7.5, 3, seed + 31)) * (1 - plateau);
   U += 0.27 * gCR;
-  U += 1.12 * gS * ampS * (1 - 0.75 * plateau);
+  U += 1.3 * gS * ampS * (1 - 0.75 * plateau);
   U += 1.22 * gC;    // the chain ends where the resistant plateau begins
   U += 0.05 * plateau + 0.10 * smoothstep(47.3, 50, wx) + 0.08 * smoothstep(47.5, 50, wy) * plateau;
   U += 0.012 * (0.5 + 0.5 * noise2(xk / 1.1, yk / 1.1, seed + 35)) * (1 - plateau);

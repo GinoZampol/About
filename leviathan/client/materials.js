@@ -167,11 +167,15 @@ void main() {
   float streak = texture2D(uNoise, vec2(dot(vWPos.xz, perp) / 9.0, h / 75.0)).r;
   rc *= mix(1.0, 0.66 + 0.62 * streak, smoothstep(0.7, 1.5, tanS));
   rc = mix(rc, rc * vec3(0.78, 0.84, 0.70), smoothstep(0.9, 1.6, precip) * n2.a * 0.7);
-  float rockW = smoothstep(0.95, 1.45, tanS + (n2.b - 0.5) * 0.45 + (n1.a - 0.5) * 0.2 - curv * 0.22 + smoothstep(1900.0, 2500.0, h) * 0.45 - sand - forest * 0.3 - smoothstep(0.8, 1.6, precip) * 0.12 - 0.5 * (1.0 - smoothstep(1450.0, 2150.0, h)) * smoothstep(0.45, 0.9, precip));
+  vec4 n4 = texture2D(uNoise, vWPos.xz / 23.0 + 0.61);
+  // rock shows through gradually: thin soils on spurs and steep, high ground, in ragged patches
+  float rockArg = tanS + (n2.b - 0.5) * 0.6 + (n3.a - 0.5) * 0.55 + (n4.g - 0.5) * 0.35 - curv * 0.3 + smoothstep(1300.0, 2700.0, h) * 0.75
+    - sand - forest * 0.75 - smoothstep(0.8, 1.6, precip) * 0.12 - 0.35 * (1.0 - smoothstep(1100.0, 2300.0, h)) * smoothstep(0.45, 0.9, precip);
+  float rockW = smoothstep(0.85, 1.75, rockArg);
   rockW = max(rockW, (1.0 - veg) * smoothstep(0.32, 0.65, tanS + (n2.b - 0.5) * 0.3) * (1.0 - smoothstep(0.2, 0.5, sand)));
   vec3 col = mix(ground, rc, rockW);
   // scree and debris aprons gather in the hollows below rock; shingle on shores
-  float scree = smoothstep(0.7, 1.0, tanS + (n1.r - 0.5) * 0.3 + curv * 0.18 + smoothstep(1700.0, 2300.0, h) * 0.25) * (1.0 - rockW) * (1.0 - ff * 0.8);
+  float scree = smoothstep(0.6, 1.15, tanS + (n4.b - 0.5) * 0.3 + (n1.r - 0.5) * 0.3 + curv * 0.18 + smoothstep(1700.0, 2300.0, h) * 0.25) * (1.0 - rockW) * (1.0 - ff * 0.8);
   col = mix(col, rc * 1.05 * (0.85 + 0.3 * n1.g), scree * 0.7);
   float shore = smoothstep(1.6, 0.15, h + (n2.r - 0.5) * 0.8) * (1.0 - rockW);
   col = mix(col, mix(sandC, S(vec3(0.42, 0.40, 0.37)), n2.g) * 0.85, shore);
@@ -188,7 +192,8 @@ void main() {
   col = mix(col, mix(iceC, vec3(0.86, 0.90, 0.95), sn), gl);
 
   // ---- distant forest canopy -------------------------------------------------------------------
-  float canopyF = smoothstep(uTreeDist * 0.6, uTreeDist, dist) * smoothstep(0.1, 0.55, forest + (n2.a - 0.5) * 0.14 + (n3.a - 0.5) * 0.3) * (1.0 - sn);
+  // canopy thins into scattered trees towards its limits rather than ending on a line
+  float canopyF = smoothstep(uTreeDist * 0.6, uTreeDist, dist) * smoothstep(0.04, 0.62, forest + (n2.a - 0.5) * 0.3 + (n3.a - 0.5) * 0.25 + (n4.r - 0.5) * 0.4 * (1.0 - smoothstep(0.5, 0.8, forest))) * (1.0 - sn);
   vec3 canopy = mix(S(vec3(0.15, 0.22, 0.09)), S(vec3(0.10, 0.17, 0.09)), smoothstep(450.0, 1100.0, h));
   canopy = mix(canopy, S(vec3(0.06, 0.12, 0.08)), dark);
   canopy *= (0.45 + 1.0 * n1.g) * (0.75 + 0.5 * n2.r) * (0.85 + 0.3 * n3.a);

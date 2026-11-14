@@ -4,7 +4,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import zlib from 'node:zlib';
 import { noise2, fbm, smoothstep, sat, hash2 } from '../shared/noise.mjs';
-import { ROCK, ROCK_TALUS, rockAt } from '../shared/geology.mjs';
+import { ROCK, ROCK_TALUS, rockAt, strengthBand } from '../shared/geology.mjs';
 import { encodeU16, H_OFFSET, H_SCALE } from '../shared/codec.mjs';
 import { makeCtx, flood, route, accumulate, computePrecip, boxBlur, DX8, DY8, DD8 } from './erosion.mjs';
 import { renderMap } from './preview.mjs';
@@ -51,13 +51,16 @@ export async function finishWorld(world, cfg, ROOT, log) {
     for (let j = 0; j < N; j++) for (let i = 0; i < N; i++) {
       const c = j * N + i; if (sea[c]) continue;
       const qk = Q[c] / 1e6, ik = ice[c] / 1e6;
-      if (qk < 6 && ik < 2) continue;
-      const Wg = ik > 0.5 ? Math.min(900, 90 * Math.pow(ik, 0.3)) : 0;
-      const Dg = ik > 0.5 ? Math.min(210, 13 * Math.pow(ik, 0.4)) * (1 - sat(g.gorge[c] * 3)) * smoothstep(60, 220, src[c]) : 0;
+      if (qk < 6 && ik < 2 && !(ik > 0.25 && src[c] > ELA + 250)) continue;
+      const cirque = ik > 0.25 && ik < 8 && src[c] > ELA + 250 ? 1 : 0;
+      const Wg = ik > 0.5 || cirque ? Math.max(cirque * 200, Math.min(900, 90 * Math.pow(Math.max(ik, 0.3), 0.3))) : 0;
+      const Dg = ik > 0.5 || cirque ? Math.max(cirque * 30, Math.min(210, 13 * Math.pow(Math.max(ik, 0.3), 0.4))) * (1 - sat(g.gorge[c] * 3)) * smoothstep(60, 220, src[c]) : 0;
       // rivers on resistant plateau rock stay confined in their canyons
       const conf = g.rock[c] === ROCK.SANDSTONE ? 0.3 : g.gorge[c] > 0.3 ? 0.45 : 1;
       const w = Math.min(620, 14 * Math.sqrt(qk)) * conf + 0.35 * Wg;
-      const R = 22 + 1.1 * Wg;
+      // a cirque is a small bowl with a steep headwall: it must not plane off the ridges around it
+      const cirqueOnly = cirque && ik < 2 && qk < 6;
+      const R = cirqueOnly ? 55 : 22 + 1.1 * Wg;
       const z0 = src[c] - Dg;
       const rmax = w + Math.sqrt(2 * R * 700);
       const rc = Math.ceil(rmax / dx);
@@ -150,7 +153,8 @@ export async function finishWorld(world, cfg, ROOT, log) {
       for (let k = 0; k < 8; k++) {
         const x = i + DX8[k], y = j + DY8[k]; if (x < 0 || y < 0 || x >= N || y >= N) continue;
         const t = y * N + x; if (sea[t]) continue;
-        const lim = hc + ROCK_TALUS[rockAt(g.rock[t], h[t], g.strat[t])] * g.tmod[t] * DD8[k] * dx;
+        const rkT = rockAt(g.rock[t], h[t], g.strat[t]);
+        const lim = hc + ROCK_TALUS[rkT] * g.tmod[t] * strengthBand(rkT, h[t], g.strat[t]) * DD8[k] * dx;
         if (h[t] > lim) { h[t] = lim; lowered++; push(t, lim); }
       }
     }
@@ -352,9 +356,10 @@ export async function finishWorld(world, cfg, ROOT, log) {
     wet = sat(wet * smoothstep(0.25, 0.6, p) + (z < 2.2 ? 0.5 * flat : 0));
     mWet[m] = Math.round(255 * wet);
     // forest canopy cover: moisture, temperature (treeline), slope, with patchiness
-    const treeline = 1930 + 90 * noise2(xk / 3, yk / 3, seed + 70);
+    // trees climb higher in sheltered hollows and stop lower on exposed spurs; the limit is a wide, ragged zone
+    const treeline = 1930 + 90 * noise2(xk / 3, yk / 3, seed + 70) + Math.max(-220, Math.min(260, (hBlur[m] - z) * 3)) + 170 * fbm(xk / 0.6, yk / 0.6, 3, seed + 74);
     const pe = p * (1 + 0.5 * smoothstep(14, 0, wdist[m])) + 0.25 * smoothstep(10, 150, qk) + 0.12 * fbm(xk / 2.4, yk / 2.4, 3, seed + 71);
-    let F = smoothstep(0.42, 0.95, pe) * (1 - smoothstep(treeline - 260, treeline, z)) * (1 - smoothstep(1.0, 1.5, sl));
+    let F = smoothstep(0.42, 0.95, pe) * (1 - smoothstep(treeline - 450, treeline + 60, z)) * (1 - smoothstep(0.8, 1.7, sl + 0.3 * fbm(xk / 0.45, yk / 0.45, 2, seed + 75)));
     F *= 0.75 + 0.25 * smoothstep(-0.25, 0.15, fbm(xk / 0.9, yk / 0.9, 3, seed + 72));   // glades and meadows
     F *= 1 - 0.85 * smoothstep(0.75, 1, wet);                                           // open marsh
     if (z < 3) F *= smoothstep(1.0, 3, z);

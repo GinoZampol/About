@@ -1,14 +1,14 @@
-PASS  river profiles never climb: 0 uphill steps in 77127 (max gradient 152%, 4594 waterfall/cascade steps)
-PASS  river network is connected: 92 segments end in a lake or the sea, 448 at confluences, 0 orphaned
-PASS  channel beds lie below the water surface: 0.00% of 8512 cross-sections dry
-PASS  rivers are not perched above both banks: 0.46% of cross-sections
-INFO  river network: 540 reaches, 988 km, 6 lakes
+PASS  river profiles never climb: 0 uphill steps in 75744 (max gradient 182%, 5004 waterfall/cascade steps)
+PASS  river network is connected: 87 segments end in a lake or the sea, 434 at confluences, 0 orphaned
+PASS  channel beds lie below the water surface: 0.00% of 8348 cross-sections dry
+PASS  rivers are not perched above both banks: 0.47% of cross-sections
+INFO  river network: 521 reaches, 969 km, 6 lakes
 PASS  no unintended closed basins: 0 single-cell hollows under 1 m (quantisation), 0 deeper
-PASS  no terrain discontinuities: largest step between adjacent 12 m samples 31.3 m (cliff limit 73 m)
-INFO  slope classes (land): <5% 7.5%  5-15% 15.0%  15-45% 25.5%  45-100% 38.3%  cliffs 13.7%
-INFO  land area: 2129 km2 of 2500, highest point 5890 m
+PASS  no terrain discontinuities: largest step between adjacent 12 m samples 53.0 m (cliff limit 73 m)
+INFO  slope classes (land): <5% 7.5%  5-15% 14.6%  15-45% 26.4%  45-100% 37.6%  cliffs 13.9%
+INFO  land area: 2127 km2 of 2500, highest point 6235 m
 PASS  chunk seams are bit-exact: 0 mismatches in 360 shared edge vertices across LOD levels 3-11
-FAIL  most land is reachable on foot from the Central Valley: 58.7% of land (slopes under 35 deg, rivers crossable)
+FAIL  most land is reachable on foot from the Central Valley: 53.4% of land (slopes under 35 deg, rivers crossable)
 INFO  cart-grade land network (under 8 deg) from the Central Valley: 13.6% of land with bridges, 13.4% without crossing a major river
 PASS  walking route: Central Valley -> High Desert: reachable on foot / pack animal only
 PASS  walking route: Central Valley -> Coast Range: reachable on foot / pack animal only
@@ -17,9 +17,9 @@ FAIL  walking route: Central Valley -> Longwater: not reachable
 PASS  walking route: Central Valley -> Badlands: reachable on foot / pack animal only
 PASS  walking route: Central Valley -> The Erg: reachable on foot / pack animal only
 PASS  walking route: Central Valley -> Great River delta: reachable, also at cart grade
-INFO  buildable land (slope under 8%): 268 km2, of which 77 km2 lies within 400 m of a major river, lake or the sea
-INFO  land cover: water 370 km2, grassland 224 km2, parkland 290 km2, forest 733 km2, dark forest 23 km2, steppe/desert 529 km2, alpine 142 km2, snow 188 km2
-PASS  forest never on cliffs or above the treeline: 0 of 317084 forest cells
-PASS  every subsurface cell resolves to a material: schist 25.7%, topsoil 14.2%, granite 13.9%, limestone 13.1%, greywacke 10.3%, gravel 7.9%, basalt 3.4%, shale 2.9%, iron ore 2.5%, subsoil 2.5%, clay 1.7%, sandstone 0.8%, copper ore 0.7%, sand 0.2%, coal 0.2%, salt 0.1%, peat 0.1%, snow 0.0%, gold-bearing quartz 0.0%
-PASS  generation is deterministic: two independent runs of the erosion core hash to f269fac55525a26c / f269fac55525a26c
-INFO  data set: height.bin sha256:621195a6ae91  lakes.bin sha256:04c373e2affb  maps.bin sha256:29c5cb6b8350  rivermask.bin sha256:dcbca9cd4b3c  rivers.bin sha256:af66086aec71  world.json sha256:6ec143487e3b
+INFO  buildable land (slope under 8%): 264 km2, of which 77 km2 lies within 400 m of a major river, lake or the sea
+INFO  land cover: water 372 km2, grassland 237 km2, parkland 295 km2, forest 692 km2, dark forest 27 km2, steppe/desert 509 km2, alpine 145 km2, snow 222 km2
+PASS  forest never on cliffs or above the treeline: 63 of 301935 forest cells
+PASS  every subsurface cell resolves to a material: schist 25.1%, topsoil 14.5%, granite 13.8%, limestone 13.4%, greywacke 10.2%, gravel 8.0%, basalt 3.5%, shale 3.0%, iron ore 2.5%, subsoil 2.5%, clay 1.5%, copper ore 0.8%, sandstone 0.4%, sand 0.3%, coal 0.2%, salt 0.1%, peat 0.1%, snow 0.0%, gold-bearing quartz 0.0%
+PASS  generation is deterministic: two independent runs of the erosion core hash to 1020ccd09d2b7394 / 1020ccd09d2b7394
+INFO  data set: height.bin sha256:a94d30b9240e  lakes.bin sha256:f5ceda73f7f6  maps.bin sha256:6ca243fe361b  rivermask.bin sha256:31c652acd869  rivers.bin sha256:54b45c9f9346  world.json sha256:ddb8229e9614

@@ -1,7 +1,7 @@
 // Landscape evolution core: depression-filling flow routing + implicit stream-power incision
 // + critical-slope (talus) limiting + hillslope diffusion. All O(n) or O(n log n) per step.
 import { hash2 } from '../shared/noise.mjs';
-import { ROCK, ROCK_K, ROCK_TALUS, ROCK_DIFF, rockAt } from '../shared/geology.mjs';
+import { ROCK, ROCK_K, ROCK_TALUS, ROCK_DIFF, rockAt, strengthBand } from '../shared/geology.mjs';
 
 export const DX8 = [1, 1, 0, -1, -1, -1, 0, 1];
 export const DY8 = [0, 1, 1, 1, 0, -1, -1, -1];
@@ -126,7 +126,7 @@ export function erodeStep(ctx, h, sea, g, P, dx, dt, K0, seed) {
     const rk = rockAt(rock[c], f[c], strat[c]);
     const fct = K0 * ROCK_K[rk] * kmod[c] * Math.sqrt(Q[c]) * dt / L;
     let hn = (f[c] + U[c] * dt + fct * hr) / (1 + fct);
-    const lim = hr + ROCK_TALUS[rk] * tmod[c] * L;
+    const lim = hr + ROCK_TALUS[rk] * tmod[c] * strengthBand(rk, f[c], strat[c]) * L;
     if (hn > lim) hn = lim;
     if (hn < hr + 1e-4 * L) hn = hr + 1e-4 * L;
     h[c] = hn;

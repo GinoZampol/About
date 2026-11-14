@@ -62,8 +62,8 @@ function placeTrees(world, { key, x0, z0, size, lod }) {
     const rv = world.riverAt(px, pz, rq); if (rv && rv.edge < 1.5 + (isTree ? 1 : 0)) continue;
     const slope = world.slope(px, pz); if (slope > 1.35) continue;
     const tl = 1930 + 90 * noise2(px / 3000, pz / 3000, seed + 70);
-    if (h > tl) continue;
-    const stunt = 1 - 0.55 * smoothstep(tl - 260, tl, h);
+    if (h > tl + 320) continue;
+    const stunt = 1 - 0.62 * smoothstep(tl - 300, tl + 250, h);
     const r4 = hash2(i, j, seed + 406), r5 = hash2(i, j, seed + 407), rot = hash2(i, j, seed + 408) * 6.283;
     const tintV = 0.8 + 0.4 * hash2(i, j, seed + 409), tintH = 0.92 + 0.16 * r5;
     if (!isTree) {

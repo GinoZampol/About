@@ -147,6 +147,13 @@ export class World {
         const tx = px * 1.6 - pz * 1.2; pz = px * 1.2 + pz * 1.6; px = tx;
       }
       d += relief * (30 + 22 * smoothstep(0.7, 1.3, s)) * (a - 0.72);
+      const alpine = relief * smoothstep(0.5, 1.0, s) * smoothstep(1000, 1800, h) * (1 - this.map(MAP.MESA, x, z));
+      if (alpine > 0.01) {
+        const b0 = band(640), b1 = band(210);
+        // rock ribs and the couloirs between them; sharper teeth along the crests
+        if (b0 > 0) d += alpine * b0 * 120 * (ridged(x / 640 + 3.1, z / 640 - 1.7, 3, seed + 240) - 0.52);
+        if (b1 > 0) d += alpine * b1 * 34 * (ridged(x / 210, z / 210, 2, seed + 241) - 0.5) * smoothstep(1500, 2400, h);
+      }
     }
     const steep = smoothstep(0.5, 0.95, s) + smoothstep(2050, 2500, h) * 0.5;
     const rocky = steep > 1 ? 1 : steep;
