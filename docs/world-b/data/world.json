@@ -20,9 +20,9 @@
  "hOffset": 300,
  "hScale": 0.125,
  "seaLevel": 0,
- "maxElevation": 5340,
+ "maxElevation": 5279,
  "landKm2": 2255,
- "riverKm": 836,
+ "riverKm": 835,
  "mapChannels": [
   "rock",
   "strat",
@@ -38,24 +38,24 @@
  ],
  "lakes": [
   {
-   "level": 84.43,
-   "areaKm2": 3.7,
-   "x": 30534,
-   "z": 11202
+   "level": 82.78,
+   "areaKm2": 3.68,
+   "x": 30503,
+   "z": 11192
   },
   {
-   "level": 165.32,
-   "areaKm2": 0.24,
-   "x": 13440,
-   "z": 37624
+   "level": 164.93,
+   "areaKm2": 0.25,
+   "x": 13441,
+   "z": 37629
   }
  ],
  "landmarks": [
   {
    "name": "Mount Leviathan",
-   "x": 39067,
-   "z": 41638,
-   "h": 3461,
+   "x": 39081,
+   "z": 41624,
+   "h": 3458,
    "note": "highest summit of the Spine, the granite core of the alpine chain"
   },
   {
@@ -67,9 +67,9 @@
   },
   {
    "name": "The Crown",
-   "x": 38630,
-   "z": 9960,
-   "h": 5340,
+   "x": 39081,
+   "z": 9946,
+   "h": 5279,
    "note": "the great ice massif of the north-east, the roof of the world"
   },
   {
@@ -97,7 +97,7 @@
    "name": "Coast Range",
    "x": 13310,
    "z": 32628,
-   "h": 540,
+   "h": 539,
    "note": "rain-forested fold belt"
   },
   {
@@ -109,9 +109,9 @@
   },
   {
    "name": "Northern Highlands",
-   "x": 32847,
+   "x": 32833,
    "z": 6843,
-   "h": 2300,
+   "h": 2298,
    "note": "fjord-cut schist uplands"
   },
   {
@@ -130,17 +130,17 @@
   },
   {
    "name": "Longwater (largest lake)",
-   "x": 30534,
-   "z": 11202,
-   "h": 84,
+   "x": 30503,
+   "z": 11192,
+   "h": 83,
    "note": "3.7 km2, up to 81 m deep"
   },
   {
    "name": "Lake 2",
-   "x": 13440,
-   "z": 37624,
+   "x": 13441,
+   "z": 37629,
    "h": 165,
-   "note": "0.2 km2, up to 21 m deep"
+   "note": "0.2 km2, up to 22 m deep"
   }
  ],
  "config": {

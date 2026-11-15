@@ -5,7 +5,7 @@
 //   Ocean -> Coast Range -> Central Valley -> the Spine (alpine arc + stratovolcano) -> high desert Plateau
 // with a glacially scoured marine Sound entering from the north-west, a Northern Highlands arc
 // around it, and one antecedent river (the Great River) crossing the Spine through a gorge.
-import { noise2, fbm, ridged, smoothstep, sat, clamp } from '../shared/noise.mjs';
+import { noise2, fbm, ridged, smoothstep, sat, clamp, hash2 } from '../shared/noise.mjs';
 import { ROCK } from '../shared/geology.mjs';
 
 export const WORLD_KM = 50;
@@ -74,7 +74,18 @@ export function designAt(xk, yk, seed) {
     land = Math.min(land, d - (a[2] + (b[2] - a[2]) * t));
   }
   land += 0.16 * fbm(xk / 0.55, yk / 0.55, 3, seed + 18) + 0.5 * Math.max(0, fbm(xk / 3.3, yk / 3.3, 2, seed + 19)) * Math.exp(-Math.abs(land) / 1.5) * (land > -1 ? -1 : 0);
-  for (const c of (VARIANT === 'B' ? ISLANDS.concat(GULF_ISLANDS) : ISLANDS)) land = Math.max(land, c[2] - Math.hypot(wx - c[0], wy - c[1]) * (1 + 0.25 * noise2(xk * 1.3, yk * 1.3, seed + 15)));
+  if (VARIANT === 'B') {
+    // Islands are drowned hills, not discs: each is stretched along its own axis, its outline is pushed
+    // in and out by headlands and coves at two scales, and the sea-floor warp above bends the whole shape.
+    const isl = ISLANDS.concat(GULF_ISLANDS);
+    for (let k = 0; k < isl.length; k++) {
+      const c = isl[k], ang = hash2(k, 3, seed + 151) * Math.PI, asp = 1.25 + 0.55 * hash2(k, 5, seed + 152);
+      const dx = sx - c[0], dy = sy - c[1], ca = Math.cos(ang), sa = Math.sin(ang);
+      const d = Math.hypot((dx * ca + dy * sa) / asp, (-dx * sa + dy * ca) * asp);
+      const r = c[2] * (1 + 0.42 * fbm(xk / (c[2] * 1.6) + k * 7.3, yk / (c[2] * 1.6), 3, seed + 153) + 0.16 * noise2(xk / (c[2] * 0.35), yk / (c[2] * 0.35), seed + 154));
+      land = Math.max(land, r - d);
+    }
+  } else for (const c of ISLANDS) land = Math.max(land, c[2] - Math.hypot(wx - c[0], wy - c[1]) * (1 + 0.25 * noise2(xk * 1.3, yk * 1.3, seed + 15)));
 
   // ---- structural elements ------------------------------------------------------------------
   const VB = VARIANT === 'B';
