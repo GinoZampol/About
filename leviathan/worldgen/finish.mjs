@@ -28,7 +28,9 @@ export async function finishWorld(world, cfg, ROOT, log) {
     const r = Math.max(1, Math.round(130 / dx)), hb = boxBlur(boxBlur(h, N, r), N, r);
     for (let c = 0; c < n; c++) if (!sea[c] && g.erg[c] > 0.01) h[c] += (hb[c] - h[c]) * Math.min(1, g.erg[c] * 1.3) * smoothstep(22, 5, Math.abs(hb[c] - h[c]));   // sand fills swales, it does not bury cliffs and canyon rims
   }
-  let P = computePrecip(h, sea, N, dx);
+  // variant B has no long range to cast a rain shadow: its east is dry because it is far inland
+  const dryEast = (P) => { if (!VB) return P; for (let j = 0; j < N; j++) for (let i = 0; i < N; i++) P[j * N + i] *= 1 - 0.74 * smoothstep(31, 40.5, KM0 + (i + 0.5) / N * KMS); return P; };
+  let P = dryEast(computePrecip(h, sea, N, dx));
 
   // ---- A. ice flux from a mass-balance accumulation --------------------------------------------
   flood(ctx, h, sea, dx); route(ctx, sea, dx, seed + 900); accumulate(ctx, sea, P, dx);
@@ -228,7 +230,7 @@ export async function finishWorld(world, cfg, ROOT, log) {
   }
 
   // ---- F. final hydrology ---------------------------------------------------------------------
-  P = computePrecip(h, sea, N, dx);
+  P = dryEast(computePrecip(h, sea, N, dx));
   flood(ctx, h, sea, dx); route(ctx, sea, dx, seed + 901); accumulate(ctx, sea, P, dx);
   const { f, Q, rec } = ctx;
   const surf = new Float32Array(n); // water-or-ground surface

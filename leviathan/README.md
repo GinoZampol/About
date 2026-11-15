@@ -29,10 +29,17 @@ URL options: `?quality=low|medium|high`, `?pos=x,heightAboveGround,z&look=headin
 ## Variant 1B (biomes)
 
 `node worldgen/generate.mjs --variant B` writes `data_b/` (run the client with `?data=/data_b/`;
-`node tools/build_web.mjs b` builds its web bundle). Same world model, three changes:
-a **central sea** reaching down the valley with islands; a **cold north** where the treeline,
-snowline and glacier line drop by up to 1,650 m (taiga, then tundra and low snow around the
-fjords); and **coastal marshes** on the low shores and deltas. The original layout is variant A.
+`node tools/build_web.mjs b` builds its web bundle). Same world model and code, different layout:
+
+- a **central ocean** about 17 km across with islands, ringed by land and open to the west through the strait
+- no long mountain chain: one **short alpine range** in the south-east, low **northern highlands**,
+  and a single **5,361 m massif** standing above the ocean
+- the **mesa plateau** along the east, with the **Great Sand Sea** in its south-east
+- **prairie** on the southern lowland, **marsh** on low shores and deltas
+- a **cold north**: taiga, tundra and low snow around the fjords
+- the east is dry because it is far inland (there is no range to cast a rain shadow)
+
+The validation suite has only been run on variant A.
 
 ## The geography
 

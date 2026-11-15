@@ -52,8 +52,13 @@ const ISLANDS = [[13.4, 39.2, 1.15], [16.3, 37.4, 0.55], [2.3, 24.5, 0.5], [2.9,
 // north is cold (see finish.mjs). Variant A is the original layout.
 let VARIANT = 'A';
 export function setVariant(v) { VARIANT = v; }
-const GULF = [[[15, 37.5, 4.2], [17, 32.5, 5.6], [19.2, 26.5, 5.4], [20.2, 21, 4.0], [19.8, 17, 2.2]]];
-const GULF_ISLANDS = [[17.2, 29.5, 1.3], [20.6, 23.6, 0.8], [15.6, 34.2, 0.6]];
+// B: a central ocean ringed by land; no long mountain chain, just one short alpine range in the
+// south-east, a low highland arc in the north, and a single Himalayan-scale massif above the sea.
+const GULF = [[[15, 37.5, 4.6], [18, 33, 7.0], [21, 27, 8.3], [22.6, 21, 6.6], [21.6, 15.5, 3.4]]];
+const GULF_ISLANDS = [[18, 30.5, 1.4], [23.2, 24.6, 1.0], [16.4, 35, 0.6], [24.6, 29.6, 0.7], [20.5, 19.5, 0.55]];
+const SPINE_B = [[34.4, 4], [33.6, 10.5], [35.0, 17.5]];
+const HIGH_B = [[28.5, 43.5], [22.5, 46.3], [12, 49.3], [3, 51]];
+const CROWN_B = [[31.0, 41.6], [34.4, 43.6]];
 export function designAt(xk, yk, seed) {
   // domain warp so nothing follows a ruler
   const wx = xk + 1.25 * fbm(xk / 9, yk / 9, 3, seed + 11) + 0.32 * fbm(xk / 2.1, yk / 2.1, 3, seed + 12);
@@ -72,29 +77,33 @@ export function designAt(xk, yk, seed) {
   for (const c of (VARIANT === 'B' ? ISLANDS.concat(GULF_ISLANDS) : ISLANDS)) land = Math.max(land, c[2] - Math.hypot(wx - c[0], wy - c[1]) * (1 + 0.25 * noise2(xk * 1.3, yk * 1.3, seed + 15)));
 
   // ---- structural elements ------------------------------------------------------------------
-  let [dS, sS] = polyDist(wx, wy, SPINE);
-  const [dN] = polyDist(wx, wy, SPINE_N);
+  const VB = VARIANT === 'B';
+  let [dS, sS] = polyDist(wx, wy, VB ? SPINE_B : SPINE);
+  const [dN] = VB ? [1e9] : polyDist(wx, wy, SPINE_N);
   const northBranch = dN < dS;
   if (northBranch) { dS = dN; sS = 20; }
   // amplitude along the arc: full alpine height in the main N-S section, lower in the highland arc
   let ampS = northBranch ? 0.86 : 1.0 - 0.5 * smoothstep(38, 50, sS);
   ampS *= 0.94 + 0.14 * noise2(sS / 5.5, 3.7, seed + 21) + 0.07 * noise2(sS / 1.9, 9.1, seed + 22);
-  const gS = gauss(dS, 4.8 - 1.2 * smoothstep(38, 50, sS));
+  if (VB) ampS *= 0.9;
+  const gS = gauss(dS, VB ? 3.4 : 4.8 - 1.2 * smoothstep(38, 50, sS));
+  const gH = VB ? 0.5 * gauss(polyDist(wx, wy, HIGH_B)[0], 3.6) : 0;        // B: low northern highlands
+  const gSA = Math.max(gS * ampS, gH);
   const [dG] = polyDist(xk + 0.35 * noise2(xk / 3, yk / 3, seed + 23), yk + 0.5 * noise2(xk / 3.5, yk / 3.5, seed + 24), GORGE);
   const gG = gauss(dG, 1.05);
 
   const xcr = 9.6 + 1.0 * Math.sin(wy / 6.0);
   const gCR = gauss(wx - xcr, 2.5) * (1 - smoothstep(29.5, 34, wy)) * (0.75 + 0.35 * noise2(wy / 4.5, 1.3, seed + 25));
-  const [dCr, sCr] = polyDist(wx, wy, CROWN);
-  const gC = gauss(dCr, 4.1) * (0.86 + 0.26 * noise2(sCr / 4.2, 5.3, seed + 28) + 0.1 * noise2(sCr / 1.6, 2.2, seed + 29));
+  const [dCr, sCr] = polyDist(wx, wy, VB ? CROWN_B : CROWN);
+  const gC = gauss(dCr, VB ? 5.4 : 4.1) * (0.86 + 0.26 * noise2(sCr / 4.2, 5.3, seed + 28) + 0.1 * noise2(sCr / 1.6, 2.2, seed + 29));
   const plateau = smoothstep(38.2, 41.2, wx) * (1 - smoothstep(0.08, 0.4, gC));
   const dGorgeMouth = Math.hypot(xk - 43.5, yk - 23.2);
 
   // ---- uplift (mm/yr) -------------------------------------------------------------------------
   let U = 0.012 + 0.034 * smoothstep(0.1, 0.65, fbm(xk / 7.5, yk / 7.5, 3, seed + 31)) * (1 - plateau);
   U += 0.27 * gCR;
-  U += 1.15 * gS * ampS * (1 - 0.75 * plateau);
-  U += 0.95 * gC;    // the chain ends where the resistant plateau begins
+  U += 1.15 * gSA * (1 - 0.75 * plateau);
+  U += (VB ? 2.5 : 0.95) * gC;    // the chain ends where the resistant plateau begins
   U += 0.05 * plateau + 0.10 * smoothstep(47.3, 50, wx) + 0.08 * smoothstep(47.5, 50, wy) * plateau;
   U += 0.012 * (0.5 + 0.5 * noise2(xk / 1.1, yk / 1.1, seed + 35)) * (1 - plateau);
   U += 0.24 * smoothstep(3.2, 0, wy) * smoothstep(8, 12, wx);
@@ -107,7 +116,7 @@ export function designAt(xk, yk, seed) {
   let h0;
   if (land < 0) h0 = -Math.min(260, 3 + 55 * Math.pow(-land, 1.3));
   else {
-    h0 = 6 + 24 * sat(land / 3) + 190 * gCR + 950 * gS * ampS + 1500 * gC + 12 * fbm(xk / 2, yk / 2, 3, seed + 33);
+    h0 = 6 + 24 * sat(land / 3) + 190 * gCR + 950 * gSA + (VB ? 2600 : 1500) * gC + 12 * fbm(xk / 2, yk / 2, 3, seed + 33);
     h0 += plateau * (1100 + 10 * dGorgeMouth + 45 * fbm(xk / 5, yk / 5, 3, seed + 34));
     const notch = 105 + 40 * Math.max(0, xk - 28);
     h0 = h0 + (Math.min(h0, notch) - h0) * Math.sqrt(gG);
@@ -119,7 +128,7 @@ export function designAt(xk, yk, seed) {
   const wob = 0.9 * noise2(xk / 2.6, yk / 2.6, seed + 41);
   if (plateau > 0.5) rock = ROCK.SANDSTONE;
   else if (gC > 0.1) rock = dCr + wob < 2.7 ? ROCK.GRANITE : ROCK.SCHIST;
-  else if (gS > 0.08) {
+  else if (gS > 0.08 || gH > 0.04) {
     const side = wx - (33.5 + 0); // rough west/east of axis for the main section
     if (dS + wob < 1.9) rock = ROCK.GRANITE;
     else rock = ROCK.SCHIST;
