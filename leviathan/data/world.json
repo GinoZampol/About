@@ -1,12 +1,14 @@
 {
  "name": "The Leviathan",
  "version": 2,
+ "variant": "A",
+ "cold": null,
  "play": {
-  "x0": 8000,
+  "x0": 10,
   "size": 50000
  },
  "seed": 7,
- "sizeM": 66000,
+ "sizeM": 50020,
  "heightRes": 4096,
  "mapRes": 1024,
  "lakeRes": 2048,
@@ -14,9 +16,9 @@
  "hOffset": 300,
  "hScale": 0.125,
  "seaLevel": 0,
- "maxElevation": 5174,
- "landKm2": 3383,
- "riverKm": 1411,
+ "maxElevation": 5924,
+ "landKm2": 2145,
+ "riverKm": 960,
  "mapChannels": [
   "rock",
   "strat",
@@ -32,154 +34,148 @@
  ],
  "lakes": [
   {
-   "level": 91.56,
-   "areaKm2": 9.96,
-   "x": 39291,
-   "z": 13549
+   "level": 605.72,
+   "areaKm2": 7.93,
+   "x": 30543,
+   "z": 5189
   },
   {
-   "level": 132.6,
-   "areaKm2": 3.89,
-   "x": 46318,
-   "z": 32561
+   "level": 76.09,
+   "areaKm2": 2.42,
+   "x": 18406,
+   "z": 4110
   },
   {
-   "level": 297.02,
-   "areaKm2": 1.79,
-   "x": 53533,
-   "z": 33529
+   "level": 289.52,
+   "areaKm2": 0.66,
+   "x": 31022,
+   "z": 15349
   },
   {
-   "level": 279.55,
-   "areaKm2": 0.78,
-   "x": 38329,
-   "z": 23789
+   "level": 408.21,
+   "areaKm2": 0.59,
+   "x": 45073,
+   "z": 25524
   },
   {
-   "level": 1944.42,
-   "areaKm2": 0.21,
-   "x": 64687,
-   "z": 55021
-  },
-  {
-   "level": 176.93,
-   "areaKm2": 0.19,
-   "x": 18246,
-   "z": 41572
+   "level": 164.94,
+   "areaKm2": 0.32,
+   "x": 10342,
+   "z": 34688
   }
  ],
  "landmarks": [
   {
    "name": "Mount Leviathan",
-   "x": 43740,
-   "z": 19376,
-   "h": 4142,
+   "x": 37069,
+   "z": 10008,
+   "h": 4882,
    "note": "highest summit of the Spine, the granite core of the alpine chain"
   },
   {
    "name": "The Erg",
-   "x": 54400,
-   "z": 42800,
+   "x": 46410,
+   "z": 34810,
    "h": 0,
    "note": "dune sea on the plateau interior"
   },
   {
    "name": "The Crown",
-   "x": 51200,
-   "z": 11529,
-   "h": 5174,
+   "x": 39280,
+   "z": 7639,
+   "h": 5924,
    "note": "the great ice massif of the north-east, the roof of the world"
   },
   {
    "name": "Great River delta",
-   "x": 26144,
-   "z": 25709,
+   "x": 18238,
+   "z": 17726,
    "h": 0,
    "note": "mouth of the Great River at the head of the Sound"
   },
   {
    "name": "The Gorge",
-   "x": 43000,
-   "z": 35000,
+   "x": 35010,
+   "z": 27010,
    "h": 0,
    "note": "antecedent water gap through the Spine: the low-level route east"
   },
   {
    "name": "Central Valley",
-   "x": 28000,
-   "z": 36000,
+   "x": 20010,
+   "z": 28010,
    "h": 0,
    "note": "prairie and parkland lowland"
   },
   {
    "name": "Coast Range",
-   "x": 18281,
-   "z": 37826,
-   "h": 562,
+   "x": 10105,
+   "z": 28741,
+   "h": 554,
    "note": "rain-forested fold belt"
   },
   {
    "name": "The Sound",
-   "x": 22500,
-   "z": 19200,
+   "x": 14510,
+   "z": 11210,
    "h": 0,
    "note": "glacially scoured marine inlet"
   },
   {
    "name": "Northern Highlands",
-   "x": 28593,
-   "z": 10691,
-   "h": 2420,
+   "x": 14697,
+   "z": 6,
+   "h": 2270,
    "note": "fjord-cut schist uplands"
   },
   {
    "name": "High Desert canyonlands",
-   "x": 53000,
-   "z": 31000,
+   "x": 45010,
+   "z": 23010,
    "h": 0,
    "note": "layered plateau cut by the upper Great River"
   },
   {
    "name": "Badlands",
-   "x": 53300,
-   "z": 49400,
+   "x": 45310,
+   "z": 41410,
    "h": 0,
    "note": "soft shale basin"
   },
   {
    "name": "Longwater (largest lake)",
-   "x": 39291,
-   "z": 13549,
-   "h": 92,
-   "note": "10.0 km2, up to 118 m deep"
+   "x": 30543,
+   "z": 5189,
+   "h": 606,
+   "note": "7.9 km2, up to 97 m deep"
   },
   {
    "name": "Lake 2",
-   "x": 46318,
-   "z": 32561,
-   "h": 133,
-   "note": "3.9 km2, up to 77 m deep"
+   "x": 18406,
+   "z": 4110,
+   "h": 76,
+   "note": "2.4 km2, up to 26 m deep"
   },
   {
    "name": "Lake 3",
-   "x": 53533,
-   "z": 33529,
-   "h": 297,
-   "note": "1.8 km2, up to 39 m deep"
+   "x": 31022,
+   "z": 15349,
+   "h": 290,
+   "note": "0.7 km2, up to 44 m deep"
   },
   {
    "name": "Lake 4",
-   "x": 38329,
-   "z": 23789,
-   "h": 280,
-   "note": "0.8 km2, up to 49 m deep"
+   "x": 45073,
+   "z": 25524,
+   "h": 408,
+   "note": "0.6 km2, up to 11 m deep"
   },
   {
    "name": "Lake 5",
-   "x": 64687,
-   "z": 55021,
-   "h": 1944,
-   "note": "0.2 km2, up to 24 m deep"
+   "x": 10342,
+   "z": 34688,
+   "h": 165,
+   "note": "0.3 km2, up to 24 m deep"
   }
  ],
  "config": {

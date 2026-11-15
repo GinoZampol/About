@@ -210,17 +210,23 @@ export class World {
     // dunes
     const sand = sandHere * (1 - smoothstep(0.16, 0.38, s));   // no dunes on steep rock
     if (sand > 0.03 && h > 6) {
-      const b1 = band(230), b2 = band(16);
+      const b1 = band(270), b2 = band(16);
       if (b1 > 0) {
         // dune crests bend, split and die out along their length; a second, smaller train crosses the first
         const bend = 2.2 * noise2(x / 520, z / 190, seed + 217) + 1.1 * noise2(x / 150, z / 150, seed + 218);
-        const ph = (x * 0.94 + z * 0.34) / (230 + 60 * noise2(x / 2300, z / 2300, seed + 213)) + 1.9 * fbm(x / 420, z / 420, 2, seed + 207) + 2.4 * noise2(x / 1300, z / 1300, seed + 214) + bend;
+        const ph = (x * 0.94 + z * 0.34) / (270 + 60 * noise2(x / 2300, z / 2300, seed + 213)) + 1.9 * fbm(x / 420, z / 420, 2, seed + 207) + 2.4 * noise2(x / 1300, z / 1300, seed + 214) + bend;
         const p = ph - Math.floor(ph);
         const prof = p < 0.64 ? p / 0.64 : (1 - p) / 0.36;
         const along = 0.35 + 0.65 * smoothstep(-0.45, 0.35, noise2(x / 310 + 9.1, z / 310, seed + 219));
-        d += sand * Math.sqrt(sand) * b1 * (7.5 + 3.5 * noise2(x / 800, z / 800, seed + 208)) * along * (prof * prof * (3 - 2 * prof) - 0.4);
+        d += sand * Math.sqrt(sand) * b1 * (6.2 + 2.8 * noise2(x / 800, z / 800, seed + 208)) * along * (prof * prof * (3 - 2 * prof) - 0.4);
         const ph2 = (x * 0.55 - z * 0.83) / 88 + 1.6 * noise2(x / 240, z / 240, seed + 220), p2 = ph2 - Math.floor(ph2), pr2 = p2 < 0.7 ? p2 / 0.7 : (1 - p2) / 0.3;
         d += sand * Math.sqrt(sand) * b1 * 2.2 * (1.2 - along) * (pr2 * pr2 * (3 - 2 * pr2) - 0.4);
+      }
+      // in the heart of a sand sea the dunes ride on broad draa, kilometre-scale swells with gentle flanks
+      const core = smoothstep(0.7, 0.96, sand), b3 = band(950);
+      if (core > 0 && b3 > 0) {
+        const ph3 = (x * 0.83 + z * 0.56) / 950 + 1.4 * noise2(x / 2600, z / 2600, seed + 221), p3 = ph3 - Math.floor(ph3), pr3 = p3 < 0.6 ? p3 / 0.6 : (1 - p3) / 0.4;
+        d += core * b3 * (22 + 10 * noise2(x / 3100, z / 3100, seed + 222)) * (pr3 * pr3 * (3 - 2 * pr3) - 0.45);
       }
       if (b2 > 0) d += sand * b2 * (0.25 + 0.3 * noise2(x / 130, z / 130, seed + 215)) * Math.sin((x * 0.9 + z * 0.43) / 16 * 6.283 + 7 * noise2(x / 55, z / 55, seed + 209) + 5 * noise2(x / 210, z / 210, seed + 216));
     }

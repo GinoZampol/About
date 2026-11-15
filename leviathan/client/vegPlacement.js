@@ -158,7 +158,9 @@ function placeGrass(world, { key, x0, z0, size }) {
     // colour follows the terrain shader's herb layer so tufts and ground read as one surface
     let cr = 0.187 + (0.051 - 0.187) * lush, cg = 0.178 + (0.089 - 0.178) * lush, cb = 0.056 + (0.017 - 0.056) * lush;
     cr += (0.164 - cr) * alp; cg += (0.156 - cg) * alp; cb += (0.043 - cb) * alp;
-    const ht = (0.32 + 0.5 * lush + 0.35 * wet) * (1 - 0.5 * alp) * (0.7 + 0.6 * r);
+    const prairie = world.meta.variant === 'B' && F < 0.3 && precip > 0.4 && precip < 0.95 && hc < 500 ? 1 : 0;
+    if (prairie) { cr = cr * 0.6 + 0.085; cg = cg * 0.6 + 0.07; cb = cb * 0.6 + 0.012; }
+    const ht = (1 + 0.7 * prairie) * (0.32 + 0.5 * lush + 0.35 * wet) * (1 - 0.5 * alp) * (0.7 + 0.6 * r);
     bins.add(T.GRASS, px, h - 0.04, pz, 0.75 + 0.5 * r, r * 6.283, cr * v * 1.25, cg * v * 1.25, cb * v * 1.25, ht);
   }
   return bins.pack(key);

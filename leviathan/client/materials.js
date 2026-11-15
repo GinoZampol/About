@@ -76,7 +76,7 @@ void main() {
 
 const TERRAIN_FRAG = /* glsl */`
 uniform sampler2D uMapA; uniform sampler2D uMapB; uniform sampler2D uFlow; uniform sampler2D uShadowTex; uniform sampler2D uRock; uniform sampler2D uNormTex; uniform sampler2D uNoise; uniform sampler2D uNoiseN;
-uniform vec3 uCold; uniform float uCell; uniform float uWorldSize; uniform float uTreeDist; uniform float uSnowLine;
+uniform vec3 uCold; uniform float uVariantB; uniform float uCell; uniform float uWorldSize; uniform float uTreeDist; uniform float uSnowLine;
 varying vec3 vWPos; varying vec3 vN; varying float vViewZ;
 #include <common>
 #include <packing>
@@ -152,6 +152,10 @@ void main() {
   grass = mix(steppe, grass, smoothstep(0.2, 0.62, m));
   grass = mix(grass, mix(steppe, dry, 0.5), mesa * 0.55);          // plateau herbage is always on the dry side
   grass = mix(grass, S(vec3(0.38, 0.36, 0.22)), smoothstep(1450.0, 2050.0, hc));
+  // variant B prairie: tall green-gold grass with the wind running over it in slow waves
+  float prairie = uVariantB * (1.0 - smoothstep(0.2, 0.6, forest)) * smoothstep(0.36, 0.52, precip) * (1.0 - smoothstep(0.85, 1.05, precip)) * (1.0 - mesa) * (1.0 - smoothstep(300.0, 700.0, hc)) * (1.0 - wet);
+  float gust = texture2D(uNoise, vWPos.xz / 310.0 + uTime * vec2(0.014, 0.006)).r;
+  grass = mix(grass, mix(S(vec3(0.33, 0.37, 0.16)), S(vec3(0.47, 0.44, 0.22)), n3.b) * (0.82 + 0.36 * gust), prairie * 0.75);
   grass *= (0.70 + 0.60 * n2.g) * (0.82 + 0.36 * n1.r) * (0.88 + 0.24 * n3.a);
   grass = mix(grass, grass * vec3(1.12, 1.05, 0.86), n3.b * 0.3);                     // cured, seeding patches
   grass = mix(grass, grass * vec3(0.78, 0.94, 0.80), smoothstep(0.55, 0.8, n2.a) * 0.5); // rank, darker swards
@@ -374,7 +378,7 @@ export function setSun(sh, elev, azim) {
 
 export function makeMaterials(shared, tex, opts) {
   const base = () => ({ ...THREE.UniformsUtils.clone(THREE.UniformsLib.lights), ...shared });
-  const terrainU = { uMapA: { value: tex.mapA }, uMapB: { value: tex.mapB }, uRock: { value: tex.rock }, uFlow: { value: tex.flow }, uShadowTex: { value: tex.shadow }, uNormTex: { value: tex.norm }, uNoise: { value: tex.noise }, uNoiseN: { value: tex.noiseN }, uWorldSize: { value: opts.worldSize }, uTreeDist: opts.uTreeDist, uSnowLine: opts.uSnowLine, uCold: opts.uCold };
+  const terrainU = { uMapA: { value: tex.mapA }, uMapB: { value: tex.mapB }, uRock: { value: tex.rock }, uFlow: { value: tex.flow }, uShadowTex: { value: tex.shadow }, uNormTex: { value: tex.norm }, uNoise: { value: tex.noise }, uNoiseN: { value: tex.noiseN }, uWorldSize: { value: opts.worldSize }, uTreeDist: opts.uTreeDist, uSnowLine: opts.uSnowLine, uCold: opts.uCold, uVariantB: { value: opts.variantB ? 1 : 0 } };
   const makeTerrain = (cell, size) => new THREE.ShaderMaterial({
     uniforms: { ...base(), ...terrainU, uCell: { value: cell }, uSize: { value: size } },
     vertexShader: TERRAIN_VERT, fragmentShader: TERRAIN_FRAG, lights: true,

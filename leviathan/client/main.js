@@ -63,7 +63,7 @@ tex.shadow = new THREE.DataTexture(tex.shadowData, tex.hgridRes, tex.hgridRes, T
 tex.shadow.magFilter = tex.shadow.minFilter = THREE.LinearFilter; tex.shadow.needsUpdate = true;
 const shared = makeShared();
 shared.uWorldSize.value = S; shared.uPlay.value.set(P0, P1);
-const opts = { worldSize: S, uTreeDist: { value: quality.treeDist }, uSnowLine: { value: num('snow', 2450) }, uCold: { value: world.coldCfg ? new THREE.Vector3(world.coldCfg.z0, world.coldCfg.z1, world.coldCfg.drop) : new THREE.Vector3(0, 0, 0) } };
+const opts = { variantB: world.meta.variant === 'B', worldSize: S, uTreeDist: { value: quality.treeDist }, uSnowLine: { value: num('snow', 2450) }, uCold: { value: world.coldCfg ? new THREE.Vector3(world.coldCfg.z0, world.coldCfg.z1, world.coldCfg.drop) : new THREE.Vector3(0, 0, 0) } };
 shared.uCloud.value = num('cloud', 0.42);
 const mats = makeMaterials(shared, tex, opts);
 
@@ -200,7 +200,7 @@ addEventListener('resize', () => { renderer.setSize(innerWidth, innerHeight, fal
 function regionName(x, z, h) {
   const xk = (x - P0) / 1000, yk = (P1 - z) / 1000, p = world.map(MAP.PRECIP, x, z) * 3, F = world.map(MAP.FOREST, x, z), D = world.map(MAP.DARK, x, z);
   const hcl = h + world.coldDrop * world.cold(z), wetl = world.map(MAP.WET, x, z);
-  let land = h < 0.3 ? 'open water' : wetl > 0.5 ? 'marsh' : world.cold(z) > 0.45 && hcl < 2450 ? (F > 0.4 ? 'taiga' : 'tundra') : D > 0.5 ? 'ancient dark forest' : F > 0.55 ? (h > 1000 ? 'montane conifer forest' : 'temperate forest') : h > 2450 ? 'snowfields' : h > 1950 ? 'alpine zone' : p < 0.3 ? 'desert' : p < 0.5 ? 'dry steppe' : F > 0.2 ? 'parkland' : 'grassland';
+  let land = h < 0.3 ? 'open water' : wetl > 0.5 ? 'marsh' : world.map(MAP.SAND, x, z) > 0.5 && h > 50 ? 'sand sea' : world.cold(z) > 0.45 && hcl < 2450 ? (F > 0.4 ? 'taiga' : 'tundra') : D > 0.5 ? 'ancient dark forest' : F > 0.55 ? (h > 1000 ? 'montane conifer forest' : 'temperate forest') : h > 2450 ? 'snowfields' : h > 1950 ? 'alpine zone' : p < 0.3 ? 'desert' : p < 0.5 ? 'dry steppe' : F > 0.2 ? 'parkland' : 'grassland';
   const reg = xk > 41 ? 'High Desert plateau' : xk > 38 ? 'the Trench' : (xk > 27 && yk < 40) || (xk > 30) ? 'the Spine' : yk > 43 ? 'Northern Highlands' : yk > 33 && xk < 23 ? 'the Sound' : xk < 14 ? 'Coast Range' : 'Central Valley';
   return `${reg} - ${land}`;
 }
