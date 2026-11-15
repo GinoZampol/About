@@ -15,74 +15,77 @@ function segDist(px, py, ax, ay, bx, by) {
   return [Math.hypot(ax + dx * t - px, ay + dy * t - py), t];
 }
 
-// tectonic fields at a point: range strengths by rank, plate id, distance to the nearest plate boundary
+// Crust velocity at a point of (warped) space: plate velocities blended over a width `sig` at the boundaries.
+function velocity(L, x, y, sig, out) {
+  let d1 = 1e9; const P = L.plates, n = P.length, d = L._d;
+  for (let k = 0; k < n; k++) { d[k] = Math.hypot(x - P[k][0], y - P[k][1]); if (d[k] < d1) d1 = d[k]; }
+  let w = 0, vx = 0, vy = 0;
+  for (let k = 0; k < n; k++) { const e = Math.exp(-(d[k] - d1) / sig); w += e; vx += e * P[k][2]; vy += e * P[k][3]; }
+  out[0] = vx / w; out[1] = vy / w;
+}
+// convergence = -div(v): positive where crust piles up, negative where it is pulled apart
+function convergence(L, x, y, sig) {
+  const h = 0.4, a = L._a, b = L._b;
+  velocity(L, x + h, y, sig, a); velocity(L, x - h, y, sig, b); let c = a[0] - b[0];
+  velocity(L, x, y + h, sig, a); velocity(L, x, y - h, sig, b); c += a[1] - b[1];
+  return -c / (2 * h) * sig;                       // times sig: independent of the blending width
+}
+// tectonic fields at a point
 function fields(L, xk, yk) {
   const seed = L.seed;
   const sx = xk + 3.2 * fbm(xk / 19, yk / 19, 3, seed + 11) + 1.1 * fbm(xk / 6, yk / 6, 3, seed + 12) + 0.3 * fbm(xk / 1.9, yk / 1.9, 2, seed + 15);
   const sy = yk + 3.2 * fbm(xk / 19, yk / 19, 3, seed + 13) + 1.1 * fbm(xk / 6, yk / 6, 3, seed + 14) + 0.3 * fbm(xk / 1.9, yk / 1.9, 2, seed + 16);
-  let i1 = 0, i2 = 0, d1 = 1e9, d2 = 1e9, d3 = 1e9;
-  for (let k = 0; k < L.plates.length; k++) { const d = Math.hypot(sx - L.plates[k][0], sy - L.plates[k][1]); if (d < d1) { d3 = d2; d2 = d1; i2 = i1; d1 = d; i1 = k; } else if (d < d2) { d3 = d2; d2 = d; i2 = k; } else if (d < d3) d3 = d; }
-  const db = (d2 - d1) / 2, key = i1 < i2 ? i1 * 16 + i2 : i2 * 16 + i1;
-  // the basin is not a circle: its centre distance is measured in strongly warped space
-  const bx = xk + 7 * fbm(xk / 26, yk / 26, 3, seed + 17) + 2.5 * fbm(xk / 9, yk / 9, 3, seed + 18), by = yk + 7 * fbm(xk / 26, yk / 26, 3, seed + 19) + 2.5 * fbm(xk / 9, yk / 9, 3, seed + 20);
-  const rr = Math.hypot((bx - 25) * L.sq[0] + (by - 25) * L.sq[1], (by - 25) * L.sq[2] + (bx - 25) * L.sq[1]), inner = smoothstep(4, 11, rr);
-  let gC = 0, gA = 0, gHl = 0;
-  const amp = L.amp ? L.amp.get(key) : 0;
-  if (amp) {                                 // a range fades toward a triple junction, leaving a pass there
-    const strike = smoothstep(-0.5, 0.05, fbm(xk / 10 + key, yk / 10, 2, seed + 21)) * (0.78 + 0.3 * noise2(xk / 2.4, yk / 2.4, seed + 22)) * inner * smoothstep(0, 2.6, (d3 - d2) / 2);
-    const rank = L.rank.get(key);
-    if (rank === 0) gC = (0.8 * gauss(db, 4.0) + 0.2 * gauss(db, 8.5)) * strike;
-    else if (rank <= 2) gA = amp * (0.75 * gauss(db, 2.5) + 0.25 * gauss(db, 5.5)) * strike;
-    else gHl = amp * gauss(db, 3.4) * strike;
-  }
-  // foothills: every range stands in a broad apron of hill country
-  gHl += 0.2 * gC * (1 - gC) + 0.25 * gA * (1 - gA) + 0.15 * smoothstep(0.1, 0.6, fbm(xk / 9, yk / 9, 3, seed + 23)) * inner * gauss(db, 9);
-  return { sx, sy, i1, db, key, rr, gC, gA, gHl };
+  const cN = Math.min(1.2, convergence(L, sx, sy, 2.2) * L.norm), cW = Math.max(-1.2, Math.min(1.2, convergence(L, sx, sy, 5.5) * L.norm));   // range core, and the broad belt around it
+  // along-strike variety: summits and passes
+  const m = Math.max(0, cN) * (0.62 + 0.5 * fbm(xk / 8, yk / 8, 2, seed + 21) + 0.16 * noise2(xk / 2.4, yk / 2.4, seed + 22));
+  const gC = Math.max(0, m - 0.5) * 1.6, gA = Math.min(m, 0.5);
+  const gHl = 0.3 * Math.max(0, cW) * (1 - sat(m * 1.6)) * (0.6 + 0.6 * smoothstep(-0.3, 0.4, fbm(xk / 7, yk / 7, 3, seed + 23)));
+  const rift = Math.max(0, -cW);
+  return { sx, sy, rr: Math.hypot(sx - L.hot[0], sy - L.hot[1]), gC, gA, gHl, rift };
 }
+// elevation tendency: rifts and the spreading centre sink, ranges and their belts rise, broad swells do the rest
 function tendency(L, xk, yk, f) {
   const seed = L.seed;
-  return 0.8 * (smoothstep(2, 22, f.rr) - 0.5) + 0.8 * fbm(xk / 15, yk / 15, 4, seed + 61) + 0.26 * fbm(xk / 5.5, yk / 5.5, 3, seed + 62)
-    + 0.07 * fbm(xk / 1.7, yk / 1.7, 3, seed + 63) + 1.3 * (f.gC + f.gA) + 1.6 * f.gHl;
+  return 0.6 * (smoothstep(2, 21, f.rr) - 0.5) - 0.8 * f.rift + 0.72 * fbm(xk / 15, yk / 15, 4, seed + 61) + 0.32 * fbm(xk / 5.5, yk / 5.5, 3, seed + 62)
+    + 0.1 * fbm(xk / 1.7, yk / 1.7, 3, seed + 63) + 1.3 * (f.gC + f.gA) + 1.6 * f.gHl;
 }
 
 let cache = null;
 export function getLayout(seed) {
   if (cache && cache.seed === seed) return cache;
   const r = mulberry32((Math.imul(seed | 0, 2654435761) ^ 0x9e3779b9) >>> 0);
-  const L = { seed, plates: [] };
-  { const a = r() * Math.PI, e = 1.15 + r() * 0.45; L.sq = [Math.cos(a) / e, Math.sin(a) / e, Math.cos(a) * e]; L.sq = [Math.cos(a) * Math.cos(a) / e + Math.sin(a) * Math.sin(a) * e, Math.cos(a) * Math.sin(a) * (1 / e - e), Math.sin(a) * Math.sin(a) / e + Math.cos(a) * Math.cos(a) * e]; }
-  for (let k = 0, n = 6 + Math.floor(r() * 3); k < n; k++) { const a = r() * Math.PI * 2, v = 0.45 + 0.55 * r(); L.plates.push([-4 + r() * 58, -4 + r() * 58, Math.cos(a) * v, Math.sin(a) * v]); }
-  // which plate pairs actually share a boundary on land, and how hard they converge there
-  const G = 96, score = new Map(), samp = [];
-  for (let j = 0; j < G; j++) for (let i = 0; i < G; i++) {
-    const xk = (i + 0.5) / G * 50, yk = (j + 0.5) / G * 50, f = fields(L, xk, yk); samp.push(f);
-    if (f.db < 2.5 && f.rr > 9) score.set(f.key, (score.get(f.key) || 0) + 1);
+  // a spreading centre lies somewhere under the middle of the world: plates drift away from it, each with
+  // its own extra motion, so the middle is pulled apart (sea) and the plates collide further out (ranges)
+  const L = { seed, plates: [], hot: [25 + (r() - 0.5) * 8, 25 + (r() - 0.5) * 8], norm: 1, _a: [0, 0], _b: [0, 0] };
+  for (let k = 0, n = 7 + Math.floor(r() * 3); k < n; k++) {
+    const x = -4 + r() * 58, y = -4 + r() * 58, dl = Math.hypot(x - L.hot[0], y - L.hot[1]) || 1, a = r() * Math.PI * 2, v = 0.55 + 0.5 * r();
+    L.plates.push([x, y, 0.45 * (x - L.hot[0]) / dl + Math.cos(a) * v, 0.45 * (y - L.hot[1]) / dl + Math.sin(a) * v]);
   }
-  const pairs = [];
-  for (const [key, cnt] of score) {
-    const a = L.plates[key >> 4], b = L.plates[key & 15], nx = b[0] - a[0], ny = b[1] - a[1], nl = Math.hypot(nx, ny) || 1;
-    const conv = ((a[2] - b[2]) * nx + (a[3] - b[3]) * ny) / nl;
-    if (conv > 0.1 && cnt > 30) pairs.push([key, conv * Math.sqrt(cnt), conv]);
-  }
-  pairs.sort((p, q) => q[1] - p[1]);
-  L.amp = new Map(); L.rank = new Map();
-  pairs.forEach((p, k) => { L.rank.set(p[0], k); L.amp.set(p[0], k === 0 ? 1 : k === 1 ? 0.66 : k === 2 ? 0.5 : 0.2 + 0.08 * sat(p[2])); });
+  L._d = new Float64Array(L.plates.length);
+  const G = 96, at = (i) => (i + 0.5) / G * 50;
+  // the hardest collision in this world sets the scale: it becomes the great range
+  // (the 98th percentile rather than the single highest sample, so one sharp corner does not dwarf everything else)
+  const cs = []; for (let j = 0; j < G; j++) for (let i = 0; i < G; i++) cs.push(convergence(L, at(i), at(j), 2.2));
+  cs.sort((p, q) => p - q); L.norm = 1 / Math.max(1e-6, cs[Math.floor(cs.length * 0.98)]);
   // sea level: the quantile of the tendency field that leaves the chosen share of the world under water
-  const seaShare = 0.22 + r() * 0.07, E = new Float32Array(G * G);
-  let best = [0, 0, 0], bestA = [0, 0, 0];
+  const seaShare = 0.24 + r() * 0.08, E = new Float32Array(G * G);
+  let best = [25, 25, 0], bestA = [25, 25, 0];
   for (let j = 0; j < G; j++) for (let i = 0; i < G; i++) {
-    const xk = (i + 0.5) / G * 50, yk = (j + 0.5) / G * 50, f = fields(L, xk, yk); E[j * G + i] = tendency(L, xk, yk, f);
-    if (f.gC > best[2]) best = [xk, yk, f.gC]; if (f.gA > bestA[2]) bestA = [xk, yk, f.gA];
+    const xk = at(i), yk = at(j), f = fields(L, xk, yk); E[j * G + i] = tendency(L, xk, yk, f);
+    if (f.gC > best[2]) best = [xk, yk, f.gC];
+  }
+  for (let j = 0; j < G; j++) for (let i = 0; i < G; i++) {     // the finest range well away from the great one
+    const xk = at(i), yk = at(j), f = fields(L, xk, yk), sc = f.gA * smoothstep(8, 16, Math.hypot(xk - best[0], yk - best[1])); if (sc > bestA[2]) bestA = [xk, yk, sc];
   }
   L.T = Float32Array.from(E).sort()[Math.floor(seaShare * G * G)];
   let cx = 0, cy = 0, cn = 0;
-  for (let j = 0; j < G; j++) for (let i = 0; i < G; i++) if (E[j * G + i] < L.T) { cx += (i + 0.5) / G * 50; cy += (j + 0.5) / G * 50; cn++; }
+  for (let j = 0; j < G; j++) for (let i = 0; i < G; i++) if (E[j * G + i] < L.T) { cx += at(i); cy += at(j); cn++; }
   L.c = [cx / cn, cy / cn]; L.massif = best; L.alpsCentre = bestA;
   // the tableland: the interior of the plate that lies farthest from the sea and from the great range
   let pb = 0, ps = -1e9;
   L.plates.forEach((p, k) => { if (p[0] < 5 || p[0] > 45 || p[1] < 5 || p[1] > 45) return; const sc = Math.hypot(p[0] - L.c[0], p[1] - L.c[1]) + 0.6 * Math.hypot(p[0] - best[0], p[1] - best[1]) - (tendency(L, p[0], p[1], fields(L, p[0], p[1])) < L.T + 0.4 ? 100 : 0); if (sc > ps) { ps = sc; pb = k; } });
   const P = L.plates[pb], tc = Math.hypot(L.c[0] - P[0], L.c[1] - P[1]) || 1, ux = (L.c[0] - P[0]) / tc, uy = (L.c[1] - P[1]) / tc, sgn = r() < 0.5 ? 1 : -1;
-  L.table = { plate: pb, x: P[0], y: P[1], rad: 6.2 + r() * 1.6 };
+  L.table = { plate: pb, x: P[0], y: P[1], rad: 4.8 + r() * 1.2 };
   L.mouth = [P[0] + ux * (L.table.rad + 0.5), P[1] + uy * (L.table.rad + 0.5)];
   L.gorge = [[P[0] + ux * 1.5, P[1] + uy * 1.5], [P[0] + ux * (L.table.rad - 1.5) - uy * (r() - 0.5) * 2, P[1] + uy * (L.table.rad - 1.5) + ux * (r() - 0.5) * 2], [P[0] + ux * (L.table.rad + 4), P[1] + uy * (L.table.rad + 4)]];
   L.sand = [P[0] - ux * 2.2 - uy * sgn * 2.2, P[1] - uy * 2.2 + ux * sgn * 2.2, 2.4 + r() * 0.8, 3.0 + r() * 0.9];
