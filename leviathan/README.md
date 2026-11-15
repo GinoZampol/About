@@ -25,7 +25,9 @@ URL options: `?quality=low|medium|high`, `?pos=x,heightAboveGround,z&look=headin
 `leviathan/tools/build_pages.sh` builds a static site into the repository's top-level `docs/`
 folder: a landing page plus three self-contained worlds (`world/`, `world-b/`, `v5/`), with
 three.js vendored so nothing depends on `node_modules` or a CDN. Re-run it after regenerating.
-To publish: repository Settings → Pages → Deploy from a branch → this branch, folder `/docs`.
+It is live at https://ginozampol.github.io/About/ and is served from the `gh-pages` branch, which holds
+the contents of `docs/`. To update the live site after rebuilding:
+`git branch -D gh-pages; git subtree split --prefix docs -b gh-pages && git push -f origin gh-pages`.
 
 ## Versions
 
