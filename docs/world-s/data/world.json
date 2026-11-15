@@ -1,0 +1,118 @@
+{
+ "name": "The Leviathan",
+ "version": 2,
+ "variant": "B",
+ "layout": "S",
+ "wind": 0.5,
+ "cold": {
+  "z0": 22000,
+  "z1": 6000,
+  "drop": 1650
+ },
+ "play": {
+  "x0": 3000,
+  "size": 50000
+ },
+ "seed": 943384,
+ "sizeM": 56000,
+ "heightRes": 4096,
+ "mapRes": 1024,
+ "lakeRes": 2048,
+ "riverMaskRes": 2048,
+ "hOffset": 300,
+ "hScale": 0.125,
+ "seaLevel": 0,
+ "maxElevation": 4971,
+ "landKm2": 2424,
+ "riverKm": 902,
+ "mapChannels": [
+  "rock",
+  "strat",
+  "precip",
+  "forest",
+  "dark",
+  "wet",
+  "sand",
+  "ao",
+  "mesa",
+  "flow",
+  "ice"
+ ],
+ "lakes": [],
+ "landmarks": [
+  {
+   "name": "Central Valley (ocean shore)",
+   "x": 36128,
+   "z": 26517,
+   "h": 14,
+   "note": "low ground on the shore of the central ocean"
+  },
+  {
+   "name": "The Crown",
+   "x": 10356,
+   "z": 27159,
+   "h": 4971,
+   "note": "the great massif"
+  },
+  {
+   "name": "The Horns",
+   "x": 44454,
+   "z": 39396,
+   "h": 3786,
+   "note": "the alpine peaks"
+  },
+  {
+   "name": "Mesa country",
+   "x": 40775,
+   "z": 17262,
+   "h": 0,
+   "note": "where the plateau river reaches the lowland"
+  },
+  {
+   "name": "The Sand Sea",
+   "x": 39862,
+   "z": 5203,
+   "h": 0,
+   "note": "dune sea on the plateau"
+  },
+  {
+   "name": "Central ocean",
+   "x": 26410,
+   "z": 25565,
+   "h": 0,
+   "note": "the middle of the world"
+  }
+ ],
+ "config": {
+  "K0": 0.0000052,
+  "levels": [
+   [
+    256,
+    110,
+    20000
+   ],
+   [
+    512,
+    60,
+    10000
+   ],
+   [
+    1024,
+    40,
+    6000
+   ],
+   [
+    2048,
+    30,
+    8000
+   ],
+   [
+    4096,
+    18,
+    7000
+   ]
+  ],
+  "ELA": 1700,
+  "Q_RIVER": 1200000
+ }
+}
