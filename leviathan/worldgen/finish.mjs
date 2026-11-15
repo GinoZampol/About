@@ -9,7 +9,7 @@ import { encodeU16, H_OFFSET, H_SCALE } from '../shared/codec.mjs';
 import { makeCtx, flood, route, accumulate, computePrecip, boxBlur, DX8, DY8, DD8 } from './erosion.mjs';
 import { renderMap } from './preview.mjs';
 import { VOLCANO, GORGE, WORLD_KM } from './design.mjs';
-import { getLayout } from './layout.mjs';
+import { getLayout, seededDesign } from './layout.mjs';
 
 const ELA = 1700;          // ice-age equilibrium line altitude (m)
 const Q_RIVER = 1.2e6;     // effective drainage (m^2) where a perennial channel starts
@@ -503,7 +503,7 @@ export async function finishWorld(world, cfg, ROOT, log) {
     let sb = -1, sd = 1e18;
     for (let j = 8; j < N - 8; j += 6) for (let i = 8; i < N - 8; i += 6) {
       const c = j * N + i; if (sea[c] || lakeId[c] || h[c] < 5 || h[c] > 45 || Math.abs(h[c] - h[c + 6]) > 1.5 || Math.abs(h[c] - h[c + 6 * N]) > 1.5) continue;
-      const [x, y] = cellXY(c), d = Math.hypot(x / 1000 + KM0 - L.c[0], y / 1000 + KM0 - L.c[1]); if (d < L.Rmax) continue;   // mainland shore, not an island
+      const [x, y] = cellXY(c), d = Math.hypot(x / 1000 + KM0 - L.c[0], y / 1000 + KM0 - L.c[1]); if (seededDesign(x / 1000 + KM0, y / 1000 + KM0, seed).land < 1.2) continue;   // mainland shore, not an island
       if (d < sd) { sd = d; sb = c; }
     }
     if (sb >= 0) { const [x, y] = cellXY(sb); landmarks.push(lm('Central Valley (ocean shore)', { x, z: S - y, h: h[sb] }, 'low ground on the shore of the central ocean')); }
