@@ -268,6 +268,7 @@ ${ATMO}
 ${SHADOW_FRAG}
 void main() {
   vec3 alb; float trans = 0.0;
+  if (max(max(uPlay.x - vWPos.x, vWPos.x - uPlay.y), max(uPlay.x - vWPos.z, vWPos.z - uPlay.y)) > 10.0) discard;
   float dist = distance(vWPos, cameraPosition);
   vec3 N = normalize(vN);
   if (vCol.b > 0.75) {
@@ -376,6 +377,8 @@ export class Vegetation {
     if (pos.distanceTo(this.lastPos) < 6 && !this.dirty) return;
     this.lastPos.copy(pos); this.dirty = false;
     const want = this._want(pos); this.want = want;
+    const pl = this.world.play, q0 = pl.x0, q1 = pl.x0 + pl.size;
+    for (const [key, w] of want) if (w.x0 > q1 || w.x0 + w.size < q0 || w.z0 > q1 || w.z0 + w.size < q0) want.delete(key);
     for (const [key, w] of want) if (!this.tiles.has(key)) {
       this.tiles.set(key, { ...w, state: 1, meshes: [] }); this.pending++;
       this.terrain.extraQueue.push({ type: 'veg', key, x0: w.x0, z0: w.z0, size: w.size, lod: w.lod, kind: w.kind });

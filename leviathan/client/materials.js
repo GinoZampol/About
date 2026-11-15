@@ -4,7 +4,7 @@ import * as THREE from 'three';
 export const ATMO = /* glsl */`
 uniform vec3 uSunDir; uniform vec3 uSunCol; uniform vec3 uAmbSky; uniform vec3 uAmbGround;
 uniform vec3 uFogCol; uniform vec3 uFogSun; uniform vec3 uZenith; uniform float uFogA; uniform float uFogB;
-uniform vec3 uSplits; uniform float uTime;
+uniform vec3 uSplits; uniform float uTime; uniform vec2 uPlay;   // uPlay: min and max coordinate of the playable square
 vec3 S(vec3 c) { return pow(c, vec3(2.2)); }
 vec3 skyColor(vec3 rd) {
   float y = max(rd.y, 0.0);
@@ -112,8 +112,8 @@ vec3 noTileN(sampler2D t, vec2 uv, float k) {
 }
 vec3 strataColor(int rk) { return rk == 3 ? S(vec3(0.66, 0.58, 0.46)) : rockColor(rk); }   // cream cap and ledge-forming beds
 void main() {
-  float outDist = max(max(-vWPos.x, vWPos.x - uWorldSize), max(-vWPos.z, vWPos.z - uWorldSize));
-  if (outDist > 8000.0) discard;
+  // the visible world ends 10 m beyond the playable border
+  if (max(max(uPlay.x - vWPos.x, vWPos.x - uPlay.y), max(uPlay.x - vWPos.z, vWPos.z - uPlay.y)) > 10.0) discard;
   vec2 uv = clamp(vWPos.xz / uWorldSize, 0.0005, 0.9995);
   float dist = distance(vWPos, cameraPosition);
   vec4 n3 = (texture2D(uNoise, vWPos.xz / 790.0 + 0.37) + texture2D(uNoise, TILE_R * vWPos.xz / 1130.0 + 0.11) - 1.0) * 0.72 + 0.5;
@@ -273,7 +273,7 @@ ${ATMO}
 void main() {
   float dep = vDepth;
   if (dep < -0.02) discard;
-  if (max(max(-vWPos.x, vWPos.x - uWorldSize), max(-vWPos.z, vWPos.z - uWorldSize)) > 8000.0) discard;
+  if (max(max(uPlay.x - vWPos.x, vWPos.x - uPlay.y), max(uPlay.x - vWPos.z, vWPos.z - uPlay.y)) > 10.0) discard;
   float dist = distance(vWPos, cameraPosition);
   vec2 p = vWPos.xz;
   #ifdef RIVER
@@ -348,7 +348,7 @@ export function makeShared() {
     uSunDir: { value: new THREE.Vector3(0.3, 0.8, 0.5).normalize() }, uSunCol: { value: new THREE.Color(3, 3, 3) },
     uAmbSky: { value: new THREE.Color(0.4, 0.5, 0.7) }, uAmbGround: { value: new THREE.Color(0.2, 0.18, 0.15) },
     uFogCol: { value: new THREE.Color(0.6, 0.7, 0.85) }, uFogSun: { value: new THREE.Color(1, 0.9, 0.7) }, uZenith: { value: new THREE.Color(0.15, 0.3, 0.65) },
-    uFogA: { value: 0.55e-5 }, uFogB: { value: 1 / 1700 }, uSplits: { value: new THREE.Vector3(100, 500, 3000) }, uTime: { value: 0 }, uCloud: { value: 0.42 }, uWorldSize: { value: 50000 },
+    uFogA: { value: 0.55e-5 }, uFogB: { value: 1 / 1700 }, uSplits: { value: new THREE.Vector3(100, 500, 3000) }, uTime: { value: 0 }, uCloud: { value: 0.42 }, uWorldSize: { value: 50000 }, uPlay: { value: new THREE.Vector2(0, 50000) },
   };
 }
 

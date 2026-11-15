@@ -62,7 +62,7 @@ tex.shadowData = new Uint8Array(tex.hgridRes * tex.hgridRes).fill(255);
 tex.shadow = new THREE.DataTexture(tex.shadowData, tex.hgridRes, tex.hgridRes, THREE.RedFormat, THREE.UnsignedByteType);
 tex.shadow.magFilter = tex.shadow.minFilter = THREE.LinearFilter; tex.shadow.needsUpdate = true;
 const shared = makeShared();
-shared.uWorldSize.value = S;
+shared.uWorldSize.value = S; shared.uPlay.value.set(P0, P1);
 const opts = { worldSize: S, uTreeDist: { value: quality.treeDist }, uSnowLine: { value: num('snow', 2450) } };
 shared.uCloud.value = num('cloud', 0.42);
 const mats = makeMaterials(shared, tex, opts);

@@ -29,7 +29,8 @@ function makeIndex() {
 
 export class Terrain {
   constructor({ scene, data, makeTerrainMaterial, waterMaterial, maxLevel = 11, workers = 3, onWorkerMessage }) {
-    this.scene = scene; this.S = data.meta.sizeM; this.maxLevel = maxLevel;
+    this.scene = scene; this.S = data.meta.sizeM;
+    { const pl = data.meta.play || { x0: 0, size: this.S }; this.p0 = pl.x0; this.p1 = pl.x0 + pl.size; } this.maxLevel = maxLevel;
     this.makeMat = makeTerrainMaterial; this.waterMat = waterMaterial;
     this.index = makeIndex();
     this.mats = new Map();
@@ -71,7 +72,7 @@ export class Terrain {
   }
   _select(n, p, req) {
     n.lastUsed = this.frame;
-    if (n.outer && Math.max(-(n.x0 + n.size), n.x0 - this.S, -(n.z0 + n.size), n.z0 - this.S) > EXT) return;
+    if (n.x0 > this.p1 + 10 || n.x0 + n.size < this.p0 - 10 || n.z0 > this.p1 + 10 || n.z0 + n.size < this.p0 - 10) return;   // beyond the border: not drawn
     const maxL = n.outer ? Math.min(8, this.maxLevel) : this.maxLevel;
     if (n.level < maxL && this._dist(n, p) < SPLIT_K * n.size) {
       if (!n.children) {
