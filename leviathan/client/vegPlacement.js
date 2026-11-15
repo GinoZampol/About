@@ -62,6 +62,7 @@ function placeTrees(world, { key, x0, z0, size, lod }) {
     if (h < 0.7 || h < world.stillLevel(px, pz) + 0.4) continue;
     const rv = world.riverAt(px, pz, rq); if (rv && rv.edge < 1.5 + (isTree ? 1 : 0)) continue;
     const slope = world.slope(px, pz); if (slope > 1.35) continue;
+    if (slope > 0.28 && world.map(MAP.MESA, px, pz) > 0.5) continue;      // mesa walls stay bare rock
     const tl = 1930 + 90 * noise2(px / 3000, pz / 3000, seed + 70);
     if (h > tl + 320) continue;
     const stunt = 1 - 0.62 * smoothstep(tl - 300, tl + 250, h);

@@ -149,14 +149,14 @@ export function volcanoHeight(xk, yk, seed) {
   return [h, r];
 }
 
-export function buildDesign(R, seed) {
+export function buildDesign(R, seed, domain = { x0: 0, size: WORLD_KM }) {
   const n = R * R;
   const d = {
     R, land: new Float32Array(n), U: new Float32Array(n), h0: new Float32Array(n), rock: new Uint8Array(n),
     kmod: new Float32Array(n), strat: new Float32Array(n), gorge: new Float32Array(n), mesa: new Float32Array(n), erg: new Float32Array(n),
   };
   for (let j = 0; j < R; j++) for (let i = 0; i < R; i++) {
-    const p = designAt((i + 0.5) / R * WORLD_KM, (j + 0.5) / R * WORLD_KM, seed);
+    const p = designAt(domain.x0 + (i + 0.5) / R * domain.size, domain.x0 + (j + 0.5) / R * domain.size, seed);
     const c = j * R + i;
     d.land[c] = p.land; d.U[c] = p.U; d.h0[c] = p.h0; d.rock[c] = p.rock; d.kmod[c] = p.kmod; d.strat[c] = p.strat; d.gorge[c] = p.gG; d.mesa[c] = p.plateau; d.erg[c] = p.erg;
   }

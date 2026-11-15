@@ -160,7 +160,7 @@ target machine for real frame times.
 - **Trees are placeholders** by request; distant forest is shaded terrain.
 - **Performance figures above predate the Crown, cloud and life passes**, and no frame rate on a
   real GPU has been measured.
-- **Edges.** Play is confined to the 50 km square by a translucent border wall that fades in as you approach. For 8 km beyond it the world continues as scenery (the terrain mirrored across the edge, without trees or river water).
+- **Edges.** Play is confined to the 50 km square by a translucent, horizontally banded border wall. For 8 km beyond it the world continues as scenery from a coarser run of the same world model over 66 km (`worldgen/outer.mjs`, 64 m cells), tied to the playable terrain at the edge; it has no trees, rivers or lakes.
 - No night sky, no networking.
 
 ## Next priorities

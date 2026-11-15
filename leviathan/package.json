@@ -5,7 +5,7 @@
   "type": "module",
   "description": "The Leviathan - deterministic 50x50 km world generator and streaming terrain client",
   "scripts": {
-    "generate": "node --max-old-space-size=8192 worldgen/generate.mjs",
+    "generate": "node --max-old-space-size=8192 worldgen/generate.mjs && node --max-old-space-size=6000 worldgen/outer.mjs",
     "validate": "node --max-old-space-size=4096 worldgen/validate.mjs",
     "start": "node tools/serve.mjs",
     "shots": "node tools/screenshot.mjs",

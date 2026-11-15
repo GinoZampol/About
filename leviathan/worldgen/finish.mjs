@@ -383,7 +383,8 @@ export async function finishWorld(world, cfg, ROOT, log) {
     const pe = p * (1 + 0.5 * smoothstep(14, 0, wdist[m])) + 0.25 * smoothstep(10, 150, qk) + 0.12 * fbm(xk / 2.4, yk / 2.4, 3, seed + 71);
     let F = smoothstep(0.42, 0.95, pe) * (1 - smoothstep(treeline - 450, treeline + 60, z)) * (1 - smoothstep(0.8, 1.7, sl + 0.3 * fbm(xk / 0.45, yk / 0.45, 2, seed + 75)));
     F *= 0.75 + 0.25 * smoothstep(-0.25, 0.15, fbm(xk / 0.9, yk / 0.9, 3, seed + 72));   // glades and meadows
-    F *= 1 - 0.85 * smoothstep(0.75, 1, wet);                                           // open marsh
+    F *= 1 - 0.85 * smoothstep(0.75, 1, wet);
+    F *= 1 - (mMesa[m] / 255) * smoothstep(0.22, 0.45, sl);                               // no woods on mesa walls and ledges                                           // open marsh
     if (z < 3) F *= smoothstep(1.0, 3, z);
     mForest[m] = Math.round(255 * sat(F));
     // ancient "dark" forest: very wet, mild, sheltered ground
@@ -400,6 +401,9 @@ export async function finishWorld(world, cfg, ROOT, log) {
     }
     mSand[m] = Math.round(255 * sat(sand));
   }
+
+  // feather forest edges a little so woodland grades into open ground
+  { const fb = boxBlur(Float32Array.from(mForest), M, 1); for (let m = 0; m < mn; m++) mForest[m] = Math.round(0.55 * mForest[m] + 0.45 * fb[m]); }
 
   // ---- I. export (client convention: x east, z south; row 0 = north) --------------------------
   const out = path.join(ROOT, 'data'); fs.mkdirSync(out, { recursive: true });

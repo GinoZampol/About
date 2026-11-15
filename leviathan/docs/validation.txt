@@ -18,8 +18,6 @@ PASS  walking route: Central Valley -> Badlands: reachable on foot / pack animal
 PASS  walking route: Central Valley -> The Erg: reachable on foot / pack animal only
 PASS  walking route: Central Valley -> Great River delta: reachable, also at cart grade
 INFO  buildable land (slope under 8%): 281 km2, of which 77 km2 lies within 400 m of a major river, lake or the sea
-INFO  land cover: water 371 km2, grassland 252 km2, parkland 334 km2, forest 661 km2, dark forest 26 km2, steppe/desert 529 km2, alpine 149 km2, snow 179 km2
-PASS  forest never on cliffs or above the treeline: 18 of 288263 forest cells
+INFO  land cover: water 371 km2, grassland 262 km2, parkland 337 km2, forest 647 km2, dark forest 26 km2, steppe/desert 529 km2, alpine 149 km2, snow 179 km2
+PASS  forest never on cliffs or above the treeline: 18 of 282242 forest cells
 PASS  every subsurface cell resolves to a material: schist 29.8%, granite 14.7%, topsoil 14.2%, limestone 11.2%, greywacke 10.3%, gravel 8.1%, shale 2.9%, subsoil 2.6%, iron ore 2.4%, clay 1.6%, sandstone 0.9%, copper ore 0.8%, sand 0.2%, coal 0.2%, salt 0.1%, peat 0.1%, snow 0.0%, gold-bearing quartz 0.0%
-PASS  generation is deterministic: two independent runs of the erosion core hash to 9cb8852ebb173ee3 / 9cb8852ebb173ee3
-INFO  data set: height.bin sha256:b20adf7c1e3e  lakes.bin sha256:35d4da4f4f14  maps.bin sha256:5f59bfcdc4c4  rivermask.bin sha256:89e0f1b14eee  rivers.bin sha256:21d047cb5048  world.json sha256:1ce388d28921

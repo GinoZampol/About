@@ -33,6 +33,7 @@ async function gunzip(buf) {
 export async function loadWorldData(read, onProgress = () => {}) {
   const meta = JSON.parse(new TextDecoder().decode(await read('world.json')));
   const names = ['height.bin', 'lakes.bin', 'maps.bin', 'rivers.bin', 'rivermask.bin'];
+  if (meta.outer) names.push('outer.bin');
   let done = 0;
   const raw = await Promise.all(names.map(async (n) => { const b = await gunzip(await read(n)); onProgress(++done / names.length); return b; }));
   const al = (u8) => u8.buffer.slice(u8.byteOffset, u8.byteOffset + u8.byteLength);
@@ -43,6 +44,7 @@ export async function loadWorldData(read, onProgress = () => {}) {
     maps: raw[2],
     rivers: al(raw[3]),
     rivermask: raw[4],
+    outer: meta.outer ? decodeU16(raw[5], meta.outer.res) : null,
   };
 }
 
@@ -56,6 +58,7 @@ export class World {
     this.M = data.meta.mapRes; this.maps = data.maps; this.minv = this.M / this.S;
     this.LN = data.meta.lakeRes; this.lakes = data.lakes;
     this.seed = data.meta.seed;
+    this.outer = data.outer || null; this.outerMeta = data.meta.outer || null;
     this.edits = new Map();           // 1 m column edits (mining / earthworks), metres of height change
     this._initRivers(data.rivers);
     this._initSlope();
@@ -77,6 +80,15 @@ export class World {
     r = j2 * N; const c = H[r + i0] * wx0 + H[r + i] * wx1 + H[r + i2] * wx2 + H[r + i3] * wx3;
     r = j3 * N; const d = H[r + i0] * wx0 + H[r + i] * wx1 + H[r + i2] * wx2 + H[r + i3] * wx3;
     return (a * wy0 + b * wy1 + c * wy2 + d * wy3) * this.hs - this.ho;
+  }
+
+  _outer(x, z) {
+    const m = this.outerMeta, R = m.res, H = this.outer;
+    let u = (x - m.x0) / m.size * R - 0.5, v = (z - m.x0) / m.size * R - 0.5;
+    u = u < 0 ? 0 : u > R - 1.001 ? R - 1.001 : u; v = v < 0 ? 0 : v > R - 1.001 ? R - 1.001 : v;
+    const i = Math.floor(u), j = Math.floor(v), fx = u - i, fy = v - j, p = j * R + i;
+    const a = H[p], b = H[p + 1], c = H[p + R], d = H[p + R + 1];
+    return (a + (b - a) * fx + (c - a + (a - b + d - c) * fx) * fy) * this.hs - this.ho;
   }
 
   // bilinear sample of an 8-bit map channel, 0..1
@@ -282,9 +294,17 @@ export class World {
   // ---- the ground ----------------------------------------------------------------------------
   ground(x, z, cell = 0) {
     const S = this.S;
-    // beyond the border the land simply continues: the world is reflected across its edge, which keeps
-    // every ridge, valley and river continuous. It is scenery only; the border wall keeps players inside.
-    const cx = x < 0 ? -x : x > S ? 2 * S - x : x, cz = z < 0 ? -z : z > S ? 2 * S - z : z;
+    if (x < 0 || x > S || z < 0 || z > S) {
+      // Beyond the border: scenery from a separate, coarser run of the same world model over a larger
+      // area, so ranges, plateau and coast carry on as they really would. It is tied to the playable
+      // terrain at the edge and takes over fully within 3 km.
+      const ex = x < 0 ? 0 : x > S ? S : x, ez = z < 0 ? 0 : z > S ? S : z;
+      if (!this.outer) return this.baseHeight(ex, ez);
+      const d = Math.hypot(x - ex, z - ez), t = 1 - smoothstep(0, 3000, d);
+      const o = this._outer(x, z);
+      return o + (this.baseHeight(ex, ez) - this._outer(ex, ez)) * t + 14 * smoothstep(0, 400, o) * fbm(x / 330, z / 330, 3, this.seed + 270) * (1 - t);
+    }
+    const cx = x, cz = z;
     let h = this.baseHeight(cx, cz);
     if (cell < 40) h += this.detail(cx, cz, h, cell);
     if (cell < 30) h = this._carve(cx, cz, h);
@@ -300,7 +320,7 @@ export class World {
 
   // level of standing water (lake or sea) that applies at this position
   stillLevel(x, z) {
-    const S = this.S; x = x < 0 ? -x : x > S ? 2 * S - x : x; z = z < 0 ? -z : z > S ? 2 * S - z : z;
+    const S = this.S;
     const LN = this.LN; let i = Math.floor(x / S * LN), j = Math.floor(z / S * LN);
     if (i < 0 || j < 0 || i >= LN || j >= LN) return 0;
     const v = this.lakes[j * LN + i];

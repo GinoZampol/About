@@ -82,14 +82,13 @@ sky.frustumCulled = false; sky.renderOrder = -10; scene.add(sky);
     fragmentShader: `uniform float uTime; varying vec3 vP; varying float vU;
       void main() {
         float d = distance(vP, cameraPosition);
-        float far = 1.0 - smoothstep(1500.0, 7500.0, d), near = 1.0 - smoothstep(60.0, 900.0, d);
+        float far = 1.0 - smoothstep(4000.0, 14000.0, d), near = 1.0 - smoothstep(80.0, 1500.0, d);
         if (far <= 0.0) discard;
-        vec2 big = vec2(vU, vP.y) / 128.0, small = vec2(vU, vP.y) / 8.0;
-        float gridB = max(step(0.965, fract(big.x)), step(0.965, fract(big.y)));
-        float gridS = max(step(0.93, fract(small.x)), step(0.93, fract(small.y)));
-        float stripes = 0.5 + 0.5 * sin((vU + vP.y) * 0.05 + uTime * 1.6);
-        float a = far * far * (0.05 + 0.10 * stripes + 0.22 * gridB) + near * (0.12 + 0.18 * stripes + 0.4 * gridS);
-        gl_FragColor = vec4(mix(vec3(0.20, 0.55, 1.0), vec3(0.65, 0.9, 1.0), stripes * 0.5 + gridS * near * 0.5), min(a, 0.8));
+        // horizontal bands only: broad ones from afar, fine ones close up, drifting slowly upward
+        float wide = smoothstep(0.35, 0.65, 0.5 + 0.5 * sin(vP.y * 0.045 - uTime * 0.5));
+        float fine = smoothstep(0.4, 0.6, 0.5 + 0.5 * sin(vP.y * 1.3 - uTime * 1.4));
+        float a = far * (0.10 + 0.26 * wide) + near * (0.10 + 0.34 * fine);
+        gl_FragColor = vec4(mix(vec3(0.20, 0.55, 1.0), vec3(0.65, 0.9, 1.0), wide * 0.4 + fine * near * 0.5), min(a, 0.8));
         #include <tonemapping_fragment>
         #include <colorspace_fragment>
       }`,

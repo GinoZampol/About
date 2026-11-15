@@ -49,7 +49,7 @@ function fieldsFor(design, N) {
 }
 
 export function erodeWorld(cfg) {
-  const design = buildDesign(Math.min(1024, cfg.res), cfg.seed);
+  const design = buildDesign(Math.min(1024, cfg.res), cfg.seed, cfg.domain);
   log('design built');
   let h = null, N = 0, g = null, P = null;
   for (const [res, iters, dt] of cfg.levels) {
