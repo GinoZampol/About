@@ -57,7 +57,8 @@ export async function finishWorld(world, cfg, ROOT, log) {
       const Dg = ik > 0.5 || cirque ? Math.max(cirque * 30, Math.min(210, 13 * Math.pow(Math.max(ik, 0.3), 0.4))) * (1 - sat(g.gorge[c] * 3)) * smoothstep(60, 220, src[c]) : 0;
       // rivers on resistant plateau rock stay confined in their canyons
       const conf = g.rock[c] === ROCK.SANDSTONE ? 0.3 : g.gorge[c] > 0.3 ? 0.45 : 1;
-      const w = Math.min(620, 14 * Math.sqrt(qk)) * conf + 0.35 * Wg;
+      // floodplain width varies along the valley; a constant width reads as a painted band
+      const w = Math.min(620, 11 * Math.sqrt(qk)) * conf * (0.45 + 0.95 * sat(0.5 + 0.8 * noise2(i * dx / 1100, j * dx / 1100, seed + 81))) + 0.35 * Wg;
       // a cirque is a small bowl with a steep headwall: it must not plane off the ridges around it
       const cirqueOnly = cirque && ik < 2 && qk < 6;
       const R = cirqueOnly ? 55 : 22 + 1.1 * Wg;
@@ -362,6 +363,8 @@ export async function finishWorld(world, cfg, ROOT, log) {
     const bl = boxBlur(acc, M, 1);
     for (let m = 0; m < mn; m++) mIce[m] = Math.round(255 * sat(bl[m] * 1.3));
   }
+  // rainfall grades across a rain shadow over kilometres, not at a line
+  { const r = Math.max(2, Math.round(450 / mdx)); const pb = boxBlur(boxBlur(mP, M, r), M, r); mP.set(pb); }
   const mPrec = new Uint8Array(mn), mForest = new Uint8Array(mn), mDark = new Uint8Array(mn), mWet = new Uint8Array(mn), mSand = new Uint8Array(mn), mStratB = new Uint8Array(mn);
   const reliefR = Math.round(700 / mdx);
   const hBlur = boxBlur(mh, M, reliefR);

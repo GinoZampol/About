@@ -32,8 +32,12 @@ export const ROCK_COLOR = [
 export function rockAt(base, z, off) {
   if (base !== ROCK.SANDSTONE) return base;
   const zs = z - off;
-  if (zs >= 1215) return ROCK.LIMESTONE;   // pale caprock that rims the mesas
-  if (zs >= 1090) return ROCK.SANDSTONE;
+  if (zs >= 1090) {
+    // the upper sequence repeats: red sandstone, pale cliff-forming cap, shale, sandstone ...
+    // so high ground on the plateau margin is banded too, never one thick uniform layer
+    const t = (zs - 1090) % 380;
+    return t < 125 ? ROCK.SANDSTONE : t < 215 ? ROCK.LIMESTONE : t < 300 ? ROCK.SHALE : ROCK.SANDSTONE;
+  }
   if (zs >= 990) return ROCK.SHALE;
   if (zs >= 905) return ROCK.SANDSTONE;
   if (zs >= 770) return ROCK.SHALE;

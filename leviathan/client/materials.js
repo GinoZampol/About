@@ -87,7 +87,8 @@ vec3 strataColor(int rk);
 int rockAt(int base, float z, float off) {
   if (base != 6) return base;
   float zs = z - off;
-  if (zs >= 1215.0) return 3; if (zs >= 1090.0) return 6; if (zs >= 990.0) return 7; if (zs >= 905.0) return 6;
+  if (zs >= 1090.0) { float t = mod(zs - 1090.0, 380.0); return t < 125.0 ? 6 : t < 215.0 ? 3 : t < 300.0 ? 7 : 6; }
+  if (zs >= 990.0) return 7; if (zs >= 905.0) return 6;
   if (zs >= 770.0) return 7; if (zs >= 650.0) return 3; if (zs >= 520.0) return 7; return 2;
 }
 vec3 rockColor(int rk) {
@@ -121,7 +122,9 @@ void main() {
   vec4 n2 = noTile(uNoise, vWPos.xz / 67.0, 1.0 - tk);
   vec4 A = texture2D(uMapA, uv); vec4 B = texture2D(uMapB, uv);
   vec2 FI = texture2D(uFlow, uv).rg; float flow = FI.r, ice = FI.g;
-  int base = int(texture2D(uRock, uv + (n2.rg - 0.5) * 0.0022).r * 255.0 + 0.5);
+  // rock provinces meet along irregular, blended contacts rather than a pixel line
+  vec2 ruv = uv + (n3.rg - 0.5) * 0.007 + (n2.rg - 0.5) * 0.0016;
+  int base = int(texture2D(uRock, ruv).r * 255.0 + 0.5);
   vec4 NT = texture2D(uNormTex, uv);
   vec3 nTex = vec3(NT.r * 2.0 - 1.0, 0.0, NT.g * 2.0 - 1.0); nTex.y = sqrt(max(1.0 - dot(nTex.xz, nTex.xz), 0.02));
   float outside = step(0.5, step(vWPos.x, 0.0) + step(uWorldSize, vWPos.x) + step(vWPos.z, 0.0) + step(uWorldSize, vWPos.z));
@@ -159,23 +162,27 @@ void main() {
   ground = mix(ground, litter, ff * 0.9);
   ground = mix(ground, S(vec3(0.22, 0.27, 0.13)) * (0.8 + 0.4 * n1.r), wet * 0.65);
   // watercourses: green ribbons in humid country, pale gravel washes in dry country
-  float course = smoothstep(0.22, 0.5, flow + (n2.g - 0.5) * 0.12);
+  vec4 n4 = noTile(uNoise, vWPos.xz / 23.0 + 0.61, tk);
+  // watercourses tint their surroundings only faintly and unevenly: no band of constant width
+  float course = smoothstep(0.3, 0.75, flow + (n2.g - 0.5) * 0.3 + (n3.b - 0.5) * 0.35) * (0.5 + 0.5 * n4.a);
   float arid = 1.0 - smoothstep(0.32, 0.6, precip);
-  ground = mix(ground, lush * (0.8 + 0.4 * n1.r), course * (1.0 - arid) * 0.45 * (1.0 - ff));
-  ground = mix(ground, S(vec3(0.60, 0.56, 0.48)) * (0.8 + 0.4 * n1.b), course * arid * 0.75);
+  ground = mix(ground, lush * (0.8 + 0.4 * n1.r), course * (1.0 - arid) * 0.3 * (1.0 - ff));
+  ground = mix(ground, S(vec3(0.60, 0.56, 0.48)) * (0.8 + 0.4 * n1.b), course * arid * 0.3);
   vec3 sandC = mix(S(vec3(0.76, 0.69, 0.54)), S(vec3(0.78, 0.60, 0.42)), mesa) * (0.90 + 0.2 * n1.r) * (0.92 + 0.16 * n2.b);
   // sand thins out over a broad, ragged margin and lingers in hollows, so dunes grade into the plateau
   ground = mix(ground, sandC, smoothstep(0.06, 0.72, sand + ((n2.r - 0.5) * 0.25 + (n3.r - 0.5) * 0.35 + curv * 0.18) * smoothstep(0.0, 0.25, sand)) * (1.0 - smoothstep(0.4, 0.8, tanS)));
 
   // ---- bedrock -------------------------------------------------------------------------------
   float hz = h + (n2.r - 0.5) * 9.0 + (n3.g - 0.5) * 22.0;
-  vec3 rc;
-  if (base == 6) {
-    // plateau stratigraphy: colour bands follow the beds; outside the plateau mask it is plain grey rock
-    vec3 st = mix(strataColor(rockAt(6, hz + (n1.r - 0.5) * 5.0, strat)), strataColor(rockAt(6, hz - 6.0 + (n1.g - 0.5) * 5.0, strat)), 0.5);
-    float bands = sin((h + strat * 0.15) * 0.7 + n3.r * 5.0) * 0.5 + sin(h * 2.3 + n2.g * 4.0) * 0.5;
-    rc = mix(rockColor(4), st * (1.0 + 0.12 * bands), mesa);
-  } else rc = rockColor(base);
+  vec3 st = mix(strataColor(rockAt(6, hz + (n1.r - 0.5) * 5.0, strat)), strataColor(rockAt(6, hz - 6.0 + (n1.g - 0.5) * 5.0, strat)), 0.5);
+  float bands = sin((h + strat * 0.15) * 0.7 + n3.r * 5.0) * 0.5 + sin(h * 2.3 + n2.g * 4.0) * 0.5;
+  // plateau stratigraphy: colour bands follow the beds; outside the plateau mask it is plain grey rock
+  vec3 mesaC = mix(rockColor(4), st * (1.0 + 0.12 * bands), mesa);
+  vec2 rs = vec2(textureSize(uRock, 0)), tc = ruv * rs - 0.5, tf = floor(tc), fr = tc - tf;
+  fr = fr * fr * (3.0 - 2.0 * fr);
+  int i00 = int(texture2D(uRock, (tf + vec2(0.5, 0.5)) / rs).r * 255.0 + 0.5), i10 = int(texture2D(uRock, (tf + vec2(1.5, 0.5)) / rs).r * 255.0 + 0.5);
+  int i01 = int(texture2D(uRock, (tf + vec2(0.5, 1.5)) / rs).r * 255.0 + 0.5), i11 = int(texture2D(uRock, (tf + vec2(1.5, 1.5)) / rs).r * 255.0 + 0.5);
+  vec3 rc = mix(mix(i00 == 6 ? mesaC : rockColor(i00), i10 == 6 ? mesaC : rockColor(i10), fr.x), mix(i01 == 6 ? mesaC : rockColor(i01), i11 == 6 ? mesaC : rockColor(i11), fr.x), fr.y);
   rc = mix(rc, rc * vec3(1.06, 0.98, 0.9), n3.b) * (0.8 + 0.4 * n3.a);
   rc *= (0.72 + 0.56 * n2.g) * (0.86 + 0.28 * n1.b);
   // water stains and joints run down the face
@@ -183,7 +190,6 @@ void main() {
   float streak = texture2D(uNoise, vec2(dot(vWPos.xz, perp) / 9.0, h / 75.0)).r;
   rc *= mix(1.0, 0.66 + 0.62 * streak, smoothstep(0.7, 1.5, tanS));
   rc = mix(rc, rc * vec3(0.78, 0.84, 0.70), smoothstep(0.9, 1.6, precip) * n2.a * 0.7);
-  vec4 n4 = noTile(uNoise, vWPos.xz / 23.0 + 0.61, tk);
   // rock shows through gradually: thin soils on spurs and steep, high ground, in ragged patches
   float rockArg = tanS + (n2.b - 0.5) * 0.6 + (n3.a - 0.5) * 0.55 + (n4.g - 0.5) * 0.35 - curv * 0.3 + smoothstep(1300.0, 2700.0, h) * 0.75
     - sand - forest * 1.15 - smoothstep(0.8, 1.6, precip) * 0.12 - 0.35 * (1.0 - smoothstep(1100.0, 2300.0, h)) * smoothstep(0.45, 0.9, precip);

@@ -1,15 +1,15 @@
-PASS  river profiles never climb: 0 uphill steps in 75416 (max gradient 165%, 4835 waterfall/cascade steps)
-PASS  river network is connected: 86 segments end in a lake or the sea, 424 at confluences, 0 orphaned
-PASS  channel beds lie below the water surface: 0.00% of 8329 cross-sections dry
-PASS  rivers are not perched above both banks: 0.12% of cross-sections
-INFO  river network: 510 reaches, 967 km, 6 lakes
+PASS  river profiles never climb: 0 uphill steps in 76215 (max gradient 143%, 4804 waterfall/cascade steps)
+PASS  river network is connected: 89 segments end in a lake or the sea, 416 at confluences, 0 orphaned
+PASS  channel beds lie below the water surface: 0.00% of 8425 cross-sections dry
+PASS  rivers are not perched above both banks: 0.07% of cross-sections
+INFO  river network: 505 reaches, 977 km, 6 lakes
 PASS  no unintended closed basins: 0 single-cell hollows under 1 m (quantisation), 0 deeper
 PASS  no terrain discontinuities: largest step between adjacent 12 m samples 45.0 m (cliff limit 73 m)
-INFO  slope classes (land): <5% 7.7%  5-15% 16.2%  15-45% 25.4%  45-100% 32.3%  cliffs 18.5%
-INFO  land area: 2128 km2 of 2500, highest point 5779 m
+INFO  slope classes (land): <5% 6.2%  5-15% 15.4%  15-45% 25.7%  45-100% 34.4%  cliffs 18.2%
+INFO  land area: 2129 km2 of 2500, highest point 5783 m
 PASS  chunk seams are bit-exact: 0 mismatches in 360 shared edge vertices across LOD levels 3-11
-FAIL  most land is reachable on foot from the Central Valley: 57.7% of land (slopes under 35 deg, rivers crossable)
-INFO  cart-grade land network (under 8 deg) from the Central Valley: 14.7% of land with bridges, 14.5% without crossing a major river
+FAIL  most land is reachable on foot from the Central Valley: 57.2% of land (slopes under 35 deg, rivers crossable)
+INFO  cart-grade land network (under 8 deg) from the Central Valley: 14.0% of land with bridges, 4.2% without crossing a major river
 PASS  walking route: Central Valley -> High Desert: reachable on foot / pack animal only
 PASS  walking route: Central Valley -> Coast Range: reachable on foot / pack animal only
 FAIL  walking route: Central Valley -> Northern Highlands: not reachable
@@ -17,7 +17,7 @@ FAIL  walking route: Central Valley -> Longwater: not reachable
 PASS  walking route: Central Valley -> Badlands: reachable on foot / pack animal only
 PASS  walking route: Central Valley -> The Erg: reachable on foot / pack animal only
 PASS  walking route: Central Valley -> Great River delta: reachable, also at cart grade
-INFO  buildable land (slope under 8%): 281 km2, of which 77 km2 lies within 400 m of a major river, lake or the sea
-INFO  land cover: water 371 km2, grassland 262 km2, parkland 337 km2, forest 647 km2, dark forest 26 km2, steppe/desert 529 km2, alpine 149 km2, snow 179 km2
-PASS  forest never on cliffs or above the treeline: 18 of 282242 forest cells
-PASS  every subsurface cell resolves to a material: schist 29.8%, granite 14.7%, topsoil 14.2%, limestone 11.2%, greywacke 10.3%, gravel 8.1%, shale 2.9%, subsoil 2.6%, iron ore 2.4%, clay 1.6%, sandstone 0.9%, copper ore 0.8%, sand 0.2%, coal 0.2%, salt 0.1%, peat 0.1%, snow 0.0%, gold-bearing quartz 0.0%
+INFO  buildable land (slope under 8%): 247 km2, of which 71 km2 lies within 400 m of a major river, lake or the sea
+INFO  land cover: water 370 km2, grassland 261 km2, parkland 336 km2, forest 651 km2, dark forest 25 km2, steppe/desert 550 km2, alpine 131 km2, snow 175 km2
+PASS  forest never on cliffs or above the treeline: 14 of 283429 forest cells
+PASS  every subsurface cell resolves to a material: schist 29.9%, granite 14.6%, topsoil 14.3%, greywacke 10.3%, gravel 8.1%, sandstone 5.6%, shale 5.6%, limestone 3.5%, subsoil 2.6%, iron ore 2.4%, clay 1.6%, copper ore 0.8%, coal 0.4%, salt 0.2%, sand 0.1%, peat 0.1%, snow 0.0%, gold-bearing quartz 0.0%
