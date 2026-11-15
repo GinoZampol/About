@@ -135,6 +135,7 @@ void main() {
 
   // ---- soil moisture: climate, then where water actually collects on the landform ------------
   float m = precip * (1.0 + 0.42 * curv + 0.28 * flow - 0.28 * sunny + (n3.r - 0.5) * 0.3 + (n2.r - 0.5) * 0.16) + 0.35 * wet;
+  m -= 0.2 * mesa * (1.0 - 0.6 * flow);            // the plateau is dry steppe; only its watercourses stay green
   float detailF = 1.0 - smoothstep(120.0, 700.0, dist);                   // fine speckle only where it can be resolved
 
   // ---- herb layer -------------------------------------------------------------------------------
