@@ -393,12 +393,13 @@ export async function finishWorld(world, cfg, ROOT, log) {
     // forest canopy cover: moisture, temperature (treeline), slope, with patchiness
     // trees climb higher in sheltered hollows and stop lower on exposed spurs; the limit is a wide, ragged zone
     const treeline = -COLD.drop * 0.9 * coldAt(yk) + 1930 + 90 * noise2(xk / 3, yk / 3, seed + 70) + Math.max(-220, Math.min(260, (hBlur[m] - z) * 3)) + 170 * fbm(xk / 0.6, yk / 0.6, 3, seed + 74);
-    const pe = p * (1 + 0.5 * smoothstep(14, 0, wdist[m])) + 0.25 * smoothstep(10, 150, qk) + 0.12 * fbm(xk / 2.4, yk / 2.4, 3, seed + 71);
+    // (rain on flat ground varies only west to east in the model; break that up so no boundary runs straight)
+    const pe = (p + 0.16 * fbm(xk / 5.5, yk / 5.5, 3, seed + 76)) * (1 + 0.5 * smoothstep(14, 0, wdist[m])) + 0.25 * smoothstep(10, 150, qk) + 0.12 * fbm(xk / 2.4, yk / 2.4, 3, seed + 71);
     let F = smoothstep(0.42, 0.95, pe) * (1 - smoothstep(treeline - 450, treeline + 60, z)) * (1 - smoothstep(0.8, 1.7, sl + 0.3 * fbm(xk / 0.45, yk / 0.45, 2, seed + 75)));
     F *= 0.75 + 0.25 * smoothstep(-0.25, 0.15, fbm(xk / 0.9, yk / 0.9, 3, seed + 72));   // glades and meadows
     F *= 1 - 0.85 * smoothstep(0.75, 1, wet);
     // variant B: the lowland south of the central sea is open prairie; trees keep to the watercourses
-    if (VB && z < 300 && p < 0.9 && sl < 0.2 && coldAt(yk) < 0.3) F *= 0.15 + 0.85 * smoothstep(5, 1, wdist[m]);
+    if (VB) { const pr = smoothstep(1.05, 0.72, pe) * smoothstep(0.24, 0.1, sl) * smoothstep(360, 200, z) * (1 - smoothstep(0.2, 0.4, coldAt(yk))); F *= 1 - pr * (0.85 - 0.85 * smoothstep(5, 1, wdist[m])); }
     F *= 1 - (mMesa[m] / 255) * smoothstep(0.22, 0.45, sl);                               // no woods on mesa walls and ledges                                           // open marsh
     if (z < 3) F *= smoothstep(1.0, 3, z);
     mForest[m] = Math.round(255 * sat(F));

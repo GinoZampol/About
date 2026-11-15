@@ -85,8 +85,8 @@ export function designAt(xk, yk, seed) {
   // amplitude along the arc: full alpine height in the main N-S section, lower in the highland arc
   let ampS = northBranch ? 0.86 : 1.0 - 0.5 * smoothstep(38, 50, sS);
   ampS *= 0.94 + 0.14 * noise2(sS / 5.5, 3.7, seed + 21) + 0.07 * noise2(sS / 1.9, 9.1, seed + 22);
-  if (VB) ampS *= 0.9;
-  const gS = gauss(dS, VB ? 3.4 : 4.8 - 1.2 * smoothstep(38, 50, sS));
+  if (VB) ampS *= 1.3;                    // B's one alpine range is short but properly high and snowy
+  const gS = gauss(dS, VB ? 3.8 : 4.8 - 1.2 * smoothstep(38, 50, sS));
   const gH = VB ? 0.5 * gauss(polyDist(wx, wy, HIGH_B)[0], 3.6) : 0;        // B: low northern highlands
   const gSA = Math.max(gS * ampS, gH);
   const [dG] = polyDist(xk + 0.35 * noise2(xk / 3, yk / 3, seed + 23), yk + 0.5 * noise2(xk / 3.5, yk / 3.5, seed + 24), GORGE);

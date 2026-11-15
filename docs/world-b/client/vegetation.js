@@ -73,6 +73,7 @@ const V = (x, y, z) => new THREE.Vector3(x, y, z);
 
 function conifer(P, lod, seed) {
   const g = new Geo(), rnd = mulberry32(seed), H = P.H;
+  if (lod === 3) { g.cone(H * P.base * 0.8, H, P.R * 0.85, 3, rnd, 0.55); return g.build(); }      // 3 triangles
   if (lod === 2) { g.cone(H * P.base * 0.9, H, P.R * 0.8, 6, rnd, 0.55); return g.build(); }
   if (lod === 1) {
     g.tube([V(0, 0, 0), V(0, H * 0.9, 0)], [P.tr, 0.04], 5);
@@ -103,6 +104,7 @@ function conifer(P, lod, seed) {
 
 function broadleaf(P, lod, seed) {
   const g = new Geo(), rnd = mulberry32(seed), H = P.H, cy = H * P.cy, C = V(0, cy, 0);
+  if (lod === 3) { g.cone(cy - P.ry * 0.8, cy + P.ry, P.rx * 0.95, 4, rnd, 0.55); return g.build(); }  // 4 triangles
   if (lod === 2) { g.blob(0, cy, 0, P.rx, P.ry, 0, rnd, 0.5); return g.build(); }
   const top = V((rnd() - 0.5) * 0.6, H * P.bare, (rnd() - 0.5) * 0.6);
   g.tube([V(0, 0, 0), V(top.x * 0.4, top.y * 0.5, top.z * 0.4), top], [P.tr * 1.2, P.tr * 0.85, P.tr * 0.6], lod ? 5 : 7);
@@ -301,7 +303,8 @@ void main() {
 const lin = (r, g, b) => new THREE.Color().setRGB(r, g, b, THREE.SRGBColorSpace);
 
 export class Vegetation {
-  constructor({ scene, world, terrain, shared, mats, tex, csm, treeDist, grassDist }) {
+  constructor({ scene, world, terrain, shared, mats, tex, csm, treeDist, farDist, grassDist }) {
+    this.farDist = farDist || treeDist;       // beyond treeDist, a thinned ring of 3-4 triangle trees out to farDist
     this.world = world; this.terrain = terrain; this.treeDist = treeDist; this.grassDist = grassDist;
     this.group = new THREE.Group(); scene.add(this.group);
     this.tiles = new Map(); this.pending = 0; this.stats = { instances: 0, tiles: 0 }; this.lastPos = new THREE.Vector3(1e9, 0, 0);
@@ -309,7 +312,7 @@ export class Vegetation {
     const tx = makeTextures();
     const mat = (leafTex, leafCol, barkCol, o = {}) => {
       const m = new THREE.ShaderMaterial({
-        uniforms: { ...mats.base(), uLeaf: { value: leafTex }, uBark: { value: tx.bark }, uNoise: { value: tex.noise }, uLeafCol: { value: leafCol }, uBarkCol: { value: barkCol }, uTrans: { value: o.trans ?? 0.6 }, uRockMode: { value: o.rock ? 1 : 0 }, uFade: { value: o.fade ?? treeDist }, uWind: { value: o.wind ?? 1 } },
+        uniforms: { ...mats.base(), uLeaf: { value: leafTex }, uBark: { value: tx.bark }, uNoise: { value: tex.noise }, uLeafCol: { value: leafCol }, uBarkCol: { value: barkCol }, uTrans: { value: o.trans ?? 0.6 }, uRockMode: { value: o.rock ? 1 : 0 }, uFade: { value: o.fade ?? (farDist || treeDist) }, uWind: { value: o.wind ?? 1 } },
         vertexShader: VEG_VERT, fragmentShader: VEG_FRAG, lights: true, vertexColors: true, side: o.rock ? THREE.FrontSide : THREE.DoubleSide,
       });
       m.userData.leafTex = leafTex; return m;
@@ -331,11 +334,11 @@ export class Vegetation {
     const BIR = { H: 15, tr: 0.15, cy: 0.66, bare: 0.4, rx: 2.5, ry: 4.4, branches: 4, clusters: 20, card: 2.0, leader: true };
     const A = this.assets = [];
     const def = (t, geos, material, shadow = true, alpha = true) => { A[t] = { geos, material, shadow, depth: alpha ? depthFor(material) : undefined }; };
-    def(T.BROADLEAF, [0, 1, 2].map((l) => broadleaf(BRO, l, 11)), M.broad);
-    def(T.CONIFER, [0, 1, 2].map((l) => conifer(CON, l, 12)), M.conifer);
-    def(T.GIANT, [0, 1, 2].map((l) => conifer(GIA, l, 13)), M.giant);
-    def(T.PINE, [0, 1, 2].map((l) => broadleaf(PIN, l, 14)), M.pine);
-    def(T.BIRCH, [0, 1, 2].map((l) => broadleaf(BIR, l, 15)), M.birch);
+    def(T.BROADLEAF, [0, 1, 2, 3].map((l) => broadleaf(BRO, l, 11)), M.broad);
+    def(T.CONIFER, [0, 1, 2, 3].map((l) => conifer(CON, l, 12)), M.conifer);
+    def(T.GIANT, [0, 1, 2, 3].map((l) => conifer(GIA, l, 13)), M.giant);
+    def(T.PINE, [0, 1, 2, 3].map((l) => broadleaf(PIN, l, 14)), M.pine);
+    def(T.BIRCH, [0, 1, 2, 3].map((l) => broadleaf(BIR, l, 15)), M.birch);
     def(T.SNAG, [snag(0, 16), snag(1, 16), snag(2, 16)], M.snag, true, false);
     def(T.BUSH, [bush(0, 17), bush(1, 17)], M.bush);
     def(T.SAGE, [bush(0, 18, true), bush(1, 18, true)], M.sage, false);
@@ -353,10 +356,12 @@ export class Vegetation {
     const want = new Map(), S = this.world.S, B = 512;
     const dist = (x0, z0, s) => Math.hypot(Math.max(x0 - pos.x, 0, pos.x - x0 - s), Math.max(z0 - pos.z, 0, pos.z - z0 - s));
     const yPen = Math.max(0, pos.y - this.world.ground(pos.x, pos.z) - 150);   // high above the ground the near rings are pointless
-    const i0 = Math.max(0, Math.floor((pos.x - this.treeDist) / B)), i1 = Math.min(Math.ceil(S / B) - 1, Math.floor((pos.x + this.treeDist) / B));
-    const j0 = Math.max(0, Math.floor((pos.z - this.treeDist) / B)), j1 = Math.min(Math.ceil(S / B) - 1, Math.floor((pos.z + this.treeDist) / B));
+    const R = this.farDist;
+    const i0 = Math.max(0, Math.floor((pos.x - R) / B)), i1 = Math.min(Math.ceil(S / B) - 1, Math.floor((pos.x + R) / B));
+    const j0 = Math.max(0, Math.floor((pos.z - R) / B)), j1 = Math.min(Math.ceil(S / B) - 1, Math.floor((pos.z + R) / B));
     for (let j = j0; j <= j1; j++) for (let i = i0; i <= i1; i++) {
-      const x0 = i * B, z0 = j * B, d = dist(x0, z0, B); if (d > this.treeDist) continue;
+      const x0 = i * B, z0 = j * B, d = dist(x0, z0, B); if (d > R) continue;
+      if (d > this.treeDist) { want.set(`3:${x0}:${z0}`, { x0, z0, size: B, lod: 3 }); continue; }
       if (d + yPen > this.midDist) { want.set(`2:${x0}:${z0}`, { x0, z0, size: B, lod: 2 }); continue; }
       for (let b = 0; b < 2; b++) for (let a = 0; a < 2; a++) {
         const x1 = x0 + a * 256, z1 = z0 + b * 256, d1 = dist(x1, z1, 256);
@@ -413,7 +418,7 @@ export class Vegetation {
       let minY = 1e9, maxY = -1e9; for (let k = 13; k < g.mats.length; k += 16) { if (g.mats[k] < minY) minY = g.mats[k]; if (g.mats[k] > maxY) maxY = g.mats[k]; }
       mesh.boundingSphere = new THREE.Sphere(new THREE.Vector3(cx, (minY + maxY) / 2 + 12, cz), Math.hypot(t.size * 0.75, (maxY - minY) / 2 + 40));
       mesh.frustumCulled = true; mesh.matrixAutoUpdate = false;
-      mesh.castShadow = a.shadow && t.lod < 2; mesh.receiveShadow = true; if (a.depth) mesh.customDepthMaterial = a.depth;
+      mesh.castShadow = a.shadow && t.lod < 2; if (t.lod === 3) mesh.receiveShadow = false; mesh.receiveShadow = true; if (a.depth) mesh.customDepthMaterial = a.depth;
       this.group.add(mesh); t.meshes.push(mesh); this.stats.instances += n;
     }
     if (m.colliders.length) this.colliderTiles.set(m.key, m.colliders);

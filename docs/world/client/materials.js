@@ -167,7 +167,8 @@ void main() {
   vec3 ground = mix(soil, grass, veg * (1.0 - bare * 0.65));
   vec3 litter = mix(S(vec3(0.26, 0.20, 0.12)), S(vec3(0.19, 0.24, 0.10)), n2.b * (0.5 + 0.5 * dark)) * (0.8 + 0.4 * n1.a);
   float ff = smoothstep(0.22, 0.74, forest + (n2.a - 0.5) * 0.35);
-  ground = mix(ground, litter, ff * 0.9);
+  // brown leaf litter is only seen from among the trees; from any distance the forest floor reads green
+  ground = mix(ground, mix(S(vec3(0.13, 0.20, 0.09)) * (0.8 + 0.4 * n1.a), litter, 1.0 - smoothstep(18.0, 70.0, dist)), ff * 0.9);
   // marsh: a mosaic of reed beds, sedge and dark peaty pools
   vec3 marsh = mix(S(vec3(0.22, 0.27, 0.13)), S(vec3(0.40, 0.41, 0.20)), smoothstep(0.35, 0.65, n2.a)) * (0.8 + 0.4 * n1.r);
   marsh = mix(marsh, S(vec3(0.08, 0.10, 0.09)), smoothstep(0.56, 0.68, n2.b * 0.6 + n3.g * 0.4) * smoothstep(0.45, 0.8, wet));
@@ -216,7 +217,7 @@ void main() {
 
   // ---- snow: lingers in shaded hollows, strips from spurs and steep faces ---------------------
   float sn = smoothstep(-110.0, 110.0, hc - uSnowLine + (n3.b - 0.5) * 280.0 + (n2.r - 0.5) * 70.0 - N.z * 160.0 + curv * 260.0) * mix(smoothstep(2.1, 1.2, tanS), smoothstep(5.0, 3.0, tanS), smoothstep(250.0, 800.0, h - uSnowLine));
-  sn = max(sn, smoothstep(650.0, 1100.0, hc - uSnowLine + (n2.r - 0.5) * 120.0) * smoothstep(6.0, 3.5, tanS));   // summits are white
+  sn = max(sn, smoothstep(300.0, 750.0, hc - uSnowLine + (n2.r - 0.5) * 120.0) * smoothstep(6.0, 3.5, tanS));   // summits are white
   col = mix(col, vec3(0.86, 0.90, 0.95), sn);
 
   // ---- glaciers: snow-covered above the snowline, bare blue-grey ice with moraine stripes below ---

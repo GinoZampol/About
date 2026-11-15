@@ -11,7 +11,8 @@ import { ROCK } from '../shared/geology.mjs';
 
 const ROOT = path.dirname(path.dirname(fileURLToPath(import.meta.url)));
 const arg = (k, d) => { const i = process.argv.indexOf('--' + k); return i > 0 ? process.argv[i + 1] : d; };
-export const MARGIN_KM = 0.01;   // the world is generated as the 50 km playable square plus 10 m on every side
+export const MARGIN_KM = 3;      // generated margin around the playable 50 km: keeps edge-of-simulation artefacts (rivers
+                                 // running along the boundary, ranges sagging to nothing) outside the visible world
 export const CFG = {
   seed: +arg('seed', 7),
   variant: arg('variant', 'A'),          // 'A' = original; 'B' = central sea, cold north, coastal marshes

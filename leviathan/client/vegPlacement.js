@@ -48,6 +48,7 @@ function placeTrees(world, { key, x0, z0, size, lod }) {
     let pTree = F > 0.34 ? Math.min(0.92, F * (0.85 + 0.45 * clump)) : F * (grove > 0.18 ? 2.0 + clump : 0.12);
     let isTree = r3 < pTree;
     if (lod === 2 && isTree && hash2(i, j, seed + 404) > 0.62) continue;
+    if (lod === 3 && (!isTree || hash2(i, j, seed + 404) > 0.16)) continue;   // far ring: one tree in six, drawn larger
     let shrub = -1;
     if (!isTree && lod < 2) {
       const r6 = hash2(i, j, seed + 405);
@@ -92,6 +93,7 @@ function placeTrees(world, { key, x0, z0, size, lod }) {
     let s = (0.5 + 0.75 * Math.pow(r5, 1.6)) * stunt;
     if (F < 0.34) s *= 1.12;                 // open-grown trees are broader and bigger
     if (lod === 2) s *= 1.12;
+    if (lod === 3) s *= 1.9;
     const lean = (hash2(i, j, seed + 412) - 0.5) * 0.08;
     bins.add(type, px, h - 0.25, pz, s, rot, tintV * tintH, tintV, tintV * (2 - tintH), s * (0.9 + 0.25 * hash2(i, j, seed + 413)), lean);
     if (lod === 0) { const tr = type === T.GIANT ? 0.95 : type === T.BIRCH ? 0.18 : 0.33; bins.col.push(px, pz, tr * s, h + 30); }
