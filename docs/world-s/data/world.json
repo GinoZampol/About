@@ -9,7 +9,7 @@
   "x0": 3000,
   "size": 50000
  },
- "seed": 99644,
+ "seed": 527801,
  "sizeM": 56000,
  "heightRes": 4096,
  "mapRes": 1024,
@@ -18,9 +18,9 @@
  "hOffset": 300,
  "hScale": 0.125,
  "seaLevel": 0,
- "maxElevation": 4565,
- "landKm2": 2060,
- "riverKm": 963,
+ "maxElevation": 2903,
+ "landKm2": 2422,
+ "riverKm": 1217,
  "mapChannels": [
   "rock",
   "strat",
@@ -34,49 +34,63 @@
   "flow",
   "ice"
  ],
- "lakes": [],
+ "lakes": [
+  {
+   "level": 672.26,
+   "areaKm2": 3.07,
+   "x": 55607,
+   "z": 41007
+  }
+ ],
  "landmarks": [
   {
    "name": "Central Valley (ocean shore)",
-   "x": 30878,
-   "z": 39806,
-   "h": 30,
+   "x": 40968,
+   "z": 24302,
+   "h": 14,
    "note": "low ground on the shore of the central ocean"
   },
   {
    "name": "The Crown",
-   "x": 10274,
-   "z": 20610,
-   "h": 4565,
+   "x": 50347,
+   "z": 33024,
+   "h": 2903,
    "note": "the great massif"
   },
   {
    "name": "The Horns",
-   "x": 13815,
-   "z": 39614,
-   "h": 3679,
+   "x": 50483,
+   "z": 48296,
+   "h": 2633,
    "note": "the alpine peaks"
   },
   {
    "name": "Mesa country",
-   "x": 29036,
-   "z": 47712,
+   "x": 20274,
+   "z": 36349,
    "h": 0,
    "note": "where the plateau river reaches the lowland"
   },
   {
    "name": "The Sand Sea",
-   "x": 38133,
-   "z": 55633,
+   "x": 14552,
+   "z": 42813,
    "h": 0,
    "note": "dune sea on the plateau"
   },
   {
    "name": "Central ocean",
-   "x": 25338,
-   "z": 27239,
+   "x": 32358,
+   "z": 28283,
    "h": 0,
    "note": "the middle of the world"
+  },
+  {
+   "name": "Lake 1",
+   "x": 55607,
+   "z": 41007,
+   "h": 672,
+   "note": "3.1 km2"
   }
  ],
  "config": {
