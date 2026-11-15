@@ -4,11 +4,7 @@
  "variant": "B",
  "layout": "S",
  "wind": 0.5,
- "cold": {
-  "z0": 22000,
-  "z1": 6000,
-  "drop": 1650
- },
+ "cold": null,
  "play": {
   "x0": 3000,
   "size": 50000

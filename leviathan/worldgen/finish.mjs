@@ -22,7 +22,7 @@ export async function finishWorld(world, cfg, ROOT, log) {
   // variant B: a cold north. `cold` rises from 0 at COLD.y0 to 1 at COLD.y1 (design km) and lowers the
   // treeline, the snowline and the glacier line by COLD.drop metres.
   const VB = cfg.variant !== 'A', VC = cfg.variant === 'C', COLD = { y0: 31, y1: 47, drop: 1650 };
-  const coldAt = (yk) => (VB ? smoothstep(COLD.y0, COLD.y1, yk) : 0);
+  const coldAt = (yk) => (VB && cfg.variant !== 'S' ? smoothstep(COLD.y0, COLD.y1, yk) : 0);
   const ctx = makeCtx(N);
   // wind-blown sand buries the fine drainage of the erg
   {
@@ -515,7 +515,7 @@ export async function finishWorld(world, cfg, ROOT, log) {
   }
   let landCells = 0, hmax = 0; for (let c = 0; c < n; c++) { if (!sea[c]) landCells++; if (h[c] > hmax) hmax = h[c]; }
   const meta = {
-    name: 'The Leviathan', version: 2, variant: VB ? 'B' : 'A', layout: cfg.variant, wind: cfg.wind || 0, cold: VB ? { z0: S - (COLD.y0 - KM0) * 1000, z1: S - (COLD.y1 - KM0) * 1000, drop: COLD.drop } : null, play: { x0: -KM0 * 1000, size: WORLD_KM * 1000 }, seed, sizeM: S, heightRes: N, mapRes: M, lakeRes: LN, riverMaskRes: RN,
+    name: 'The Leviathan', version: 2, variant: VB ? 'B' : 'A', layout: cfg.variant, wind: cfg.wind || 0, cold: VB && cfg.variant !== 'S' ? { z0: S - (COLD.y0 - KM0) * 1000, z1: S - (COLD.y1 - KM0) * 1000, drop: COLD.drop } : null, play: { x0: -KM0 * 1000, size: WORLD_KM * 1000 }, seed, sizeM: S, heightRes: N, mapRes: M, lakeRes: LN, riverMaskRes: RN,
     hOffset: H_OFFSET, hScale: H_SCALE, seaLevel: 0, maxElevation: Math.round(hmax),
     landKm2: Math.round(landCells * dx * dx / 1e6), riverKm: Math.round(totalLen / 1000),
     mapChannels: ['rock', 'strat', 'precip', 'forest', 'dark', 'wet', 'sand', 'ao', 'mesa', 'flow', 'ice'],
