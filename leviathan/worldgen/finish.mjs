@@ -29,8 +29,9 @@ export async function finishWorld(world, cfg, ROOT, log) {
     for (let c = 0; c < n; c++) if (!sea[c] && g.erg[c] > 0.01) h[c] += (hb[c] - h[c]) * Math.min(1, g.erg[c] * 1.3) * smoothstep(22, 5, Math.abs(hb[c] - h[c]));   // sand fills swales, it does not bury cliffs and canyon rims
   }
   // variant B has no long range to cast a rain shadow: its east is dry because it is far inland
-  const dryEast = (P) => { if (!VB) return P; for (let j = 0; j < N; j++) for (let i = 0; i < N; i++) P[j * N + i] *= 1 - 0.74 * smoothstep(31, 40.5, KM0 + (i + 0.5) / N * KMS); return P; };
-  let P = dryEast(computePrecip(h, sea, N, dx));
+  const W = cfg.wind || 0;
+  const dryEast = (P) => { if (!VB) return P; for (let j = 0; j < N; j++) for (let i = 0; i < N; i++) P[j * N + i] *= 1 - 0.74 * smoothstep(31, 40.5, KM0 + (i + 0.5) / N * KMS + (W ? (KM0 + (j + 0.5) / N * KMS - 25) * W * 0.6 + 2.2 * noise2(i / N * 6, j / N * 6, seed + 83) : 0)); return P; };
+  let P = dryEast(computePrecip(h, sea, N, dx, W));
 
   // ---- A. ice flux from a mass-balance accumulation --------------------------------------------
   flood(ctx, h, sea, dx); route(ctx, sea, dx, seed + 900); accumulate(ctx, sea, P, dx);
@@ -230,7 +231,7 @@ export async function finishWorld(world, cfg, ROOT, log) {
   }
 
   // ---- F. final hydrology ---------------------------------------------------------------------
-  P = dryEast(computePrecip(h, sea, N, dx));
+  P = dryEast(computePrecip(h, sea, N, dx, W));
   flood(ctx, h, sea, dx); route(ctx, sea, dx, seed + 901); accumulate(ctx, sea, P, dx);
   const { f, Q, rec } = ctx;
   const surf = new Float32Array(n); // water-or-ground surface
@@ -422,7 +423,7 @@ export async function finishWorld(world, cfg, ROOT, log) {
   { const fb = boxBlur(Float32Array.from(mForest), M, 1); for (let m = 0; m < mn; m++) mForest[m] = Math.round(0.55 * mForest[m] + 0.45 * fb[m]); }
 
   // ---- I. export (client convention: x east, z south; row 0 = north) --------------------------
-  const out = path.join(ROOT, VB ? 'data_b' : 'data'); fs.mkdirSync(out, { recursive: true });
+  const out = path.join(ROOT, cfg.outDir || (VB ? 'data_b' : 'data')), tag = (cfg.outDir || (VB ? 'data_b' : 'data')).replace(/^data/, ''); fs.mkdirSync(out, { recursive: true });
   const flip = (src, R, Ctor) => { const o = new Ctor(R * R); for (let j = 0; j < R; j++) for (let i = 0; i < R; i++) o[(R - 1 - j) * R + i] = src[j * R + i]; return o; };
   const hq = new Uint16Array(n);
   for (let c = 0; c < n; c++) hq[c] = Math.max(0, Math.min(65535, Math.round((h[c] + H_OFFSET) / H_SCALE)));
@@ -490,7 +491,7 @@ export async function finishWorld(world, cfg, ROOT, log) {
   ];
   let landCells = 0, hmax = 0; for (let c = 0; c < n; c++) { if (!sea[c]) landCells++; if (h[c] > hmax) hmax = h[c]; }
   const meta = {
-    name: 'The Leviathan', version: 2, variant: cfg.variant, cold: VB ? { z0: S - (COLD.y0 - KM0) * 1000, z1: S - (COLD.y1 - KM0) * 1000, drop: COLD.drop } : null, play: { x0: -KM0 * 1000, size: WORLD_KM * 1000 }, seed, sizeM: S, heightRes: N, mapRes: M, lakeRes: LN, riverMaskRes: RN,
+    name: 'The Leviathan', version: 2, variant: cfg.variant, wind: cfg.wind || 0, cold: VB ? { z0: S - (COLD.y0 - KM0) * 1000, z1: S - (COLD.y1 - KM0) * 1000, drop: COLD.drop } : null, play: { x0: -KM0 * 1000, size: WORLD_KM * 1000 }, seed, sizeM: S, heightRes: N, mapRes: M, lakeRes: LN, riverMaskRes: RN,
     hOffset: H_OFFSET, hScale: H_SCALE, seaLevel: 0, maxElevation: Math.round(hmax),
     landKm2: Math.round(landCells * dx * dx / 1e6), riverKm: Math.round(totalLen / 1000),
     mapChannels: ['rock', 'strat', 'precip', 'forest', 'dark', 'wet', 'sand', 'ao', 'mesa', 'flow', 'ice'],
@@ -502,9 +503,9 @@ export async function finishWorld(world, cfg, ROOT, log) {
   // previews
   const prev = path.join(ROOT, 'docs'); fs.mkdirSync(prev, { recursive: true });
   const lakeF = new Float32Array(n); for (let c = 0; c < n; c++) lakeF[c] = lakeId[c];
-  renderMap(path.join(prev, VB ? 'map_relief_b.png' : 'map_relief.png'), h, N, dx, { Q, qThr: Q_RIVER * 2, lake: lakeF });
+  renderMap(path.join(prev, `map_relief${tag}.png`), h, N, dx, { Q, qThr: Q_RIVER * 2, lake: lakeF });
   const mi = (c) => Math.min(M - 1, Math.floor(((c / N) | 0) / st)) * M + Math.min(M - 1, Math.floor((c % N) / st));
-  renderMap(path.join(prev, VB ? 'map_ecology_b.png' : 'map_ecology.png'), h, N, dx, {
+  renderMap(path.join(prev, `map_ecology${tag}.png`), h, N, dx, {
     Q, qThr: Q_RIVER * 6, lake: lakeF,
     color: (c, z) => {
       if (z <= 0 && sea[c]) return [40, 78, 120];

@@ -202,16 +202,19 @@ export function boxBlur(src, N, r, out) {
 }
 
 // Orographic precipitation: moist westerlies marched across the terrain. 1.0 ~ 1000 mm/yr.
-export function computePrecip(h, sea, N, dx) {
+// `slope` tilts the wind: 0 = from due west; 0.5 = from the south-west quarter (air tracks rise half a
+// cell north per cell east), which stops climate belts lining up with the north-south ranges.
+export function computePrecip(h, sea, N, dx, slope = 0) {
   const hp = new Float32Array(N * N);
   for (let c = 0; c < N * N; c++) hp[c] = h[c] > 0 ? h[c] : 0;
   const r = Math.max(1, Math.round(1400 / dx));
   const hs = boxBlur(boxBlur(hp, N, r), N, r);
   const P = new Float32Array(N * N);
-  const km = dx / 1000;
-  for (let j = 0; j < N; j++) {
+  const km = dx / 1000 * Math.sqrt(1 + slope * slope);
+  for (let j0 = -Math.ceil(N * Math.max(0, slope)); j0 < N + Math.ceil(N * Math.max(0, -slope)); j0++) {
     let M = 1.0, crest = 0;
     for (let i = 0; i < N; i++) {
+      const j = j0 + Math.floor(i * slope); if (j < 0 || j >= N) continue;
       const c = j * N + i;
       const s = (hs[j * N + Math.min(N - 1, i + 1)] - hs[j * N + Math.max(0, i - 1)]) / (2 * dx);
       crest = Math.max(hs[c], crest - 12 * km);

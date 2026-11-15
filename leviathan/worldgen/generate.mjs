@@ -15,7 +15,9 @@ export const MARGIN_KM = 3;      // generated margin around the playable 50 km: 
                                  // running along the boundary, ranges sagging to nothing) outside the visible world
 export const CFG = {
   seed: +arg('seed', 7),
-  variant: arg('variant', 'A'),          // 'A' = original; 'B' = central sea, cold north, coastal marshes
+  variant: arg('variant', 'A'),
+  wind: +arg('wind', 0),                 // rain-bearing wind: 0 = from the west, 0.5 = from the south-west
+  outDir: arg('out', arg('variant', 'A') === 'B' ? 'data_b' : 'data'),          // 'A' = original; 'B' = central sea, cold north, coastal marshes
   res: +arg('res', 4096),
   // the generated world is the 50 km playable square plus MARGIN_KM of equally detailed land on every side
   sizeM: (WORLD_KM + 2 * MARGIN_KM) * 1000,
@@ -87,7 +89,7 @@ export function erodeWorld(cfg) {
     }
     const ctx = makeCtx(N);
     for (let it = 0; it < iters; it++) {
-      if (it % 15 === 0) P = computePrecip(h, g.sea, N, dx);
+      if (it % 15 === 0) P = computePrecip(h, g.sea, N, dx, cfg.wind || 0);
       erodeStep(ctx, h, g.sea, g, P, dx, dt, cfg.K0, cfg.seed + res);
     }
     let mx = 0; for (let c = 0; c < N * N; c++) if (h[c] > mx) mx = h[c];
@@ -115,7 +117,7 @@ function stats(h, N, g) {
 if (import.meta.url === `file://${process.argv[1]}`) {
   const stage = arg('stage', 'all');
   setVariant(CFG.variant);
-  const cacheFile = path.join(CACHE, `eroded_${CFG.res}_${CFG.seed}${CFG.variant === 'A' ? '' : '_' + CFG.variant}.f32`);
+  const cacheFile = path.join(CACHE, `eroded_${CFG.res}_${CFG.seed}${CFG.variant === 'A' ? '' : '_' + CFG.variant}${CFG.wind ? '_w' + CFG.wind : ''}.f32`);
   let world;
   if (stage === 'finish' && fs.existsSync(cacheFile)) {
     const buf = fs.readFileSync(cacheFile);

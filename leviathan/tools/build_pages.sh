@@ -18,6 +18,7 @@ world() {  # $1 = target name, $2 = data dir, $3 = title
 }
 world world data "The Leviathan"
 world world-b data_b "The Leviathan 1B"
+[ -d "$L/data_b2" ] && world world-b2 data_b2 "The Leviathan 1B (seed 21)"
 # frozen version 5, taken straight from its commit
 mkdir -p "$OUT/v5"; git -C "$REPO" archive "$V5" leviathan/client leviathan/shared leviathan/data | tar -x -C "$OUT/v5" --strip-components=1
 page "$OUT/v5/client/index.html" "$OUT/v5" "The Leviathan v5"; rm "$OUT/v5/client/index.html"
@@ -41,6 +42,7 @@ cat > "$OUT/index.html" <<'HTML'
 <p>A generated 50 × 50 km world you can fly or walk through in the browser. Each world downloads about 14 MB.</p>
 <a href="world/"><b>The main world</b><span>Coast Range, Central Valley, the Spine, the Crown, mesa and dune sea</span></a>
 <a href="world-b/"><b>Version 1B</b><span>A central ocean, one great massif, prairie, sand sea, cold north</span></a>
+<a href="world-b2/"><b>Version 1B, second seed</b><span>Same design with a different seed and a south-westerly rain wind, so the climate belts no longer run north to south</span></a>
 <a href="v5/"><b>Version 5 (frozen)</b><span>An earlier snapshot, kept for comparison</span></a>
 </main></body></html>
 HTML
