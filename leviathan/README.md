@@ -20,6 +20,13 @@ Controls: click to capture the mouse, WASD, Shift (fast), F walk/fly, H mount, w
 `[` `]` time of day, T day cycle, N sound, M map and place list (click the map to travel), G / B dig or fill 1 m³.
 URL options: `?quality=low|medium|high`, `?pos=x,heightAboveGround,z&look=heading,pitch&time=13.5`.
 
+## Public site (GitHub Pages)
+
+`leviathan/tools/build_pages.sh` builds a static site into the repository's top-level `docs/`
+folder: a landing page plus three self-contained worlds (`world/`, `world-b/`, `v5/`), with
+three.js vendored so nothing depends on `node_modules` or a CDN. Re-run it after regenerating.
+To publish: repository Settings → Pages → Deploy from a branch → this branch, folder `/docs`.
+
 ## Versions
 
 - **Version 5** (drainage-line gullies, snow summits, mesa, erg, life layer; still has Ashfall Peak
