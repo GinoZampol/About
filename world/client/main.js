@@ -17,9 +17,9 @@ addEventListener('error', fail); addEventListener('unhandledrejection', fail);
 const Q = new URLSearchParams(location.search);
 const num = (k, d) => (Q.has(k) ? +Q.get(k) : d);
 const QUALITY = {
-  low:    { maxLevel: 9,  shadows: 0,    treeDist: 500,  grassDist: 0,  pr: 1 },
-  medium: { maxLevel: 10, shadows: 1024, treeDist: 900,  grassDist: 45, pr: 1 },
-  high:   { maxLevel: 11, shadows: 2048, treeDist: 1500, grassDist: 70, pr: Math.min(devicePixelRatio, 2) },
+  low:    { maxLevel: 9,  shadows: 0,    treeDist: 500,  farDist: 1600, grassDist: 0,  pr: 1 },
+  medium: { maxLevel: 10, shadows: 1024, treeDist: 900,  farDist: 2800, grassDist: 45, pr: 1 },
+  high:   { maxLevel: 11, shadows: 2048, treeDist: 1500, farDist: 4500, grassDist: 70, pr: Math.min(devicePixelRatio, 2) },
 };
 const quality = QUALITY[Q.get('quality') || (Math.min(innerWidth, innerHeight) < 600 ? 'low' : 'medium')];
 const SHOT = Q.has('shot');
@@ -63,7 +63,7 @@ tex.shadow = new THREE.DataTexture(tex.shadowData, tex.hgridRes, tex.hgridRes, T
 tex.shadow.magFilter = tex.shadow.minFilter = THREE.LinearFilter; tex.shadow.needsUpdate = true;
 const shared = makeShared();
 shared.uWorldSize.value = S; shared.uPlay.value.set(P0, P1);
-const opts = { variantB: world.meta.variant === 'B', worldSize: S, uTreeDist: { value: quality.treeDist }, uSnowLine: { value: num('snow', 2450) }, uCold: { value: world.coldCfg ? new THREE.Vector3(world.coldCfg.z0, world.coldCfg.z1, world.coldCfg.drop) : new THREE.Vector3(0, 0, 0) } };
+const opts = { variantB: world.meta.variant === 'B', worldSize: S, uTreeDist: { value: quality.farDist }, uSnowLine: { value: num('snow', 2450) }, uCold: { value: world.coldCfg ? new THREE.Vector3(world.coldCfg.z0, world.coldCfg.z1, world.coldCfg.drop) : new THREE.Vector3(0, 0, 0) } };
 shared.uCloud.value = num('cloud', 0.42);
 const mats = makeMaterials(shared, tex, opts);
 
@@ -111,7 +111,7 @@ let hgLeft = 0, normalsReady = false; const hgNew = new Float32Array(tex.hgridRe
 function onHgrid(m) { hgNew.set(m.out, m.j0 * tex.hgridRes); if (--hgLeft === 0) { refineNormals(tex, hgNew); updateSun(); normalsReady = true; } }
 { const T = tex.hgridRes, STRIP = 64; for (let j = 0; j < T; j += STRIP) { hgLeft++; terrain.extraQueue.push({ type: 'hgrid', T, j0: j, j1: Math.min(T, j + STRIP) }); } }
 const rivers = buildRivers(world, mats.river, scene);
-vegetation = new Vegetation({ scene, world, terrain, shared, mats, tex, csm, treeDist: quality.treeDist, grassDist: num('grass', quality.grassDist) });
+vegetation = new Vegetation({ scene, world, terrain, shared, mats, tex, csm, treeDist: quality.treeDist, farDist: quality.farDist, grassDist: num('grass', quality.grassDist) });
 await terrain.ready;
 
 const player = new Player(camera, world, canvas);
@@ -128,9 +128,12 @@ player.colliders = (x, z) => vegetation.collidersNear(x, z);
 }
 const life = new Life({ scene, world, camera, shared });
 let timeOfDay = num('time', 13.5), dayCycle = !SHOT && Q.get('cycle') !== '0', sunT = 0;
+// the sun follows a mid-European spring arc (47 N, mid-April): about 13.5 hours of daylight, 52 degrees high at noon
+const SUN_LAT = 47 * Math.PI / 180, SUN_DEC = 9.5 * Math.PI / 180;
+const DAY_HALF = Math.acos(-Math.tan(SUN_LAT) * Math.tan(SUN_DEC)) * 12 / Math.PI;   // hours from noon to sunset
 function updateSun() {
   const hAng = (timeOfDay - 13) / 12 * Math.PI;                       // solar noon at 13:00
-  const lat = 46 * Math.PI / 180, dec = 18 * Math.PI / 180;
+  const lat = SUN_LAT, dec = SUN_DEC;
   const sinE = Math.sin(lat) * Math.sin(dec) + Math.cos(lat) * Math.cos(dec) * Math.cos(hAng);
   const elev = Math.asin(sinE);
   const az = Math.atan2(-Math.sin(hAng) * Math.cos(dec), Math.cos(lat) * Math.sin(dec) - Math.sin(lat) * Math.cos(dec) * Math.cos(hAng)); // from north, clockwise
@@ -219,7 +222,7 @@ function frame() {
   shared.uTime.value += dt;
   player.update(dt);
   // the day turns slowly (one game hour every 75 s); the short night is skipped
-  if (dayCycle) { timeOfDay += dt / 75; if (timeOfDay > 20.6) timeOfDay = 5.4; sunT += dt; if (sunT > 2.5) { sunT = 0; updateSun(); } }
+  if (dayCycle) { timeOfDay += dt / 75; if (timeOfDay > 13 + DAY_HALF + 0.35) timeOfDay = 13 - DAY_HALF - 0.35; sunT += dt; if (sunT > 2.5) { sunT = 0; updateSun(); } }
   life.update(dt, timeOfDay);
   const agl = player.pos.y - world.ground(player.pos.x, player.pos.z);
   camera.near = Math.max(0.3, Math.min(30, agl * 0.04)); camera.updateProjectionMatrix();
