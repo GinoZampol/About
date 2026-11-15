@@ -4,7 +4,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { hash2, noise2 } from '../shared/noise.mjs';
-import { buildDesign, volcanoHeight, WORLD_KM } from './design.mjs';
+import { buildDesign, volcanoHeight, WORLD_KM, setVariant } from './design.mjs';
 import { makeCtx, erodeStep, upsample2, resample, computePrecip, flood, route, accumulate } from './erosion.mjs';
 import { renderMap } from './preview.mjs';
 import { ROCK } from '../shared/geology.mjs';
@@ -14,6 +14,7 @@ const arg = (k, d) => { const i = process.argv.indexOf('--' + k); return i > 0 ?
 export const MARGIN_KM = 8;
 export const CFG = {
   seed: +arg('seed', 7),
+  variant: arg('variant', 'A'),          // 'A' = original; 'B' = central sea, cold north, coastal marshes
   res: +arg('res', 4096),
   // the generated world is the 50 km playable square plus MARGIN_KM of equally detailed land on every side
   sizeM: (WORLD_KM + 2 * MARGIN_KM) * 1000,
@@ -112,7 +113,8 @@ function stats(h, N, g) {
 
 if (import.meta.url === `file://${process.argv[1]}`) {
   const stage = arg('stage', 'all');
-  const cacheFile = path.join(CACHE, `eroded_${CFG.res}_${CFG.seed}.f32`);
+  setVariant(CFG.variant);
+  const cacheFile = path.join(CACHE, `eroded_${CFG.res}_${CFG.seed}${CFG.variant === 'A' ? '' : '_' + CFG.variant}.f32`);
   let world;
   if (stage === 'finish' && fs.existsSync(cacheFile)) {
     const buf = fs.readFileSync(cacheFile);

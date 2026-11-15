@@ -11,6 +11,8 @@ export const VIEWS = JSON.parse(fs.readFileSync(path.join(ROOT, 'tools', 'views.
 const want = process.argv.slice(2).filter((a) => !a.startsWith('--'));
 const quality = (process.argv.find((a) => a.startsWith('--quality=')) || '--quality=high').split('=')[1];
 const size = (process.argv.find((a) => a.startsWith('--size=')) || '--size=1600x900').split('=')[1].split('x').map(Number);
+const dataArg = (process.argv.find((a) => a.startsWith('--data=')) || '').split('=')[1];   // e.g. --data=/data_b/ for variant 1B
+const outSuffix = dataArg ? '_b' : '';
 const port = 8123 + Math.floor(Math.random() * 500);
 const srv = await serve(port);
 const browser = await chromium.launch({ args: GL_ARGS });
@@ -19,14 +21,14 @@ page.on('console', (m) => { if (m.type() === 'error' || m.type() === 'warning') 
 page.on('pageerror', (e) => console.log('[pageerror]', e.message.slice(0, 600)));
 const names = want.length ? want : Object.keys(VIEWS);
 const v0 = VIEWS[names[0]];
-await page.goto(`http://localhost:${port}/client/index.html?shot=1&ui=0&pr=1&quality=${quality}&pos=${v0[0]},${v0[1]},${v0[2]}&look=${v0[3]},${v0[4]}&time=${v0[5]}`);
+await page.goto(`http://localhost:${port}/client/index.html?shot=1&ui=0&pr=1&quality=${quality}&pos=${v0[0]},${v0[1]},${v0[2]}&look=${v0[3]},${v0[4]}&time=${v0[5]}${dataArg ? '&data=' + dataArg : ''}`);
 for (const name of names) {
   const v = VIEWS[name], t0 = Date.now();
   await page.waitForFunction(() => typeof window.__setView === 'function', null, { timeout: 180000 });
   await page.evaluate((v) => window.__setView(...v), v);
   await page.waitForFunction(() => window.__ready === true, null, { timeout: 600000, polling: 500 });
   await page.waitForTimeout(300);
-  await page.screenshot({ path: path.join(OUT, name + '.jpg'), type: 'jpeg', quality: 88, timeout: 240000 });
+  await page.screenshot({ path: path.join(OUT, name + outSuffix + '.jpg'), type: 'jpeg', quality: 88, timeout: 240000 });
   const st = await page.evaluate(() => window.__stats());
   console.log(`${name}: ${((Date.now() - t0) / 1000).toFixed(0)}s  chunks ${st.chunks}  tris ${(st.tris / 1e6).toFixed(2)}M  draws ${st.calls}`);
 }

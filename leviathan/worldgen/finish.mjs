@@ -18,6 +18,10 @@ export async function finishWorld(world, cfg, ROOT, log) {
   const { h, N, g } = world;
   const n = N * N, dx = cfg.sizeM / N, sea = g.sea, seed = cfg.seed;
   const KM0 = cfg.domain.x0, KMS = cfg.domain.size, kmi = (k) => (k - KM0) / KMS * N;   // design kilometres <-> grid
+  // variant B: a cold north. `cold` rises from 0 at COLD.y0 to 1 at COLD.y1 (design km) and lowers the
+  // treeline, the snowline and the glacier line by COLD.drop metres.
+  const VB = cfg.variant === 'B', COLD = { y0: 31, y1: 47, drop: 1650 };
+  const coldAt = (yk) => (VB ? smoothstep(COLD.y0, COLD.y1, yk) : 0);
   const ctx = makeCtx(N);
   // wind-blown sand buries the fine drainage of the erg
   {
@@ -345,9 +349,10 @@ export async function finishWorld(world, cfg, ROOT, log) {
   // present-day glaciers: ice accumulates above today's snowline and flows down the valleys until it melts
   const mIce = new Uint8Array(mn);
   {
-    const { order, cnt } = ctx, a = dx * dx, ice2 = new Float64Array(n), ELA_NOW = 3050, acc = new Float32Array(mn);
+    const { order, cnt } = ctx, a = dx * dx, ice2 = new Float64Array(n), ELA_NOW0 = 3050, acc = new Float32Array(mn);
     for (let q = cnt - 1; q >= 0; q--) {
       const c = order[q];
+      const ELA_NOW = ELA_NOW0 - COLD.drop * coldAt(KM0 + ((c / N) | 0) / N * KMS);
       let bal = 0.004 * (h[c] - ELA_NOW) * (0.4 + P[c]) * a;
       if (bal < 0) bal *= Math.max(1, 2 * 70 * Math.pow(Math.max(ice2[c], 1) / 1e6, 0.3) / dx);
       const v = Math.max(0, ice2[c] + bal); ice2[c] = v;
@@ -380,10 +385,12 @@ export async function finishWorld(world, cfg, ROOT, log) {
     const flat = smoothstep(0.035, 0.008, sl);
     let wet = flat * smoothstep(8, 120, qk) * 0.8 + flat * smoothstep(5, 0, wdist[m]) * smoothstep(6, 1.5, z - (hBlur[m] - 3)) * 0.5;
     wet = sat(wet * smoothstep(0.25, 0.6, p) + (z < 2.2 ? 0.5 * flat : 0));
+    // variant B: broad tidal marshes and fens on the low shores of the central sea and the deltas
+    if (VB) wet = Math.max(wet, smoothstep(0.05, 0.012, sl) * smoothstep(20, 5, wdist[m]) * smoothstep(9, 2.5, z));
     mWet[m] = Math.round(255 * wet);
     // forest canopy cover: moisture, temperature (treeline), slope, with patchiness
     // trees climb higher in sheltered hollows and stop lower on exposed spurs; the limit is a wide, ragged zone
-    const treeline = 1930 + 90 * noise2(xk / 3, yk / 3, seed + 70) + Math.max(-220, Math.min(260, (hBlur[m] - z) * 3)) + 170 * fbm(xk / 0.6, yk / 0.6, 3, seed + 74);
+    const treeline = -COLD.drop * 0.9 * coldAt(yk) + 1930 + 90 * noise2(xk / 3, yk / 3, seed + 70) + Math.max(-220, Math.min(260, (hBlur[m] - z) * 3)) + 170 * fbm(xk / 0.6, yk / 0.6, 3, seed + 74);
     const pe = p * (1 + 0.5 * smoothstep(14, 0, wdist[m])) + 0.25 * smoothstep(10, 150, qk) + 0.12 * fbm(xk / 2.4, yk / 2.4, 3, seed + 71);
     let F = smoothstep(0.42, 0.95, pe) * (1 - smoothstep(treeline - 450, treeline + 60, z)) * (1 - smoothstep(0.8, 1.7, sl + 0.3 * fbm(xk / 0.45, yk / 0.45, 2, seed + 75)));
     F *= 0.75 + 0.25 * smoothstep(-0.25, 0.15, fbm(xk / 0.9, yk / 0.9, 3, seed + 72));   // glades and meadows
@@ -410,7 +417,7 @@ export async function finishWorld(world, cfg, ROOT, log) {
   { const fb = boxBlur(Float32Array.from(mForest), M, 1); for (let m = 0; m < mn; m++) mForest[m] = Math.round(0.55 * mForest[m] + 0.45 * fb[m]); }
 
   // ---- I. export (client convention: x east, z south; row 0 = north) --------------------------
-  const out = path.join(ROOT, 'data'); fs.mkdirSync(out, { recursive: true });
+  const out = path.join(ROOT, VB ? 'data_b' : 'data'); fs.mkdirSync(out, { recursive: true });
   const flip = (src, R, Ctor) => { const o = new Ctor(R * R); for (let j = 0; j < R; j++) for (let i = 0; i < R; i++) o[(R - 1 - j) * R + i] = src[j * R + i]; return o; };
   const hq = new Uint16Array(n);
   for (let c = 0; c < n; c++) hq[c] = Math.max(0, Math.min(65535, Math.round((h[c] + H_OFFSET) / H_SCALE)));
@@ -478,7 +485,7 @@ export async function finishWorld(world, cfg, ROOT, log) {
   ];
   let landCells = 0, hmax = 0; for (let c = 0; c < n; c++) { if (!sea[c]) landCells++; if (h[c] > hmax) hmax = h[c]; }
   const meta = {
-    name: 'The Leviathan', version: 2, play: { x0: -KM0 * 1000, size: WORLD_KM * 1000 }, seed, sizeM: S, heightRes: N, mapRes: M, lakeRes: LN, riverMaskRes: RN,
+    name: 'The Leviathan', version: 2, variant: cfg.variant, cold: VB ? { z0: S - (COLD.y0 - KM0) * 1000, z1: S - (COLD.y1 - KM0) * 1000, drop: COLD.drop } : null, play: { x0: -KM0 * 1000, size: WORLD_KM * 1000 }, seed, sizeM: S, heightRes: N, mapRes: M, lakeRes: LN, riverMaskRes: RN,
     hOffset: H_OFFSET, hScale: H_SCALE, seaLevel: 0, maxElevation: Math.round(hmax),
     landKm2: Math.round(landCells * dx * dx / 1e6), riverKm: Math.round(totalLen / 1000),
     mapChannels: ['rock', 'strat', 'precip', 'forest', 'dark', 'wet', 'sand', 'ao', 'mesa', 'flow', 'ice'],
@@ -490,9 +497,9 @@ export async function finishWorld(world, cfg, ROOT, log) {
   // previews
   const prev = path.join(ROOT, 'docs'); fs.mkdirSync(prev, { recursive: true });
   const lakeF = new Float32Array(n); for (let c = 0; c < n; c++) lakeF[c] = lakeId[c];
-  renderMap(path.join(prev, 'map_relief.png'), h, N, dx, { Q, qThr: Q_RIVER * 2, lake: lakeF });
+  renderMap(path.join(prev, VB ? 'map_relief_b.png' : 'map_relief.png'), h, N, dx, { Q, qThr: Q_RIVER * 2, lake: lakeF });
   const mi = (c) => Math.min(M - 1, Math.floor(((c / N) | 0) / st)) * M + Math.min(M - 1, Math.floor((c % N) / st));
-  renderMap(path.join(prev, 'map_ecology.png'), h, N, dx, {
+  renderMap(path.join(prev, VB ? 'map_ecology_b.png' : 'map_ecology.png'), h, N, dx, {
     Q, qThr: Q_RIVER * 6, lake: lakeF,
     color: (c, z) => {
       if (z <= 0 && sea[c]) return [40, 78, 120];

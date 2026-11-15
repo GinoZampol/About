@@ -48,6 +48,12 @@ const SOUND = [
 ];
 const ISLANDS = [[13.4, 39.2, 1.15], [16.3, 37.4, 0.55], [2.3, 24.5, 0.5], [2.9, 12.2, 0.38], [2.6, 46.3, 0.42]];
 
+// Variant B ("1B"): the Sound is widened into a central sea that reaches down the valley, and the
+// north is cold (see finish.mjs). Variant A is the original layout.
+let VARIANT = 'A';
+export function setVariant(v) { VARIANT = v; }
+const GULF = [[[15, 37.5, 4.2], [17, 32.5, 5.6], [19.2, 26.5, 5.4], [20.2, 21, 4.0], [19.8, 17, 2.2]]];
+const GULF_ISLANDS = [[17.2, 29.5, 1.3], [20.6, 23.6, 0.8], [15.6, 34.2, 0.6]];
 export function designAt(xk, yk, seed) {
   // domain warp so nothing follows a ruler
   const wx = xk + 1.25 * fbm(xk / 9, yk / 9, 3, seed + 11) + 0.32 * fbm(xk / 2.1, yk / 2.1, 3, seed + 12);
@@ -57,13 +63,13 @@ export function designAt(xk, yk, seed) {
   const xc = 5.0 + 1.3 * Math.sin(wy / 6.5 + 0.8) + 0.7 * Math.sin(wy / 2.7 + 2.0);
   let land = wx - xc;
   const sx = wx + 0.6 * fbm(xk / 1.3, yk / 1.3, 3, seed + 16) + 0.7 * noise2(xk / 3.7, yk / 3.7, seed + 26), sy = wy + 0.6 * fbm(xk / 1.3, yk / 1.3, 3, seed + 17) + 0.7 * noise2(xk / 3.7, yk / 3.7, seed + 27);
-  for (const pl of SOUND) for (let q = 0; q < pl.length - 1; q++) {
+  for (const pl of (VARIANT === 'B' ? SOUND.concat(GULF) : SOUND)) for (let q = 0; q < pl.length - 1; q++) {
     const a = pl[q], b = pl[q + 1];
     const [d, t] = segDist(sx, sy, a[0], a[1], b[0], b[1]);
     land = Math.min(land, d - (a[2] + (b[2] - a[2]) * t));
   }
   land += 0.16 * fbm(xk / 0.55, yk / 0.55, 3, seed + 18) + 0.5 * Math.max(0, fbm(xk / 3.3, yk / 3.3, 2, seed + 19)) * Math.exp(-Math.abs(land) / 1.5) * (land > -1 ? -1 : 0);
-  for (const c of ISLANDS) land = Math.max(land, c[2] - Math.hypot(wx - c[0], wy - c[1]) * (1 + 0.25 * noise2(xk * 1.3, yk * 1.3, seed + 15)));
+  for (const c of (VARIANT === 'B' ? ISLANDS.concat(GULF_ISLANDS) : ISLANDS)) land = Math.max(land, c[2] - Math.hypot(wx - c[0], wy - c[1]) * (1 + 0.25 * noise2(xk * 1.3, yk * 1.3, seed + 15)));
 
   // ---- structural elements ------------------------------------------------------------------
   let [dS, sS] = polyDist(wx, wy, SPINE);

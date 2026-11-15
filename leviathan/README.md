@@ -26,6 +26,14 @@ URL options: `?quality=low|medium|high`, `?pos=x,heightAboveGround,z&look=headin
   and the Tor) is commit `eda0fff` on this branch: `git checkout eda0fff` restores code and data
   exactly. A frozen playable copy is published separately as "The Leviathan v5".
 
+## Variant 1B (biomes)
+
+`node worldgen/generate.mjs --variant B` writes `data_b/` (run the client with `?data=/data_b/`;
+`node tools/build_web.mjs b` builds its web bundle). Same world model, three changes:
+a **central sea** reaching down the valley with islands; a **cold north** where the treeline,
+snowline and glacier line drop by up to 1,650 m (taiga, then tundra and low snow around the
+fjords); and **coastal marshes** on the low shores and deltas. The original layout is variant A.
+
 ## The geography
 
 One coherent convergent-margin transect, west to east, drained by a single river system:
@@ -160,7 +168,7 @@ target machine for real frame times.
 - **Trees are placeholders** by request; distant forest is shaded terrain.
 - **Performance figures above predate the Crown, cloud and life passes**, and no frame rate on a
   real GPU has been measured.
-- **Edges.** The generated world is 66 × 66 km at uniform quality; play is confined to the central 50 × 50 km by a translucent, diagonally striped border wall, and the 8 km beyond it on every side is ordinary world (terrain, rivers, forest) that is simply out of bounds. Height samples are now 16 m apart instead of 12 m. Statistics in `docs/validation.txt` cover the whole 66 km.
+- **Edges.** The world is generated as 66 × 66 km so the playable 50 × 50 km has natural terrain right up to its edge; only that core plus 10 m is drawn, behind a translucent, diagonally striped border wall. Height samples are now 16 m apart instead of 12 m. Statistics in `docs/validation.txt` cover the whole 66 km.
 - No night sky, no networking.
 
 ## Next priorities

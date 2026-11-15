@@ -58,6 +58,7 @@ export class World {
     this.M = data.meta.mapRes; this.maps = data.maps; this.minv = this.M / this.S;
     this.LN = data.meta.lakeRes; this.lakes = data.lakes;
     this.seed = data.meta.seed;
+    this.coldCfg = data.meta.cold || null;
     this.play = data.meta.play || { x0: 0, size: this.S };       // the playable square inside the generated world
     this.outer = data.outer || null; this.outerMeta = data.meta.outer || null;
     this.edits = new Map();           // 1 m column edits (mining / earthworks), metres of height change
@@ -351,6 +352,10 @@ export class World {
     const sx = fx * fx * (3 - 2 * fx), sy = fy * fy * (3 - 2 * fy);
     return a + (b - a) * sx + (c - a + (a - b + d - c) * sx) * sy;
   }
+
+  // 0..1 northward cooling (variant B); effective altitude for snow and tree limits is h + coldDrop * cold
+  cold(z) { const c = this.coldCfg; if (!c) return 0; const t = sat((c.z0 - z) / (c.z0 - c.z1)); return t * t * (3 - 2 * t); }
+  get coldDrop() { return this.coldCfg ? this.coldCfg.drop : 0; }
 
   // ---- ecology at a point (used for vegetation placement and gameplay queries) -----------------
   climate(x, z, h) {

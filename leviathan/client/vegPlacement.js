@@ -63,7 +63,8 @@ function placeTrees(world, { key, x0, z0, size, lod }) {
     const rv = world.riverAt(px, pz, rq); if (rv && rv.edge < 1.5 + (isTree ? 1 : 0)) continue;
     const slope = world.slope(px, pz); if (slope > 1.35) continue;
     if (slope > 0.28 && world.map(MAP.MESA, px, pz) > 0.5) continue;      // mesa walls stay bare rock
-    const tl = 1930 + 90 * noise2(px / 3000, pz / 3000, seed + 70);
+    const cold = world.cold(pz);
+    const tl = 1930 + 90 * noise2(px / 3000, pz / 3000, seed + 70) - world.coldDrop * 0.9 * cold;
     if (h > tl + 320) continue;
     const stunt = 1 - 0.62 * smoothstep(tl - 300, tl + 250, h);
     const r4 = hash2(i, j, seed + 406), r5 = hash2(i, j, seed + 407), rot = hash2(i, j, seed + 408) * 6.283;
@@ -78,6 +79,7 @@ function placeTrees(world, { key, x0, z0, size, lod }) {
     const dark = world.map(MAP.DARK, px, pz), wet = world.map(MAP.WET, px, pz);
     let type;
     if (r4 > 0.972) type = T.SNAG;
+    else if (cold > 0.45) type = r4 < 0.8 ? T.CONIFER : T.BIRCH;          // taiga
     else if (dark > 0.42) type = r4 < 0.3 ? T.GIANT : r4 < 0.8 ? T.CONIFER : T.BROADLEAF;
     else if (h > 1150) type = r4 < 0.9 ? T.CONIFER : T.BIRCH;
     else if (precip < 0.64) type = r4 < 0.62 ? T.PINE : T.BROADLEAF;
@@ -147,11 +149,12 @@ function placeGrass(world, { key, x0, z0, size }) {
     const px = (i + hash2(i, j, seed + 472)) * GRASS_G, pz = (j + hash2(i, j, seed + 473)) * GRASS_G;
     if (px < x0 || px >= x0 + size || pz < z0 || pz >= z0 + size) continue;
     const h = world.ground(px, pz, 0.6);
-    if (h < 0.9 || h > 2300 || h < world.stillLevel(px, pz) + 0.25) continue;
+    const hc = h + world.coldDrop * world.cold(pz);
+    if (h < 0.9 || hc > 2300 || h < world.stillLevel(px, pz) + 0.25) continue;
     if (world.slope(px, pz) > 0.85) continue;
     const rv = world.riverAt(px, pz, rq); if (rv && rv.edge < 0.6) continue;
     const r = hash2(i, j, seed + 474), v = 0.8 + 0.4 * hash2(i, j, seed + 475);
-    const lush = smoothstep(0.42, 0.95, m + (r - 0.5) * 0.3), alp = smoothstep(1450, 2000, h);
+    const lush = smoothstep(0.42, 0.95, m + (r - 0.5) * 0.3), alp = smoothstep(1450, 2000, hc);
     // colour follows the terrain shader's herb layer so tufts and ground read as one surface
     let cr = 0.187 + (0.051 - 0.187) * lush, cg = 0.178 + (0.089 - 0.178) * lush, cb = 0.056 + (0.017 - 0.056) * lush;
     cr += (0.164 - cr) * alp; cg += (0.156 - cg) * alp; cb += (0.043 - cb) * alp;

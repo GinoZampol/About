@@ -1,0 +1,223 @@
+{
+ "name": "The Leviathan",
+ "version": 2,
+ "variant": "B",
+ "cold": {
+  "z0": 27000,
+  "z1": 11000,
+  "drop": 1650
+ },
+ "play": {
+  "x0": 8000,
+  "size": 50000
+ },
+ "seed": 7,
+ "sizeM": 66000,
+ "heightRes": 4096,
+ "mapRes": 1024,
+ "lakeRes": 2048,
+ "riverMaskRes": 2048,
+ "hOffset": 300,
+ "hScale": 0.125,
+ "seaLevel": 0,
+ "maxElevation": 5173,
+ "landKm2": 3195,
+ "riverKm": 1326,
+ "mapChannels": [
+  "rock",
+  "strat",
+  "precip",
+  "forest",
+  "dark",
+  "wet",
+  "sand",
+  "ao",
+  "mesa",
+  "flow",
+  "ice"
+ ],
+ "lakes": [
+  {
+   "level": 91.7,
+   "areaKm2": 9.99,
+   "x": 39292,
+   "z": 13550
+  },
+  {
+   "level": 112.06,
+   "areaKm2": 4.02,
+   "x": 46300,
+   "z": 32329
+  },
+  {
+   "level": 251.38,
+   "areaKm2": 1.91,
+   "x": 53564,
+   "z": 33507
+  },
+  {
+   "level": 283.25,
+   "areaKm2": 0.66,
+   "x": 38671,
+   "z": 23693
+  },
+  {
+   "level": 174.29,
+   "areaKm2": 0.24,
+   "x": 18022,
+   "z": 41357
+  },
+  {
+   "level": 1944.46,
+   "areaKm2": 0.21,
+   "x": 64688,
+   "z": 55020
+  }
+ ],
+ "landmarks": [
+  {
+   "name": "Mount Leviathan",
+   "x": 43740,
+   "z": 19328,
+   "h": 4136,
+   "note": "highest summit of the Spine, the granite core of the alpine chain"
+  },
+  {
+   "name": "The Erg",
+   "x": 54400,
+   "z": 42800,
+   "h": 0,
+   "note": "dune sea on the plateau interior"
+  },
+  {
+   "name": "The Crown",
+   "x": 51200,
+   "z": 11529,
+   "h": 5173,
+   "note": "the great ice massif of the north-east, the roof of the world"
+  },
+  {
+   "name": "Great River delta",
+   "x": 32299,
+   "z": 36569,
+   "h": 0,
+   "note": "mouth of the Great River at the head of the Sound"
+  },
+  {
+   "name": "The Gorge",
+   "x": 43000,
+   "z": 35000,
+   "h": 0,
+   "note": "antecedent water gap through the Spine: the low-level route east"
+  },
+  {
+   "name": "Central Valley",
+   "x": 28000,
+   "z": 36000,
+   "h": 0,
+   "note": "prairie and parkland lowland"
+  },
+  {
+   "name": "Coast Range",
+   "x": 18264,
+   "z": 37826,
+   "h": 562,
+   "note": "rain-forested fold belt"
+  },
+  {
+   "name": "The Sound",
+   "x": 22500,
+   "z": 19200,
+   "h": 0,
+   "note": "glacially scoured marine inlet"
+  },
+  {
+   "name": "Northern Highlands",
+   "x": 28593,
+   "z": 10691,
+   "h": 2420,
+   "note": "fjord-cut schist uplands"
+  },
+  {
+   "name": "High Desert canyonlands",
+   "x": 53000,
+   "z": 31000,
+   "h": 0,
+   "note": "layered plateau cut by the upper Great River"
+  },
+  {
+   "name": "Badlands",
+   "x": 53300,
+   "z": 49400,
+   "h": 0,
+   "note": "soft shale basin"
+  },
+  {
+   "name": "Longwater (largest lake)",
+   "x": 39292,
+   "z": 13550,
+   "h": 92,
+   "note": "10.0 km2, up to 117 m deep"
+  },
+  {
+   "name": "Lake 2",
+   "x": 46300,
+   "z": 32329,
+   "h": 112,
+   "note": "4.0 km2, up to 75 m deep"
+  },
+  {
+   "name": "Lake 3",
+   "x": 53564,
+   "z": 33507,
+   "h": 251,
+   "note": "1.9 km2, up to 39 m deep"
+  },
+  {
+   "name": "Lake 4",
+   "x": 38671,
+   "z": 23693,
+   "h": 283,
+   "note": "0.7 km2, up to 44 m deep"
+  },
+  {
+   "name": "Lake 5",
+   "x": 18022,
+   "z": 41357,
+   "h": 174,
+   "note": "0.2 km2, up to 20 m deep"
+  }
+ ],
+ "config": {
+  "K0": 0.0000052,
+  "levels": [
+   [
+    256,
+    110,
+    20000
+   ],
+   [
+    512,
+    60,
+    10000
+   ],
+   [
+    1024,
+    40,
+    6000
+   ],
+   [
+    2048,
+    30,
+    8000
+   ],
+   [
+    4096,
+    18,
+    7000
+   ]
+  ],
+  "ELA": 1700,
+  "Q_RIVER": 1200000
+ }
+}

@@ -76,7 +76,7 @@ void main() {
 
 const TERRAIN_FRAG = /* glsl */`
 uniform sampler2D uMapA; uniform sampler2D uMapB; uniform sampler2D uFlow; uniform sampler2D uShadowTex; uniform sampler2D uRock; uniform sampler2D uNormTex; uniform sampler2D uNoise; uniform sampler2D uNoiseN;
-uniform float uCell; uniform float uWorldSize; uniform float uTreeDist; uniform float uSnowLine;
+uniform vec3 uCold; uniform float uCell; uniform float uWorldSize; uniform float uTreeDist; uniform float uSnowLine;
 varying vec3 vWPos; varying vec3 vN; varying float vViewZ;
 #include <common>
 #include <packing>
@@ -130,6 +130,8 @@ void main() {
   float outside = step(0.5, step(vWPos.x, 0.0) + step(uWorldSize, vWPos.x) + step(vWPos.z, 0.0) + step(uWorldSize, vWPos.z));
   vec3 N = normalize(mix(normalize(vN), nTex, smoothstep(9.0, 24.0, uCell) * (1.0 - outside)));
   float h = vWPos.y;
+  float coldT = uCold.x > uCold.y ? clamp((uCold.x - vWPos.z) / (uCold.x - uCold.y), 0.0, 1.0) : 0.0;
+  float hc = h + uCold.z * coldT * coldT * (3.0 - 2.0 * coldT);        // altitude as the climate sees it (cold north, variant B)
   float tanS = length(N.xz) / max(N.y, 0.05);
   float precip = A.r * 3.0, forest = A.g, dark = A.b, wet = A.a, sand = B.r, ao = B.g, strat = B.b * 510.0 - 100.0;
   float curv = clamp((NT.a - 0.5) * 2.0, -1.0, 1.0);                      // + hollows, - spurs and crests
@@ -149,7 +151,7 @@ void main() {
   grass = mix(grass, lush, smoothstep(0.6, 1.3, m));
   grass = mix(steppe, grass, smoothstep(0.2, 0.62, m));
   grass = mix(grass, mix(steppe, dry, 0.5), mesa * 0.55);          // plateau herbage is always on the dry side
-  grass = mix(grass, S(vec3(0.38, 0.36, 0.22)), smoothstep(1450.0, 2050.0, h));
+  grass = mix(grass, S(vec3(0.38, 0.36, 0.22)), smoothstep(1450.0, 2050.0, hc));
   grass *= (0.70 + 0.60 * n2.g) * (0.82 + 0.36 * n1.r) * (0.88 + 0.24 * n3.a);
   grass = mix(grass, grass * vec3(1.12, 1.05, 0.86), n3.b * 0.3);                     // cured, seeding patches
   grass = mix(grass, grass * vec3(0.78, 0.94, 0.80), smoothstep(0.55, 0.8, n2.a) * 0.5); // rank, darker swards
@@ -162,7 +164,10 @@ void main() {
   vec3 litter = mix(S(vec3(0.26, 0.20, 0.12)), S(vec3(0.19, 0.24, 0.10)), n2.b * (0.5 + 0.5 * dark)) * (0.8 + 0.4 * n1.a);
   float ff = smoothstep(0.22, 0.74, forest + (n2.a - 0.5) * 0.35);
   ground = mix(ground, litter, ff * 0.9);
-  ground = mix(ground, S(vec3(0.22, 0.27, 0.13)) * (0.8 + 0.4 * n1.r), wet * 0.65);
+  // marsh: a mosaic of reed beds, sedge and dark peaty pools
+  vec3 marsh = mix(S(vec3(0.22, 0.27, 0.13)), S(vec3(0.40, 0.41, 0.20)), smoothstep(0.35, 0.65, n2.a)) * (0.8 + 0.4 * n1.r);
+  marsh = mix(marsh, S(vec3(0.08, 0.10, 0.09)), smoothstep(0.56, 0.68, n2.b * 0.6 + n3.g * 0.4) * smoothstep(0.45, 0.8, wet));
+  ground = mix(ground, marsh, wet * 0.75);
   // watercourses: green ribbons in humid country, pale gravel washes in dry country
   vec4 n4 = noTile(uNoise, vWPos.xz / 23.0 + 0.61, tk);
   // watercourses tint their surroundings only faintly and unevenly: no band of constant width
@@ -193,25 +198,25 @@ void main() {
   rc *= mix(1.0, 0.66 + 0.62 * streak, smoothstep(0.7, 1.5, tanS));
   rc = mix(rc, rc * vec3(0.78, 0.84, 0.70), smoothstep(0.9, 1.6, precip) * n2.a * 0.7);
   // rock shows through gradually: thin soils on spurs and steep, high ground, in ragged patches
-  float rockArg = tanS + (n2.b - 0.5) * 0.6 + (n3.a - 0.5) * 0.55 + (n4.g - 0.5) * 0.35 - curv * 0.3 + smoothstep(1300.0, 2700.0, h) * 0.75
-    - sand - forest * 1.15 - smoothstep(0.8, 1.6, precip) * 0.12 - 0.35 * (1.0 - smoothstep(1100.0, 2300.0, h)) * smoothstep(0.45, 0.9, precip);
+  float rockArg = tanS + (n2.b - 0.5) * 0.6 + (n3.a - 0.5) * 0.55 + (n4.g - 0.5) * 0.35 - curv * 0.3 + smoothstep(1300.0, 2700.0, hc) * 0.75
+    - sand - forest * 1.15 - smoothstep(0.8, 1.6, precip) * 0.12 - 0.35 * (1.0 - smoothstep(1100.0, 2300.0, hc)) * smoothstep(0.45, 0.9, precip);
   float rockW = smoothstep(0.85, 1.75, rockArg);
   rockW = max(rockW, (1.0 - veg) * smoothstep(0.32, 0.65, tanS + (n2.b - 0.5) * 0.3) * (1.0 - smoothstep(0.2, 0.5, sand)));
   vec3 col = mix(ground, rc, rockW);
   // scree and debris aprons gather in the hollows below rock; shingle on shores
-  float scree = smoothstep(0.6, 1.15, tanS + (n4.b - 0.5) * 0.3 + (n1.r - 0.5) * 0.3 + curv * 0.18 + smoothstep(1700.0, 2300.0, h) * 0.25) * (1.0 - rockW) * (1.0 - ff * 0.8);
+  float scree = smoothstep(0.6, 1.15, tanS + (n4.b - 0.5) * 0.3 + (n1.r - 0.5) * 0.3 + curv * 0.18 + smoothstep(1700.0, 2300.0, hc) * 0.25) * (1.0 - rockW) * (1.0 - ff * 0.8);
   col = mix(col, rc * 1.05 * (0.85 + 0.3 * n1.g), scree * 0.7);
   float shore = smoothstep(1.6, 0.15, h + (n2.r - 0.5) * 0.8) * (1.0 - rockW);
   col = mix(col, mix(sandC, S(vec3(0.42, 0.40, 0.37)), n2.g) * 0.85, shore);
   col *= mix(1.0, 0.55, smoothstep(0.3, -2.5, h));
 
   // ---- snow: lingers in shaded hollows, strips from spurs and steep faces ---------------------
-  float sn = smoothstep(-110.0, 110.0, h - uSnowLine + (n3.b - 0.5) * 280.0 + (n2.r - 0.5) * 70.0 - N.z * 160.0 + curv * 260.0) * mix(smoothstep(2.1, 1.2, tanS), smoothstep(5.0, 3.0, tanS), smoothstep(250.0, 800.0, h - uSnowLine));
-  sn = max(sn, smoothstep(650.0, 1100.0, h - uSnowLine + (n2.r - 0.5) * 120.0) * smoothstep(6.0, 3.5, tanS));   // summits are white
+  float sn = smoothstep(-110.0, 110.0, hc - uSnowLine + (n3.b - 0.5) * 280.0 + (n2.r - 0.5) * 70.0 - N.z * 160.0 + curv * 260.0) * mix(smoothstep(2.1, 1.2, tanS), smoothstep(5.0, 3.0, tanS), smoothstep(250.0, 800.0, h - uSnowLine));
+  sn = max(sn, smoothstep(650.0, 1100.0, hc - uSnowLine + (n2.r - 0.5) * 120.0) * smoothstep(6.0, 3.5, tanS));   // summits are white
   col = mix(col, vec3(0.86, 0.90, 0.95), sn);
 
   // ---- glaciers: snow-covered above the snowline, bare blue-grey ice with moraine stripes below ---
-  float gl = smoothstep(0.35, 0.65, ice + (n2.b - 0.5) * 0.2) * smoothstep(1.6, 0.9, tanS) * smoothstep(2100.0, 2600.0, h);
+  float gl = smoothstep(0.35, 0.65, ice + (n2.b - 0.5) * 0.2) * smoothstep(1.6, 0.9, tanS) * smoothstep(2100.0, 2600.0, hc);
   vec3 iceC = mix(S(vec3(0.60, 0.70, 0.76)), S(vec3(0.80, 0.86, 0.90)), n2.g) * (0.8 + 0.3 * n1.r);
   iceC = mix(iceC, S(vec3(0.36, 0.34, 0.32)), smoothstep(0.62, 0.8, texture2D(uNoise, vec2(dot(vWPos.xz, perp) / 40.0, dot(vWPos.xz, vec2(perp.y, -perp.x)) / 900.0)).a) * 0.7);
   col = mix(col, mix(iceC, vec3(0.86, 0.90, 0.95), sn), gl);
@@ -369,7 +374,7 @@ export function setSun(sh, elev, azim) {
 
 export function makeMaterials(shared, tex, opts) {
   const base = () => ({ ...THREE.UniformsUtils.clone(THREE.UniformsLib.lights), ...shared });
-  const terrainU = { uMapA: { value: tex.mapA }, uMapB: { value: tex.mapB }, uRock: { value: tex.rock }, uFlow: { value: tex.flow }, uShadowTex: { value: tex.shadow }, uNormTex: { value: tex.norm }, uNoise: { value: tex.noise }, uNoiseN: { value: tex.noiseN }, uWorldSize: { value: opts.worldSize }, uTreeDist: opts.uTreeDist, uSnowLine: opts.uSnowLine };
+  const terrainU = { uMapA: { value: tex.mapA }, uMapB: { value: tex.mapB }, uRock: { value: tex.rock }, uFlow: { value: tex.flow }, uShadowTex: { value: tex.shadow }, uNormTex: { value: tex.norm }, uNoise: { value: tex.noise }, uNoiseN: { value: tex.noiseN }, uWorldSize: { value: opts.worldSize }, uTreeDist: opts.uTreeDist, uSnowLine: opts.uSnowLine, uCold: opts.uCold };
   const makeTerrain = (cell, size) => new THREE.ShaderMaterial({
     uniforms: { ...base(), ...terrainU, uCell: { value: cell }, uSize: { value: size } },
     vertexShader: TERRAIN_VERT, fragmentShader: TERRAIN_FRAG, lights: true,
