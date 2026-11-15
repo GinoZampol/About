@@ -18,7 +18,9 @@ let cache = null;
 export function getLayout(seed) {
   if (cache && cache.seed === seed) return cache;
   const r = mulberry32((Math.imul(seed | 0, 2654435761) ^ 0x9e3779b9) >>> 0);
-  const c = [25 + (r() - 0.5) * 5, 25 + (r() - 0.5) * 5], R = 8.2 + r() * 1.6;
+  const c = [25 + (r() - 0.5) * 6, 25 + (r() - 0.5) * 6];
+  // the sea is an arm of the outer ocean: an elongated basin, a broad funnel mouth, side bays and headlands
+  const ax = 10.8 + r() * 2.6, ay = 7.6 + r() * 1.8, rot = r() * Math.PI, R = (ax + ay) / 2;
   const at = (b, d) => [c[0] + Math.cos(b) * d, c[1] + Math.sin(b) * d];
   // five things share the horizon around the ocean; their order and bearings come from the seed
   const slots = ['massif', 'mesa', 'alps', 'hills', 'gate'];
@@ -32,13 +34,17 @@ export function getLayout(seed) {
   for (let k = 0, n = 3 + Math.floor(r() * 2); k < n; k++) { const a = r() * TAU, d = k === 0 ? 0 : 2.6 + r() * 2.4; peaks.push([ac[0] + Math.cos(a) * d, ac[1] + Math.sin(a) * d, 2.5 + r() * 1.1, 0.72 + r() * 0.3]); }
   const hills = [];
   for (let k = 0; k < 3; k++) { const p = at(bearing.hills + (k - 1) * 0.42 + (r() - 0.5) * 0.2, 12.5 + r() * 7); hills.push([p[0], p[1], 3 + r() * 1.6, 0.16 + r() * 0.1]); }
-  const hw = 0.85 + r() * 0.3, Rin = R + 4.5 + r() * 2, sgn = r() < 0.5 ? 1 : -1;
+  const hw = 0.46 + r() * 0.14, Rin = R + 7 + r() * 2.5, sgn = r() < 0.5 ? 1 : -1;
   const islands = [];
-  for (let k = 0, n = 4 + Math.floor(r() * 3); k < n; k++) { const p = at(r() * TAU, R * (0.22 + 0.5 * r())); islands.push([p[0], p[1], 0.5 + r() * 0.95]); }
+  for (let k = 0, n = 5 + Math.floor(r() * 3); k < n; k++) { const p = k < 2 ? at(bearing.gate + (r() - 0.5) * 0.7, R * (1.0 + 0.6 * r())) : at(r() * TAU, R * (0.2 + 0.45 * r())); islands.push([p[0], p[1], 0.45 + r() * 0.9]); }
+  const bays = [], capes = [];
+  for (let k = 0, n = 2 + Math.floor(r() * 2); k < n; k++) { const b = bearing.gate + Math.PI + (k - (n - 1) / 2) * 1.25 + (r() - 0.5) * 0.5; bays.push([b, R * (0.9 + r() * 0.25), 2.6 + r() * 1.8, 1.3 + r() * 1.1]); }
+  for (let k = 0, n = 1 + Math.floor(r() * 2); k < n; k++) { const b = r() * TAU; capes.push([b, R * (1.05 + r() * 0.1), R * (0.55 + r() * 0.2), 0.8 + r() * 0.8, (r() - 0.5) * 1.2]); }
   cache = {
     seed, c, R, bearing, order: slots, massif, peaks, alpsCentre: ac, hills,
     mesa: { b: bearing.mesa, hw, Rin },
-    gate: { b: bearing.gate, Dout: 19 + r() * 2.5 },
+    gate: { b: bearing.gate, Dout: 14 + r() * 3, w0: 4.0 + r() * 1.6, flare: 0.3 + r() * 0.3, bend: (r() - 0.5) * 5 },
+    basin: { ax, ay, rot }, Rmax: Math.max(ax, ay) * 1.15, bays, capes,
     islands,
     sand: [...at(bearing.mesa + sgn * hw * 0.45, Rin + 9 + r() * 3), 4.2 + r() * 1.5, 5.5 + r() * 2],
     badlands: [...at(bearing.mesa - sgn * hw * 0.5, Rin + 6.5 + r() * 2), 3 + r(), 3.6 + r()],
@@ -56,11 +62,26 @@ export function seededDesign(xk, yk, seed) {
   const dxc = sx - c[0], dyc = sy - c[1], rr = Math.hypot(dxc, dyc), th = Math.atan2(dyc, dxc);
 
   // ---- land / sea: the central ocean, its strait, and the outer ocean beyond it ----------------
-  const Rloc = L.R * (1 + 0.28 * fbm(xk / 8, yk / 8, 3, seed + 61) + 0.1 * fbm(xk / 2.6, yk / 2.6, 2, seed + 62));
-  let land = rr - Rloc;
-  const gx = Math.cos(L.gate.b), gy = Math.sin(L.gate.b), ug = dxc * gx + dyc * gy;
-  land = Math.min(land, L.gate.Dout - ug + 2.4 * fbm(xk / 6, yk / 6, 3, seed + 63));
-  { const [d] = segDist(sx, sy, c[0] + gx * (L.R - 2), c[1] + gy * (L.R - 2), c[0] + gx * (L.gate.Dout + 2), c[1] + gy * (L.gate.Dout + 2)); land = Math.min(land, d - (1.35 + 0.5 * noise2(xk / 3, yk / 3, seed + 64))); }
+  // broad warp so no coast follows a circle or a straight line
+  const bx = dxc + 2.6 * fbm(xk / 13, yk / 13, 3, seed + 61), by = dyc + 2.6 * fbm(xk / 13, yk / 13, 3, seed + 67);
+  const smin = (a, b, k) => { const h = Math.max(0, Math.min(1, 0.5 + 0.5 * (b - a) / k)); return b + (a - b) * h - k * h * (1 - h); };
+  const B = L.basin, cr = Math.cos(B.rot), sr = Math.sin(B.rot);
+  let land = (Math.hypot((bx * cr + by * sr) / B.ax, (-bx * sr + by * cr) / B.ay) - 1) * B.ay * (1 + 0.2 * fbm(xk / 6, yk / 6, 3, seed + 62));
+  const gx = Math.cos(L.gate.b), gy = Math.sin(L.gate.b), ug = bx * gx + by * gy, vg = -bx * gy + by * gx;
+  // the mouth: a funnel that widens seaward and bends a little
+  { const t = sat(ug / L.gate.Dout), off = L.gate.bend * Math.sin(t * Math.PI) + 1.1 * noise2(ug / 4, 3.3, seed + 64);
+    const w = L.gate.w0 + L.gate.flare * Math.max(0, ug - L.R * 0.5) + 0.9 * noise2(xk / 3.5, yk / 3.5, seed + 68);
+    if (ug > 0) land = smin(land, Math.abs(vg - off) - w, 2.2); }
+  land = smin(land, L.gate.Dout - ug + 3.2 * fbm(xk / 7, yk / 7, 3, seed + 63), 2.5);
+  for (const q of L.bays) {                 // side bays reaching inland
+    const qx = bx - Math.cos(q[0]) * q[1], qy = by - Math.sin(q[0]) * q[1], ca = Math.cos(q[0]), sa = Math.sin(q[0]);
+    land = smin(land, (Math.hypot((qx * ca + qy * sa) / q[2], (-qx * sa + qy * ca) / q[3]) - 1) * q[3], 1.6);
+  }
+  for (const q of L.capes) {                // headlands pushing into the basin
+    const a0 = q[0], a1 = q[0] + q[4], x0 = Math.cos(a0) * q[1], y0 = Math.sin(a0) * q[1], x1 = Math.cos(a1) * q[2], y1 = Math.sin(a1) * q[2];
+    const [d, t] = segDist(bx, by, x0, y0, x1, y1);
+    land = -smin(-land, d - q[3] * (1.5 - 0.9 * t) * (0.8 + 0.5 * noise2(xk / 1.8, yk / 1.8, seed + 69)), 1.2);
+  }
   land += 0.16 * fbm(xk / 0.55, yk / 0.55, 3, seed + 18) + 0.5 * Math.max(0, fbm(xk / 3.3, yk / 3.3, 2, seed + 19)) * Math.exp(-Math.abs(land) / 1.5) * (land > -1 ? -1 : 0);
   for (let k = 0; k < L.islands.length; k++) {
     const i = L.islands[k], ang = hash2(k, 3, seed + 151) * Math.PI, asp = 1.25 + 0.55 * hash2(k, 5, seed + 152);

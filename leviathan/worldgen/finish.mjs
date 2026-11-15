@@ -35,7 +35,8 @@ export async function finishWorld(world, cfg, ROOT, log) {
   const VS = cfg.variant === 'S';
   let mesaWide = null;
   if (VS) { const r = Math.max(2, Math.round(3200 / dx)); mesaWide = boxBlur(boxBlur(g.mesa, N, r), N, r); }
-  const dryEast = (P) => { if (!VB) return P; if (VS) { for (let c = 0; c < n; c++) P[c] *= 1 - 0.74 * smoothstep(0.03, 0.55, mesaWide[c]); return P; } for (let j = 0; j < N; j++) for (let i = 0; i < N; i++) P[j * N + i] *= 1 - 0.74 * smoothstep(VC ? 14 : 31, VC ? 25 : 40.5, VC ? 0.906 * (KM0 + (i + 0.5) / N * KMS) - 0.423 * (KM0 + (j + 0.5) / N * KMS) + 2.2 * noise2(i / N * 6, j / N * 6, seed + 83) : KM0 + (i + 0.5) / N * KMS + (W ? (KM0 + (j + 0.5) / N * KMS - 25) * W * 0.6 + 2.2 * noise2(i / N * 6, j / N * 6, seed + 83) : 0)); return P; };
+  const dryEast = (P) => { if (!VB) return P; if (VS) { let m = 0, k = 0; for (let c = 0; c < n; c++) if (!sea[c]) { m += P[c]; k++; } m /= Math.max(1, k);   // gentler rain shadows: lee slopes stay green, only the mesa country is truly dry
+      for (let c = 0; c < n; c++) P[c] = (0.42 * m + 0.58 * P[c]) * (1 - 0.66 * smoothstep(0.08, 0.6, mesaWide[c])); return P; } for (let j = 0; j < N; j++) for (let i = 0; i < N; i++) P[j * N + i] *= 1 - 0.74 * smoothstep(VC ? 14 : 31, VC ? 25 : 40.5, VC ? 0.906 * (KM0 + (i + 0.5) / N * KMS) - 0.423 * (KM0 + (j + 0.5) / N * KMS) + 2.2 * noise2(i / N * 6, j / N * 6, seed + 83) : KM0 + (i + 0.5) / N * KMS + (W ? (KM0 + (j + 0.5) / N * KMS - 25) * W * 0.6 + 2.2 * noise2(i / N * 6, j / N * 6, seed + 83) : 0)); return P; };
   let P = dryEast(computePrecip(h, sea, N, dx, W));
 
   // ---- A. ice flux from a mass-balance accumulation --------------------------------------------
@@ -502,7 +503,7 @@ export async function finishWorld(world, cfg, ROOT, log) {
     let sb = -1, sd = 1e18;
     for (let j = 8; j < N - 8; j += 6) for (let i = 8; i < N - 8; i += 6) {
       const c = j * N + i; if (sea[c] || lakeId[c] || h[c] < 5 || h[c] > 45 || Math.abs(h[c] - h[c + 6]) > 1.5 || Math.abs(h[c] - h[c + 6 * N]) > 1.5) continue;
-      const [x, y] = cellXY(c), d = Math.hypot(x / 1000 + KM0 - L.c[0], y / 1000 + KM0 - L.c[1]); if (d < L.R * 1.12) continue;   // mainland shore, not an island
+      const [x, y] = cellXY(c), d = Math.hypot(x / 1000 + KM0 - L.c[0], y / 1000 + KM0 - L.c[1]); if (d < L.Rmax) continue;   // mainland shore, not an island
       if (d < sd) { sd = d; sb = c; }
     }
     if (sb >= 0) { const [x, y] = cellXY(sb); landmarks.push(lm('Central Valley (ocean shore)', { x, z: S - y, h: h[sb] }, 'low ground on the shore of the central ocean')); }
