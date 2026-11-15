@@ -14,7 +14,8 @@ const arg = (k, d) => { const i = process.argv.indexOf('--' + k); return i > 0 ?
 export const MARGIN_KM = 3;      // generated margin around the playable 50 km: keeps edge-of-simulation artefacts (rivers
                                  // running along the boundary, ranges sagging to nothing) outside the visible world
 export const CFG = {
-  seed: +arg('seed', 7),
+  // --seed random picks a fresh seed and prints it; the number is stored in world.json so the world can be rebuilt
+  seed: arg('seed', 7) === 'random' ? Math.floor(Math.random() * 1e6) : +arg('seed', 7),
   variant: arg('variant', 'A'),
   wind: +arg('wind', 0),                 // rain-bearing wind: 0 = from the west, 0.5 = from the south-west
   outDir: arg('out', arg('variant', 'A') === 'B' ? 'data_b' : 'data'),          // 'A' = original; 'B' = central sea, cold north, coastal marshes

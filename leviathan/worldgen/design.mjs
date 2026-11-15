@@ -7,6 +7,7 @@
 // around it, and one antecedent river (the Great River) crossing the Spine through a gorge.
 import { noise2, fbm, ridged, smoothstep, sat, clamp, hash2 } from '../shared/noise.mjs';
 import { ROCK } from '../shared/geology.mjs';
+import { seededDesign } from './layout.mjs';
 
 export const WORLD_KM = 50;
 
@@ -60,21 +61,23 @@ const SPINE_B = [[34.4, 4], [33.6, 10.5], [35.0, 17.5]];
 const HIGH_B = [[28.5, 43.5], [22.5, 46.3], [12, 49.3], [3, 51]];
 const CROWN_B = [[31.0, 41.6], [34.4, 43.6]];
 export function designAt(xk, yk, seed) {
+  if (VARIANT === 'S') return seededDesign(xk, yk, seed);     // seed-driven layout: see layout.mjs
   // domain warp so nothing follows a ruler
   const wx = xk + 1.25 * fbm(xk / 9, yk / 9, 3, seed + 11) + 0.32 * fbm(xk / 2.1, yk / 2.1, 3, seed + 12);
   const wy = yk + 1.25 * fbm(xk / 9, yk / 9, 3, seed + 13) + 0.32 * fbm(xk / 2.1, yk / 2.1, 3, seed + 14);
 
   // ---- land / sea -------------------------------------------------------------------------
   const xc = 5.0 + 1.3 * Math.sin(wy / 6.5 + 0.8) + 0.7 * Math.sin(wy / 2.7 + 2.0);
-  let land = wx - xc;
+  // layout C: the outer ocean only takes the north-west corner; everywhere else the land runs to the edge
+  let land = VARIANT === 'C' ? 16.6 - (-0.77 * wx + 0.64 * wy) : wx - xc;
   const sx = wx + 0.6 * fbm(xk / 1.3, yk / 1.3, 3, seed + 16) + 0.7 * noise2(xk / 3.7, yk / 3.7, seed + 26), sy = wy + 0.6 * fbm(xk / 1.3, yk / 1.3, 3, seed + 17) + 0.7 * noise2(xk / 3.7, yk / 3.7, seed + 27);
-  for (const pl of (VARIANT === 'B' ? SOUND.concat(GULF) : SOUND)) for (let q = 0; q < pl.length - 1; q++) {
+  for (const pl of (VARIANT !== 'A' ? SOUND.concat(GULF) : SOUND)) for (let q = 0; q < pl.length - 1; q++) {
     const a = pl[q], b = pl[q + 1];
     const [d, t] = segDist(sx, sy, a[0], a[1], b[0], b[1]);
     land = Math.min(land, d - (a[2] + (b[2] - a[2]) * t));
   }
   land += 0.16 * fbm(xk / 0.55, yk / 0.55, 3, seed + 18) + 0.5 * Math.max(0, fbm(xk / 3.3, yk / 3.3, 2, seed + 19)) * Math.exp(-Math.abs(land) / 1.5) * (land > -1 ? -1 : 0);
-  if (VARIANT === 'B') {
+  if (VARIANT !== 'A') {
     // Islands are drowned hills, not discs: each is stretched along its own axis, its outline is pushed
     // in and out by headlands and coves at two scales, and the sea-floor warp above bends the whole shape.
     const isl = ISLANDS.concat(GULF_ISLANDS);
@@ -88,8 +91,12 @@ export function designAt(xk, yk, seed) {
   } else for (const c of ISLANDS) land = Math.max(land, c[2] - Math.hypot(wx - c[0], wy - c[1]) * (1 + 0.25 * noise2(xk * 1.3, yk * 1.3, seed + 15)));
 
   // ---- structural elements ------------------------------------------------------------------
-  const VB = VARIANT === 'B';
-  let [dS, sS] = polyDist(wx, wy, VB ? SPINE_B : SPINE);
+  // Layout C ("around the ocean"): nothing is arranged in north-south strips. Clockwise from the north:
+  // fjord highlands, the great massif (NE), the mesa and sand sea (a wedge in the east and south-east),
+  // prairie (S), a compact alpine group (SW), rolling hills (W), the strait and outer ocean (NW).
+  const VB = VARIANT !== 'A', VC = VARIANT === 'C';
+  let [dS, sS] = VC ? [1e9, 0] : polyDist(wx, wy, VB ? SPINE_B : SPINE);
+  const gA = VC ? Math.max(gauss(Math.hypot(wx - 9, wy - 9.5), 3.7), 0.85 * gauss(Math.hypot(wx - 13.8, wy - 6), 3.0)) * (0.9 + 0.2 * noise2(xk / 2.2, yk / 2.2, seed + 36)) : 0;
   const [dN] = VB ? [1e9] : polyDist(wx, wy, SPINE_N);
   const northBranch = dN < dS;
   if (northBranch) { dS = dN; sS = 20; }
@@ -104,20 +111,21 @@ export function designAt(xk, yk, seed) {
   const gG = gauss(dG, 1.05);
 
   const xcr = 9.6 + 1.0 * Math.sin(wy / 6.0);
-  const gCR = gauss(wx - xcr, 2.5) * (1 - smoothstep(29.5, 34, wy)) * (0.75 + 0.35 * noise2(wy / 4.5, 1.3, seed + 25));
+  const gCR = gauss(wx - xcr, 2.5) * (1 - smoothstep(29.5, 34, wy)) * (0.75 + 0.35 * noise2(wy / 4.5, 1.3, seed + 25)) * (VC ? 0 : 1);
   const [dCr, sCr] = polyDist(wx, wy, VB ? CROWN_B : CROWN);
   const gC = gauss(dCr, VB ? 5.4 : 4.1) * (0.86 + 0.26 * noise2(sCr / 4.2, 5.3, seed + 28) + 0.1 * noise2(sCr / 1.6, 2.2, seed + 29));
-  const plateau = smoothstep(38.2, 41.2, wx) * (1 - smoothstep(0.08, 0.4, gC));
+  const plateau = (VC ? smoothstep(24, 27.5, 0.906 * wx - 0.423 * wy) : smoothstep(38.2, 41.2, wx)) * (1 - smoothstep(0.08, 0.4, gC));
   const dGorgeMouth = Math.hypot(xk - 43.5, yk - 23.2);
 
   // ---- uplift (mm/yr) -------------------------------------------------------------------------
   let U = 0.012 + 0.034 * smoothstep(0.1, 0.65, fbm(xk / 7.5, yk / 7.5, 3, seed + 31)) * (1 - plateau);
   U += 0.27 * gCR;
+  if (VC) U += 2.0 * gA + 0.2 * (gauss(Math.hypot(wx - 6, wy - 24), 4) + gauss(Math.hypot(wx - 9.5, wy - 32.5), 3.2));
   U += 1.15 * gSA * (1 - 0.75 * plateau);
   U += (VB ? 2.5 : 0.95) * gC;    // the chain ends where the resistant plateau begins
   U += 0.05 * plateau + 0.10 * smoothstep(47.3, 50, wx) + 0.08 * smoothstep(47.5, 50, wy) * plateau;
   U += 0.012 * (0.5 + 0.5 * noise2(xk / 1.1, yk / 1.1, seed + 35)) * (1 - plateau);
-  U += 0.24 * smoothstep(3.2, 0, wy) * smoothstep(8, 12, wx);
+  U += (VC ? 0.08 : 0.24) * smoothstep(3.2, 0, wy) * smoothstep(8, 12, wx);
   U += 0.06 * ridged(xk / 3.2, yk / 3.2, 3, seed + 32) * (0.3 + gS + gCR);
   U *= 1 - 0.86 * gG;
   // wave and ice planation: skerries and the immediate shore zone do not build relief
@@ -127,7 +135,7 @@ export function designAt(xk, yk, seed) {
   let h0;
   if (land < 0) h0 = -Math.min(260, 3 + 55 * Math.pow(-land, 1.3));
   else {
-    h0 = 6 + 24 * sat(land / 3) + 190 * gCR + 950 * gSA + (VB ? 2600 : 1500) * gC + 12 * fbm(xk / 2, yk / 2, 3, seed + 33);
+    h0 = 6 + 24 * sat(land / 3) + 190 * gCR + 1800 * gA + 950 * gSA + (VB ? 2600 : 1500) * gC + 12 * fbm(xk / 2, yk / 2, 3, seed + 33);
     h0 += plateau * (1100 + 10 * dGorgeMouth + 45 * fbm(xk / 5, yk / 5, 3, seed + 34));
     const notch = 105 + 40 * Math.max(0, xk - 28);
     h0 = h0 + (Math.min(h0, notch) - h0) * Math.sqrt(gG);
@@ -139,6 +147,7 @@ export function designAt(xk, yk, seed) {
   const wob = 0.9 * noise2(xk / 2.6, yk / 2.6, seed + 41);
   if (plateau > 0.5) rock = ROCK.SANDSTONE;
   else if (gC > 0.1) rock = dCr + wob < 2.7 ? ROCK.GRANITE : ROCK.SCHIST;
+  else if (gA > 0.1) rock = gA > 0.42 ? ROCK.GRANITE : ROCK.SCHIST;
   else if (gS > 0.08 || gH > 0.04) {
     const side = wx - (33.5 + 0); // rough west/east of axis for the main section
     if (dS + wob < 1.9) rock = ROCK.GRANITE;
@@ -163,7 +172,7 @@ export function designAt(xk, yk, seed) {
   // the erg: a sand sea banked against the plateau interior, downwind of the badlands
   let erg = plateau * smoothstep(1.2, 0.3, Math.hypot((wx - 46.4) / 2.5, (wy - 15.2) / 4.3) + 0.28 * fbm(xk / 1.6, yk / 1.6, 2, seed + 47));
   // variant B: the Great Sand Sea fills the south-east of the plateau, in the deepest rain shadow
-  if (VARIANT === 'B') erg = Math.max(erg, plateau * smoothstep(27.5, 22, wy + 1.5 * noise2(xk / 4, yk / 4, seed + 48)) * smoothstep(41.6, 44.6, wx + 1.2 * noise2(xk / 3, yk / 3, seed + 49)));
+  if (VARIANT !== 'A') erg = Math.max(erg, plateau * smoothstep(27.5, 22, wy + 1.5 * noise2(xk / 4, yk / 4, seed + 48)) * smoothstep(41.6, 44.6, wx + 1.2 * noise2(xk / 3, yk / 3, seed + 49)));
   return { land, U: U * 1e-3, h0, rock, kmod, strat, gG, plateau, erg };
 }
 

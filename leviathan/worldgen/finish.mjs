@@ -9,6 +9,7 @@ import { encodeU16, H_OFFSET, H_SCALE } from '../shared/codec.mjs';
 import { makeCtx, flood, route, accumulate, computePrecip, boxBlur, DX8, DY8, DD8 } from './erosion.mjs';
 import { renderMap } from './preview.mjs';
 import { VOLCANO, GORGE, WORLD_KM } from './design.mjs';
+import { getLayout } from './layout.mjs';
 
 const ELA = 1700;          // ice-age equilibrium line altitude (m)
 const Q_RIVER = 1.2e6;     // effective drainage (m^2) where a perennial channel starts
@@ -20,7 +21,7 @@ export async function finishWorld(world, cfg, ROOT, log) {
   const KM0 = cfg.domain.x0, KMS = cfg.domain.size, kmi = (k) => (k - KM0) / KMS * N;   // design kilometres <-> grid
   // variant B: a cold north. `cold` rises from 0 at COLD.y0 to 1 at COLD.y1 (design km) and lowers the
   // treeline, the snowline and the glacier line by COLD.drop metres.
-  const VB = cfg.variant === 'B', COLD = { y0: 31, y1: 47, drop: 1650 };
+  const VB = cfg.variant !== 'A', VC = cfg.variant === 'C', COLD = { y0: 31, y1: 47, drop: 1650 };
   const coldAt = (yk) => (VB ? smoothstep(COLD.y0, COLD.y1, yk) : 0);
   const ctx = makeCtx(N);
   // wind-blown sand buries the fine drainage of the erg
@@ -30,7 +31,11 @@ export async function finishWorld(world, cfg, ROOT, log) {
   }
   // variant B has no long range to cast a rain shadow: its east is dry because it is far inland
   const W = cfg.wind || 0;
-  const dryEast = (P) => { if (!VB) return P; for (let j = 0; j < N; j++) for (let i = 0; i < N; i++) P[j * N + i] *= 1 - 0.74 * smoothstep(31, 40.5, KM0 + (i + 0.5) / N * KMS + (W ? (KM0 + (j + 0.5) / N * KMS - 25) * W * 0.6 + 2.2 * noise2(i / N * 6, j / N * 6, seed + 83) : 0)); return P; };
+  // seeded layout: dryness follows the mesa country itself, wherever the seed put it
+  const VS = cfg.variant === 'S';
+  let mesaWide = null;
+  if (VS) { const r = Math.max(2, Math.round(3200 / dx)); mesaWide = boxBlur(boxBlur(g.mesa, N, r), N, r); }
+  const dryEast = (P) => { if (!VB) return P; if (VS) { for (let c = 0; c < n; c++) P[c] *= 1 - 0.74 * smoothstep(0.03, 0.55, mesaWide[c]); return P; } for (let j = 0; j < N; j++) for (let i = 0; i < N; i++) P[j * N + i] *= 1 - 0.74 * smoothstep(VC ? 14 : 31, VC ? 25 : 40.5, VC ? 0.906 * (KM0 + (i + 0.5) / N * KMS) - 0.423 * (KM0 + (j + 0.5) / N * KMS) + 2.2 * noise2(i / N * 6, j / N * 6, seed + 83) : KM0 + (i + 0.5) / N * KMS + (W ? (KM0 + (j + 0.5) / N * KMS - 25) * W * 0.6 + 2.2 * noise2(i / N * 6, j / N * 6, seed + 83) : 0)); return P; };
   let P = dryEast(computePrecip(h, sea, N, dx, W));
 
   // ---- A. ice flux from a mass-balance accumulation --------------------------------------------
@@ -129,9 +134,11 @@ export async function finishWorld(world, cfg, ROOT, log) {
     }
   };
   flood(ctx, h, sea, dx); route(ctx, sea, dx, seed + 902); accumulate(ctx, sea, P, dx);
+  if (!VS) {
   carveLake(22, 31, 40.6, 48, 12, 1.2, 9.5, 120, 380, 720);     // Longwater, in the great northern trough
   carveLake(26.5, 30.5, 25, 34, 260, 0.5, 3.6, 60, 140, 260, 70);   // an alpine valley lake on the Spine's west flank
   carveLake(9, 12, 6, 20, 150, 0.4, 2.0, 28, 90, 170, 50);         // a small Coast Range lake
+  }
 
   // ---- C. the sea floods everything below sea level that is connected to it (fjords) -----------
   {
@@ -143,7 +150,7 @@ export async function finishWorld(world, cfg, ROOT, log) {
       for (let k = 0; k < 8; k += 2) {
         const x = i + DX8[k], y = j + DY8[k]; if (x < 0 || y < 0 || x >= N || y >= N) continue;
         const t = y * N + x;
-        if (!sea[t] && h[t] < -0.5 && KM0 + ((t / N) | 0) / N * KMS > 33) { sea[t] = 1; added++; stack.push(t); }
+        if (!sea[t] && h[t] < -0.5 && (VS || KM0 + ((t / N) | 0) / N * KMS > 33)) { sea[t] = 1; added++; stack.push(t); }
       }
     }
     log(`fjord flooding: ${added} cells joined the sea`);
@@ -489,9 +496,25 @@ export async function finishWorld(world, cfg, ROOT, log) {
     lm('Badlands', km(45.3, 8.6), 'soft shale basin'),
     ...lakes.slice(0, 5).map((l, k) => lm(k === 0 ? 'Longwater (largest lake)' : `Lake ${k + 1}`, { x: l.x, z: S - l.y, h: l.level }, `${l.areaKm2.toFixed(1)} km2, up to ${l.maxDepth.toFixed(0)} m deep`)),
   ];
+  if (VS) {
+    // places are found from the generated world, not from fixed coordinates
+    const L = getLayout(seed); landmarks.length = 0;
+    let sb = -1, sd = 1e18;
+    for (let j = 8; j < N - 8; j += 6) for (let i = 8; i < N - 8; i += 6) {
+      const c = j * N + i; if (sea[c] || lakeId[c] || h[c] < 5 || h[c] > 45 || Math.abs(h[c] - h[c + 6]) > 1.5 || Math.abs(h[c] - h[c + 6 * N]) > 1.5) continue;
+      const [x, y] = cellXY(c), d = Math.hypot(x / 1000 + KM0 - L.c[0], y / 1000 + KM0 - L.c[1]); if (d < sd) { sd = d; sb = c; }
+    }
+    if (sb >= 0) { const [x, y] = cellXY(sb); landmarks.push(lm('Central Valley (ocean shore)', { x, z: S - y, h: h[sb] }, 'low ground on the shore of the central ocean')); }
+    landmarks.push(lm('The Crown', peak(L.massif[0] - 7, L.massif[0] + 7, L.massif[1] - 7, L.massif[1] + 7), 'the great massif'));
+    landmarks.push(lm('The Horns', peak(L.alpsCentre[0] - 6, L.alpsCentre[0] + 6, L.alpsCentre[1] - 6, L.alpsCentre[1] + 6), 'the alpine peaks'));
+    landmarks.push(lm('Mesa country', km(L.mouth[0], L.mouth[1]), 'where the plateau river reaches the lowland'));
+    landmarks.push(lm('The Sand Sea', km(L.sand[0], L.sand[1]), 'dune sea on the plateau'));
+    landmarks.push(lm('Central ocean', km(L.c[0], L.c[1]), 'the middle of the world'));
+    lakes.slice(0, 3).forEach((l, k) => landmarks.push(lm(`Lake ${k + 1}`, { x: l.x, z: S - l.y, h: l.level }, `${l.areaKm2.toFixed(1)} km2`)));
+  }
   let landCells = 0, hmax = 0; for (let c = 0; c < n; c++) { if (!sea[c]) landCells++; if (h[c] > hmax) hmax = h[c]; }
   const meta = {
-    name: 'The Leviathan', version: 2, variant: cfg.variant, wind: cfg.wind || 0, cold: VB ? { z0: S - (COLD.y0 - KM0) * 1000, z1: S - (COLD.y1 - KM0) * 1000, drop: COLD.drop } : null, play: { x0: -KM0 * 1000, size: WORLD_KM * 1000 }, seed, sizeM: S, heightRes: N, mapRes: M, lakeRes: LN, riverMaskRes: RN,
+    name: 'The Leviathan', version: 2, variant: VB ? 'B' : 'A', layout: cfg.variant, wind: cfg.wind || 0, cold: VB ? { z0: S - (COLD.y0 - KM0) * 1000, z1: S - (COLD.y1 - KM0) * 1000, drop: COLD.drop } : null, play: { x0: -KM0 * 1000, size: WORLD_KM * 1000 }, seed, sizeM: S, heightRes: N, mapRes: M, lakeRes: LN, riverMaskRes: RN,
     hOffset: H_OFFSET, hScale: H_SCALE, seaLevel: 0, maxElevation: Math.round(hmax),
     landKm2: Math.round(landCells * dx * dx / 1e6), riverKm: Math.round(totalLen / 1000),
     mapChannels: ['rock', 'strat', 'precip', 'forest', 'dark', 'wet', 'sand', 'ao', 'mesa', 'flow', 'ice'],
