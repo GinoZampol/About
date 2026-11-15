@@ -11,10 +11,13 @@ import { ROCK } from '../shared/geology.mjs';
 
 const ROOT = path.dirname(path.dirname(fileURLToPath(import.meta.url)));
 const arg = (k, d) => { const i = process.argv.indexOf('--' + k); return i > 0 ? process.argv[i + 1] : d; };
+export const MARGIN_KM = 8;
 export const CFG = {
   seed: +arg('seed', 7),
   res: +arg('res', 4096),
-  sizeM: WORLD_KM * 1000,
+  // the generated world is the 50 km playable square plus MARGIN_KM of equally detailed land on every side
+  sizeM: (WORLD_KM + 2 * MARGIN_KM) * 1000,
+  domain: { x0: -MARGIN_KM, size: WORLD_KM + 2 * MARGIN_KM },
   K0: 5.2e-6,
   // multigrid schedule: [resolution, iterations, dt years]
   levels: [[256, 110, 20000], [512, 60, 10000], [1024, 40, 6000], [2048, 30, 8000], [4096, 18, 7000]],
@@ -38,7 +41,7 @@ function fieldsFor(design, N) {
   g.sea = sea;
   // rock-mass strength varies from place to place: without this every mountain face settles at
   // exactly the same critical angle and the range looks faceted
-  const tm = new Float32Array(N * N), cs = 50000 / N;
+  const tm = new Float32Array(N * N), cs = CFG.sizeM / N;
   for (let j = 0; j < N; j++) for (let i = 0; i < N; i++) {
     const x = (i + 0.5) * cs, y = (j + 0.5) * cs;
     const v = 0.98 + 0.42 * noise2(x / 420, y / 420, CFG.seed + 91) + 0.26 * noise2(x / 130, y / 130, CFG.seed + 92) + 0.3 * Math.max(0, noise2(x / 900, y / 900, CFG.seed + 93));
@@ -94,7 +97,8 @@ export function erodeWorld(cfg) {
 function stats(h, N, g) {
   const reg = (x0, x1, y0, y1) => {
     let mx = -1e9, sum = 0, cnt = 0;
-    for (let j = Math.floor(y0 / 50 * N); j < y1 / 50 * N; j++) for (let i = Math.floor(x0 / 50 * N); i < x1 / 50 * N; i++) {
+    const ki = (km) => (km - CFG.domain.x0) / CFG.domain.size * N;
+    for (let j = Math.floor(ki(y0)); j < ki(y1); j++) for (let i = Math.floor(ki(x0)); i < ki(x1); i++) {
       const z = h[j * N + i]; if (z > mx) mx = z; if (z > 0) { sum += z; cnt++; }
     }
     return `max ${mx.toFixed(0)} mean ${(sum / Math.max(1, cnt)).toFixed(0)}`;
@@ -114,7 +118,7 @@ if (import.meta.url === `file://${process.argv[1]}`) {
     const buf = fs.readFileSync(cacheFile);
     const h = new Float32Array(buf.buffer, buf.byteOffset, buf.length / 4).slice();
     const N = CFG.res;
-    const design = buildDesign(Math.min(1024, N), CFG.seed);
+    const design = buildDesign(Math.min(1024, N), CFG.seed, CFG.domain);
     const g = fieldsFor(design, N);
     for (let j = 0; j < N; j++) for (let i = 0; i < N; i++) {
       const [vh, r] = volcanoHeight((i + 0.5) / N * WORLD_KM, (j + 0.5) / N * WORLD_KM, CFG.seed);

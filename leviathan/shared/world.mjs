@@ -58,6 +58,7 @@ export class World {
     this.M = data.meta.mapRes; this.maps = data.maps; this.minv = this.M / this.S;
     this.LN = data.meta.lakeRes; this.lakes = data.lakes;
     this.seed = data.meta.seed;
+    this.play = data.meta.play || { x0: 0, size: this.S };       // the playable square inside the generated world
     this.outer = data.outer || null; this.outerMeta = data.meta.outer || null;
     this.edits = new Map();           // 1 m column edits (mining / earthworks), metres of height change
     this._initRivers(data.rivers);

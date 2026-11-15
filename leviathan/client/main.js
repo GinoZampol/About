@@ -44,7 +44,7 @@ async function readData(n) {
 const data = await loadWorldData(readData, (f) => progress(f * 0.6, 'loading world data'));
 progress(0.65, 'building world model');
 const world = new World(data);
-const S = world.S;
+const S = world.S, PL = world.play, P0 = PL.x0, P1 = PL.x0 + PL.size;
 
 const canvas = $('view');
 const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: 'high-performance' });
@@ -62,6 +62,7 @@ tex.shadowData = new Uint8Array(tex.hgridRes * tex.hgridRes).fill(255);
 tex.shadow = new THREE.DataTexture(tex.shadowData, tex.hgridRes, tex.hgridRes, THREE.RedFormat, THREE.UnsignedByteType);
 tex.shadow.magFilter = tex.shadow.minFilter = THREE.LinearFilter; tex.shadow.needsUpdate = true;
 const shared = makeShared();
+shared.uWorldSize.value = S;
 const opts = { worldSize: S, uTreeDist: { value: quality.treeDist }, uSnowLine: { value: num('snow', 2450) } };
 shared.uCloud.value = num('cloud', 0.42);
 const mats = makeMaterials(shared, tex, opts);
@@ -73,7 +74,7 @@ sky.frustumCulled = false; sky.renderOrder = -10; scene.add(sky);
 {
   const y0 = -600, y1 = 9000, P = [], U = [];
   const side = (ax, az, bx, bz) => { P.push(ax, y0, az, bx, y0, bz, bx, y1, bz, ax, y0, az, bx, y1, bz, ax, y1, az); U.push(0, S, S, 0, S, 0); };
-  side(0, 0, S, 0); side(S, 0, S, S); side(S, S, 0, S); side(0, S, 0, 0);
+  side(P0, P0, P1, P0); side(P1, P0, P1, P1); side(P1, P1, P0, P1); side(P0, P1, P0, P0);
   const g = new THREE.BufferGeometry();
   g.setAttribute('position', new THREE.Float32BufferAttribute(P, 3)); g.setAttribute('aU', new THREE.Float32BufferAttribute(U, 1));
   const wall = new THREE.Mesh(g, new THREE.ShaderMaterial({
@@ -84,9 +85,9 @@ sky.frustumCulled = false; sky.renderOrder = -10; scene.add(sky);
         float d = distance(vP, cameraPosition);
         float far = 1.0 - smoothstep(4000.0, 14000.0, d), near = 1.0 - smoothstep(80.0, 1500.0, d);
         if (far <= 0.0) discard;
-        // horizontal bands only: broad ones from afar, fine ones close up, drifting slowly upward
-        float wide = smoothstep(0.35, 0.65, 0.5 + 0.5 * sin(vP.y * 0.045 - uTime * 0.5));
-        float fine = smoothstep(0.4, 0.6, 0.5 + 0.5 * sin(vP.y * 1.3 - uTime * 1.4));
+        // diagonal (45 degree) bands: broad from afar, fine close up, drifting slowly
+        float wide = smoothstep(0.35, 0.65, 0.5 + 0.5 * sin((vU + vP.y) * 0.032 - uTime * 0.5));
+        float fine = smoothstep(0.4, 0.6, 0.5 + 0.5 * sin((vU + vP.y) * 0.9 - uTime * 1.4));
         float a = far * (0.10 + 0.26 * wide) + near * (0.10 + 0.34 * fine);
         gl_FragColor = vec4(mix(vec3(0.20, 0.55, 1.0), vec3(0.65, 0.9, 1.0), wide * 0.4 + fine * near * 0.5), min(a, 0.8));
         #include <tonemapping_fragment>
@@ -147,7 +148,7 @@ const mapCv = $('map');
 function drawMap() {
   const ctx = mapCv.getContext('2d'), W = 512, img = ctx.createImageData(W, W), N = world.N;
   for (let j = 0; j < W; j++) for (let i = 0; i < W; i++) {
-    const x = (i + 0.5) / W * S, z = (j + 0.5) / W * S, k = (j * W + i) * 4;
+    const x = P0 + (i + 0.5) / W * PL.size, z = P0 + (j + 0.5) / W * PL.size, k = (j * W + i) * 4;
     const ci = Math.min(N - 2, Math.floor(x / S * N)), cj = Math.min(N - 2, Math.floor(z / S * N));
     const h = world.H[cj * N + ci] * world.hs - world.ho, hx = world.H[cj * N + ci + 1] * world.hs - world.ho, hz = world.H[(cj + 1) * N + ci] * world.hs - world.ho;
     const sh = 0.75 + Math.max(-0.4, Math.min(0.5, ((h - hx) + (h - hz)) / (S / N) * 0.5));
@@ -170,7 +171,7 @@ function toggleMap() {
   if (mapOn && !mapCv._img) { drawMap(); for (const l of world.meta.landmarks) { const b = document.createElement('button'); b.textContent = l.name; b.title = l.note; b.onclick = () => { player.fly = true; player.teleport(l.x, l.z, world.ground(l.x, l.z) + 120); }; $('places').appendChild(b); } }
   if (mapOn) document.exitPointerLock?.();
 }
-mapCv.addEventListener('click', (e) => { const r = mapCv.getBoundingClientRect(); const x = (e.clientX - r.left) / r.width * S, z = (e.clientY - r.top) / r.height * S; player.fly = true; player.teleport(x, z, world.ground(x, z) + 150); });
+mapCv.addEventListener('click', (e) => { const r = mapCv.getBoundingClientRect(); const x = P0 + (e.clientX - r.left) / r.width * PL.size, z = P0 + (e.clientY - r.top) / r.height * PL.size; player.fly = true; player.teleport(x, z, world.ground(x, z) + 150); });
 let lastDig = '';
 function dig(sign) {
   const dir = new THREE.Vector3(); camera.getWorldDirection(dir);
@@ -197,7 +198,7 @@ addEventListener('keydown', (e) => {
 addEventListener('resize', () => { renderer.setSize(innerWidth, innerHeight, false); camera.aspect = innerWidth / innerHeight; camera.updateProjectionMatrix(); if (csm) csm.updateFrustums(); });
 
 function regionName(x, z, h) {
-  const xk = x / 1000, yk = (S - z) / 1000, p = world.map(MAP.PRECIP, x, z) * 3, F = world.map(MAP.FOREST, x, z), D = world.map(MAP.DARK, x, z);
+  const xk = (x - P0) / 1000, yk = (P1 - z) / 1000, p = world.map(MAP.PRECIP, x, z) * 3, F = world.map(MAP.FOREST, x, z), D = world.map(MAP.DARK, x, z);
   let land = h < 0.3 ? 'open water' : D > 0.5 ? 'ancient dark forest' : F > 0.55 ? (h > 1000 ? 'montane conifer forest' : 'temperate forest') : h > 2450 ? 'snowfields' : h > 1950 ? 'alpine zone' : p < 0.3 ? 'desert' : p < 0.5 ? 'dry steppe' : F > 0.2 ? 'parkland' : 'grassland';
   const reg = xk > 41 ? 'High Desert plateau' : xk > 38 ? 'the Trench' : (xk > 27 && yk < 40) || (xk > 30) ? 'the Spine' : yk > 43 ? 'Northern Highlands' : yk > 33 && xk < 23 ? 'the Sound' : xk < 14 ? 'Coast Range' : 'Central Valley';
   return `${reg} - ${land}`;
@@ -242,10 +243,10 @@ function frame() {
     hudT = 0;
     const p = player.pos, g = world.ground(p.x, p.z), c = world.climate(p.x, p.z, g);
     $('hud').textContent = `${regionName(p.x, p.z, g)}\n` +
-      `E ${(p.x / 1000).toFixed(2)} km  N ${((S - p.z) / 1000).toFixed(2)} km  elev ${g.toFixed(0)} m${player.fly ? `  (fly ${(player.flySpeed * (player.altBoost || 1)).toFixed(0)} m/s)` : player.swimming ? '  (swimming)' : player.mount ? '  (mounted)' : ''}\n` +
+      `E ${((p.x - P0) / 1000).toFixed(2)} km  N ${((P1 - p.z) / 1000).toFixed(2)} km  elev ${g.toFixed(0)} m${player.fly ? `  (fly ${(player.flySpeed * (player.altBoost || 1)).toFixed(0)} m/s)` : player.swimming ? '  (swimming)' : player.mount ? '  (mounted)' : ''}\n` +
       `bedrock ${ROCK_NAMES[world.rockAt(p.x, p.z, g)]}  rain ${(c.precip * 1000).toFixed(0)} mm  ${c.temp.toFixed(1)} C  ${String(Math.floor(timeOfDay)).padStart(2, '0')}:${String(Math.round(timeOfDay % 1 * 60)).padStart(2, '0')}\n` +
       `${fps.toFixed(0)} fps  ${terrain.stats.chunks} chunks  ${(renderer.info.render.triangles / 1e6).toFixed(2)} M tris  ${renderer.info.render.calls} draws${lastDig ? '\n' + lastDig : ''}`;
-    if (mapOn && mapCv._img) { const ctx = mapCv.getContext('2d'); ctx.putImageData(mapCv._img, 0, 0); ctx.fillStyle = '#fff'; ctx.strokeStyle = '#000'; ctx.beginPath(); ctx.arc(p.x / S * 512, p.z / S * 512, 4, 0, 7); ctx.fill(); ctx.stroke(); }
+    if (mapOn && mapCv._img) { const ctx = mapCv.getContext('2d'); ctx.putImageData(mapCv._img, 0, 0); ctx.fillStyle = '#fff'; ctx.strokeStyle = '#000'; ctx.beginPath(); ctx.arc((p.x - P0) / PL.size * 512, (p.z - P0) / PL.size * 512, 4, 0, 7); ctx.fill(); ctx.stroke(); }
   }
 }
 renderer.setAnimationLoop(frame);

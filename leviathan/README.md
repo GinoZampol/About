@@ -37,11 +37,11 @@ One coherent convergent-margin transect, west to east, drained by a single river
 | The Sound | a glacially scoured sea inlet with islands and fjords cutting into the Northern Highlands; the Great River delta lies at its head |
 | Central Valley | prairie and parkland in the Coast Range rain shadow |
 | The Spine | a continuous alpine chain, crest 2,300–4,100 m: granite and limestone faces furrowed by gullies, with cirques at the valley heads; forest thins through a ragged treeline zone into rock and snow |
-| The Crown | the ice massif of the north-east, 5,778 m, with present-day glaciers in its valleys |
+| The Crown | the ice massif of the north-east, 5,174 m, with present-day glaciers in its valleys |
 | The Gorge | the antecedent water gap where the Great River crosses the Spine: the one low-level route east |
 | High Desert | a tilted, layered plateau (cream caprock over red sandstone, shale and limestone on granite) cut into mesas and canyons; badlands in the south-east and the Erg, a dune sea, on its interior |
 
-Land 2,128 km², water 372 km²; 967 km of rivers in 510 reaches; 6 lakes; highest point 5,779 m.
+Whole 66 km world: land 3,363 km²; 1,411 km of rivers in 675 reaches; 6 lakes; highest point 5,174 m.
 Maps: `docs/map_relief.png`, `docs/map_ecology.png`. Screenshots: `docs/screenshots/`.
 
 The plateau's strata, red soils and red sand are confined by an explicit province mask, so mesa
@@ -160,7 +160,7 @@ target machine for real frame times.
 - **Trees are placeholders** by request; distant forest is shaded terrain.
 - **Performance figures above predate the Crown, cloud and life passes**, and no frame rate on a
   real GPU has been measured.
-- **Edges.** Play is confined to the 50 km square by a translucent, horizontally banded border wall. For 8 km beyond it the world continues as scenery from a coarser run of the same world model over 66 km (`worldgen/outer.mjs`, 64 m cells), tied to the playable terrain at the edge; it has no trees, rivers or lakes.
+- **Edges.** The generated world is 66 × 66 km at uniform quality; play is confined to the central 50 × 50 km by a translucent, diagonally striped border wall, and the 8 km beyond it on every side is ordinary world (terrain, rivers, forest) that is simply out of bounds. Height samples are now 16 m apart instead of 12 m. Statistics in `docs/validation.txt` cover the whole 66 km.
 - No night sky, no networking.
 
 ## Next priorities

@@ -65,7 +65,7 @@ const hAt = (i, j) => H[j * N + i] * w.hs - w.ho;
   report('no terrain discontinuities', maxJump < dx * 6, `largest step between adjacent 12 m samples ${maxJump.toFixed(1)} m (cliff limit ${(dx * 6).toFixed(0)} m)`);
   const pc = sl.map((v) => (100 * v / land).toFixed(1));
   info('slope classes (land)', `<5% ${pc[0]}%  5-15% ${pc[1]}%  15-45% ${pc[2]}%  45-100% ${pc[3]}%  cliffs ${pc[4]}%`);
-  info('land area', `${(land * dx * dx / 1e6).toFixed(0)} km2 of 2500, highest point ${w.meta.maxElevation} m`);
+  info('land area', `${(land * dx * dx / 1e6).toFixed(0)} km2 of ${Math.round(S * S / 1e6)} (whole generated world, playable core plus margin), highest point ${w.meta.maxElevation} m`);
 }
 
 // ---- 3. chunk seams: neighbouring chunks must produce bit-identical edge vertices --------------

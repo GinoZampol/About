@@ -133,20 +133,22 @@ void main() {
   float tanS = length(N.xz) / max(N.y, 0.05);
   float precip = A.r * 3.0, forest = A.g, dark = A.b, wet = A.a, sand = B.r, ao = B.g, strat = B.b * 510.0 - 100.0;
   float curv = clamp((NT.a - 0.5) * 2.0, -1.0, 1.0);                      // + hollows, - spurs and crests
-  float mesa = smoothstep(0.38, 0.62, B.a + (n2.g - 0.5) * 0.12);        // the layered plateau province, and only it
+  float mesa = smoothstep(0.22, 0.78, B.a + (n2.g - 0.5) * 0.16 + (n3.g - 0.5) * 0.2);        // the layered plateau province, and only it
   float sunny = N.z * min(tanS, 1.0);                                    // + on south-facing slopes
 
   // ---- soil moisture: climate, then where water actually collects on the landform ------------
-  float m = precip * (1.0 + 0.42 * curv + 0.28 * flow - 0.28 * sunny + (n3.r - 0.5) * 0.3 + (n2.r - 0.5) * 0.16) + 0.35 * wet;
+  float m = precip * (1.0 + 0.2 * curv + 0.22 * flow - 0.14 * sunny + (n3.r - 0.5) * 0.3 + (n2.r - 0.5) * 0.16) + 0.35 * wet;
   m -= 0.3 * mesa * (1.0 - 0.7 * smoothstep(0.25, 0.55, flow));            // the plateau is dry steppe; only its watercourses stay green
   float detailF = 1.0 - smoothstep(120.0, 700.0, dist);                   // fine speckle only where it can be resolved
 
   // ---- herb layer -------------------------------------------------------------------------------
   vec3 lush = S(vec3(0.19, 0.26, 0.11)), mid = S(vec3(0.25, 0.31, 0.14)), dry = S(vec3(0.36, 0.39, 0.19)), steppe = S(vec3(0.50, 0.46, 0.36));
   // open grassland is green; only truly dry country (the plateau side) cures to straw and steppe
-  vec3 grass = mix(dry, mid, smoothstep(0.34, 0.52, m));
-  grass = mix(grass, lush, smoothstep(0.6, 1.2, m));
-  grass = mix(steppe, grass, smoothstep(0.32, 0.5, m));
+  // broad, overlapping ramps: steppe, cured grass, green sward and lush growth grade into one another
+  vec3 grass = mix(dry, mid, smoothstep(0.24, 0.6, m));
+  grass = mix(grass, lush, smoothstep(0.6, 1.3, m));
+  grass = mix(steppe, grass, smoothstep(0.2, 0.62, m));
+  grass = mix(grass, mix(steppe, dry, 0.5), mesa * 0.55);          // plateau herbage is always on the dry side
   grass = mix(grass, S(vec3(0.38, 0.36, 0.22)), smoothstep(1450.0, 2050.0, h));
   grass *= (0.70 + 0.60 * n2.g) * (0.82 + 0.36 * n1.r) * (0.88 + 0.24 * n3.a);
   grass = mix(grass, grass * vec3(1.12, 1.05, 0.86), n3.b * 0.3);                     // cured, seeding patches
@@ -154,7 +156,7 @@ void main() {
   vec3 soil = mix(S(vec3(0.38, 0.32, 0.24)), S(vec3(0.52, 0.46, 0.36)), n3.g);
   soil = mix(soil, mix(S(vec3(0.55, 0.40, 0.29)), S(vec3(0.66, 0.56, 0.42)), n3.g), mesa);
   soil *= 0.82 + 0.36 * n1.g;
-  float veg = smoothstep(0.2, 0.48, max(m, precip * 0.85 - 0.3 * mesa) + (n2.r - 0.5) * 0.25 * mix(0.4, 1.0, detailF) + (n1.b - 0.5) * 0.14 * detailF);
+  float veg = smoothstep(0.1, 0.62, max(m, precip * 0.85 - 0.3 * mesa) + (n2.r - 0.5) * 0.25 * mix(0.4, 1.0, detailF) + (n1.b - 0.5) * 0.14 * detailF);
   float bare = (1.0 - 0.7 * smoothstep(0.4, 0.6, m)) * mix(0.12, smoothstep(0.62, 0.8, n1.g * 0.45 + n2.b * 0.55 + tanS * 0.22 - curv * 0.12), detailF);  // slips, trails, thin soil on spurs
   vec3 ground = mix(soil, grass, veg * (1.0 - bare * 0.65));
   vec3 litter = mix(S(vec3(0.26, 0.20, 0.12)), S(vec3(0.19, 0.24, 0.10)), n2.b * (0.5 + 0.5 * dark)) * (0.8 + 0.4 * n1.a);

@@ -17,6 +17,7 @@ const gz = (buf) => zlib.gzipSync(Buffer.from(buf.buffer, buf.byteOffset, buf.by
 export async function finishWorld(world, cfg, ROOT, log) {
   const { h, N, g } = world;
   const n = N * N, dx = cfg.sizeM / N, sea = g.sea, seed = cfg.seed;
+  const KM0 = cfg.domain.x0, KMS = cfg.domain.size, kmi = (k) => (k - KM0) / KMS * N;   // design kilometres <-> grid
   const ctx = makeCtx(N);
   // wind-blown sand buries the fine drainage of the erg
   {
@@ -32,7 +33,7 @@ export async function finishWorld(world, cfg, ROOT, log) {
     const { order, rec, cnt } = ctx, a = dx * dx;
     for (let q = cnt - 1; q >= 0; q--) {
       const c = order[q];
-      const yk = ((c / N) | 0) / N * WORLD_KM;
+      const yk = KM0 + ((c / N) | 0) / N * KMS;
       const ela = ELA - 450 * smoothstep(36, 46, yk);     // maritime north: lower snowline
       let bal = 0.004 * (h[c] - ela) * (0.4 + P[c]) * a;
       // below the snowline the whole glacier tongue melts, not just the one-cell flow path
@@ -85,7 +86,7 @@ export async function finishWorld(world, cfg, ROOT, log) {
   const carveLake = (x0, x1, y0, y1, minH, skipKm, lenKm, depth, w0, w1, R = 260) => {
     const { Q, order, rec, cnt } = ctx;
     let best = -1, bq = 0;
-    for (let j = Math.floor(y0 / 50 * N); j < y1 / 50 * N; j++) for (let i = Math.floor(x0 / 50 * N); i < x1 / 50 * N; i++) {
+    for (let j = Math.floor(kmi(y0)); j < kmi(y1); j++) for (let i = Math.floor(kmi(x0)); i < kmi(x1); i++) {
       const c = j * N + i; if (!sea[c] && h[c] > minH && Q[c] > bq) { bq = Q[c]; best = c; }
     }
     if (best < 0) return;
@@ -135,7 +136,7 @@ export async function finishWorld(world, cfg, ROOT, log) {
       for (let k = 0; k < 8; k += 2) {
         const x = i + DX8[k], y = j + DY8[k]; if (x < 0 || y < 0 || x >= N || y >= N) continue;
         const t = y * N + x;
-        if (!sea[t] && h[t] < -0.5 && ((t / N) | 0) / N * WORLD_KM > 33) { sea[t] = 1; added++; stack.push(t); }
+        if (!sea[t] && h[t] < -0.5 && KM0 + ((t / N) | 0) / N * KMS > 33) { sea[t] = 1; added++; stack.push(t); }
       }
     }
     log(`fjord flooding: ${added} cells joined the sea`);
@@ -370,7 +371,7 @@ export async function finishWorld(world, cfg, ROOT, log) {
   const hBlur = boxBlur(mh, M, reliefR);
   for (let j = 0; j < M; j++) for (let i = 0; i < M; i++) {
     const m = j * M + i, z = mh[m], p = mP[m], sl = mSlope[m];
-    const xk = (i + 0.5) / M * WORLD_KM, yk = (j + 0.5) / M * WORLD_KM;
+    const xk = KM0 + (i + 0.5) / M * KMS, yk = KM0 + (j + 0.5) / M * KMS;
     mPrec[m] = Math.round(255 * sat(p / 3));
     mStratB[m] = Math.round(sat((mStrat[m] + 100) / 510) * 255);
     if (mWater[m]) continue;
@@ -452,7 +453,7 @@ export async function finishWorld(world, cfg, ROOT, log) {
   // landmarks (client coordinates)
   const peak = (x0, x1, y0, y1, pred) => {
     let best = -1, bz = -1e9;
-    for (let j = Math.floor(y0 / 50 * N); j < Math.min(N, y1 / 50 * N); j++) for (let i = Math.floor(x0 / 50 * N); i < Math.min(N, x1 / 50 * N); i++) {
+    for (let j = Math.floor(kmi(y0)); j < Math.min(N, kmi(y1)); j++) for (let i = Math.floor(kmi(x0)); i < Math.min(N, kmi(x1)); i++) {
       const c = j * N + i; if (h[c] > bz && (!pred || pred(c))) { bz = h[c]; best = c; }
     }
     const [x, y] = cellXY(best); return { x, z: S - y, h: bz };
@@ -460,7 +461,7 @@ export async function finishWorld(world, cfg, ROOT, log) {
   let mouth = { q: 0 };
   for (const pts of segs) { const l = pts[pts.length - 1]; if (l.water && l.z === 0 && l.q > mouth.q) mouth = l; }
   const lm = (name, p, note) => ({ name, x: Math.round(p.x), z: Math.round(p.z), h: Math.round(p.h ?? 0), note });
-  const km = (x, y) => ({ x: x * 1000, z: S - y * 1000 });
+  const km = (x, y) => ({ x: (x - KM0) * 1000, z: S - (y - KM0) * 1000 });
   const landmarks = [
     lm('Mount Leviathan', peak(30, 39, 4, 40, (c) => g.rock[c] === ROCK.GRANITE), 'highest summit of the Spine, the granite core of the alpine chain'),
     lm('The Erg', km(46.4, 15.2), 'dune sea on the plateau interior'),
@@ -477,7 +478,7 @@ export async function finishWorld(world, cfg, ROOT, log) {
   ];
   let landCells = 0, hmax = 0; for (let c = 0; c < n; c++) { if (!sea[c]) landCells++; if (h[c] > hmax) hmax = h[c]; }
   const meta = {
-    name: 'The Leviathan', version: 1, seed, sizeM: S, heightRes: N, mapRes: M, lakeRes: LN, riverMaskRes: RN,
+    name: 'The Leviathan', version: 2, play: { x0: -KM0 * 1000, size: WORLD_KM * 1000 }, seed, sizeM: S, heightRes: N, mapRes: M, lakeRes: LN, riverMaskRes: RN,
     hOffset: H_OFFSET, hScale: H_SCALE, seaLevel: 0, maxElevation: Math.round(hmax),
     landKm2: Math.round(landCells * dx * dx / 1e6), riverKm: Math.round(totalLen / 1000),
     mapChannels: ['rock', 'strat', 'precip', 'forest', 'dark', 'wet', 'sand', 'ao', 'mesa', 'flow', 'ice'],

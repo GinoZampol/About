@@ -79,7 +79,8 @@ export class Player {
       if (this.pos.y - this.eye <= g) { this.pos.y = g + this.eye; this.vel.y = 0; this.onGround = true; }
       else this.onGround = (this.pos.y - this.eye - g) < 0.25 && this.vel.y <= 0 ? (this.pos.y = g + this.eye, this.vel.y = 0, true) : false;
     }
-    this.pos.x = Math.max(5, Math.min(S - 5, this.pos.x)); this.pos.z = Math.max(5, Math.min(S - 5, this.pos.z));
+    const P0 = w.play.x0 + 5, P1 = w.play.x0 + w.play.size - 5;
+    this.pos.x = Math.max(P0, Math.min(P1, this.pos.x)); this.pos.z = Math.max(P0, Math.min(P1, this.pos.z));
     this.cam.position.copy(this.pos);
     this.cam.rotation.set(this.pitch, this.yaw, 0, 'YXZ');
   }
