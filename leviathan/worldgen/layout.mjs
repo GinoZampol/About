@@ -107,18 +107,12 @@ export function getLayout(seed) {
   // 2. volcanic centres in the deep basin, and one limestone block
   const T = new Array(n);
   for (let j = 0; j < G; j++) for (let i = 0; i < G; i++) T[j * G + i] = tect(L, gridAt(i), gridAt(j));
-  { const deep = []; for (let c = 0; c < n; c++) if (T[c].dB < 0.5 && inPlay(gridAt(c % G), gridAt((c / G) | 0))) deep.push(c);
-    const want = 1 + Math.floor(r() * 3);
-    for (let tries = 0; tries < 400 && L.islands.length < want && deep.length; tries++) {
-      const c = deep[Math.floor(r() * deep.length)], x = gridAt(c % G), y = gridAt((c / G) | 0);
-      if (L.islands.some((q) => Math.hypot(q[0] - x, q[1] - y) < 8)) continue;
-      // [x, y, radius km, limestone block?, axis, elongation]
-      L.islands.push([x, y, 1.5 + r() * 1.2, L.islands.length === 0 && r() < 0.6 ? 1 : 0, r() * Math.PI, 1.15 + r() * 0.4]);
-    } }
+  // the edges toward which the land rises a little: three sides, or two, chosen by the seed
+  { const skip = Math.floor(r() * 4), two = r() < 0.4, skip2 = (skip + 2) % 4; L.rim = [0, 1, 2, 3].map((k) => (k === skip || (two && k === skip2) ? 0 : 0.7 + 0.6 * r())); }
 
   // 3. the starting surface, and the sea level that leaves the chosen share of the world under water
   const z = new Float32Array(n), U = new Float32Array(n);
-  for (let c = 0; c < n; c++) { const p = forcing(L, gridAt(c % G), gridAt((c / G) | 0), T[c], 0); z[c] = p.h0raw; U[c] = p.U; }
+  for (let c = 0; c < n; c++) { const p = forcing(L, gridAt(c % G), gridAt((c / G) | 0), T[c], 0, false); /* (the gentle rim plays no part in where the badlands go) */ z[c] = p.h0raw; U[c] = p.U; }
   const play = []; for (let c = 0; c < n; c++) if (inPlay(gridAt(c % G), gridAt((c / G) | 0))) play.push(z[c]);
   play.sort((a, b) => a - b); L.z0 = play[Math.floor(play.length * (0.27 + r() * 0.07))];
 
@@ -207,19 +201,23 @@ export function getLayout(seed) {
 }
 
 // Uplift rate and starting surface at one point. `plateau` is the sedimentary cover (0 while it is not yet known).
-function forcing(L, xk, yk, f, plateau) {
+function forcing(L, xk, yk, f, plateau, withRim = true) {
   const s = L.seed, { reg, mt, hill } = f;
-  let isl = 0, chalk = 0;
-  for (const q of L.islands) {
-    const dx = xk - q[0], dy = yk - q[1], ca = Math.cos(q[4]), sa = Math.sin(q[4]);
-    const d = Math.hypot((dx * ca + dy * sa) / q[5], (-dx * sa + dy * ca) * q[5]) / (q[2] * (1 + 0.32 * fbm(xk / (q[2] * 1.3) + q[0], yk / (q[2] * 1.3), 3, s + 93)));
-    if (q[3]) chalk = Math.max(chalk, smoothstep(1.0, 0.72, d)); else isl = Math.max(isl, gauss(d, 0.5));
-  }
+  // Islands are not placed: the floor of the sinking basin has its own relief (old fault blocks and volcanic
+  // highs, as broad irregular swells), and where a swell rises faster than the basin sinks it stands above the sea.
+  // Their outlines are whatever that relief and erosion make of them.
+  const fl = fbm(xk / 6.5 + L.o[4], yk / 6.5 + L.o[0], 4, s + 93) + 0.35 * fbm(xk / 2.2, yk / 2.2, 3, s + 94);
+  const isl = smoothstep(0.17, 0.42, fl) * (1 - smoothstep(0.55, 0.95, f.dB)), chalk = 0;
+  // The world is enclosed: toward two or three of its edges (the seed chooses which) the land rises very gently,
+  // so going away from the central sea the country climbs a little on average.
+  let rim = 0;
+  if (withRim) for (let k = 0; k < 4; k++) if (L.rim[k]) { const e = k === 0 ? xk : k === 1 ? PW - xk : k === 2 ? yk : PH - yk; rim = Math.max(rim, L.rim[k] * smoothstep(16, 0, e)); }
   // uplift rate (mm/yr)
   // away from hills and mountains the crust barely moves, so most of the land stays low plains
   let U = reg + 0.006 + 0.02 * smoothstep(0.1, 0.65, fbm(xk / 7.5, yk / 7.5, 3, s + 31));
   const nearT = L.tableNear ? sample(L.tableNear, xk, yk) : 0;
-  U += 1.55 * f.gC + 0.0 * mt * (1 - nearT) + 0.3 * hill   /* (no secondary ranges: they read as a mid grey wall) */ * (1 - plateau) + 1.15 * isl + 0.62 * chalk;
+  // (no secondary ranges: they read as a mid grey wall)
+  U += 1.55 * f.gC + 0.3 * hill * (1 - plateau) + 1.3 * isl + 0.06 * rim * (1 - plateau);
   U += 0.012 * (0.5 + 0.5 * noise2(xk / 1.1, yk / 1.1, s + 35)) * (1 - plateau);
   // The block rises steadily from a low start (as the Colorado Plateau did): the rivers already flowing across it keep
   // cutting down as it rises, so canyons run right through its interior instead of only nibbling at its edges.
