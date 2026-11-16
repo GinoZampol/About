@@ -135,7 +135,7 @@ export function getLayout(seed) {
   const score = new Float32Array(n).fill(-9), land = [];
   for (let c = 0; c < n; c++) {
     const x = gridAt(c % G), y = gridAt((c / G) | 0);
-    if (sea[c] || seaD[c] < 0.4 || T[c].dB < 0.75 || T[c].t > 0.6 || T[c].gC > 0.08 || Math.min(x, y, PLAY - x, PLAY - y) < -2.5) continue;
+    if (sea[c] || seaD[c] < 1.2 || T[c].dB < 0.9 || T[c].t > 0.5 || T[c].gC > 0.08 || Math.min(x, y, PLAY - x, PLAY - y) < -2.5) continue;
     score[c] = -P[c] + 0.06 * Math.min(seaD[c], 9) - 0.6 * T[c].hill + 0.12 * fbm(x / 13 + L.o[5], y / 13, 2, seed + 31); if (inPlay(x, y)) land.push(c);
   }
   L.table = new Float32Array(n); L.tdist = new Float32Array(n);
