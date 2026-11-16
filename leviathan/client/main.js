@@ -205,7 +205,7 @@ function regionName(x, z, h) {
   const hcl = h + world.coldDrop * world.cold(z), wetl = world.map(MAP.WET, x, z);
   let land = h < 0.3 ? 'open water' : wetl > 0.5 ? 'marsh' : world.map(MAP.SAND, x, z) > 0.5 && h > 50 ? 'sand sea' : world.cold(z) > 0.45 && hcl < 2450 ? (F > 0.4 ? 'taiga' : 'tundra') : D > 0.5 ? 'ancient dark forest' : F > 0.55 ? (h > 1000 ? 'montane conifer forest' : 'temperate forest') : h > 2450 ? 'snowfields' : h > 1950 ? 'alpine zone' : p < 0.3 ? 'desert' : p < 0.5 ? 'dry steppe' : F > 0.2 ? 'parkland' : 'grassland';
   // region names belong to the fixed layouts; a seeded world is described by its land cover alone
-  if (world.meta.layout === 'S') return land + (world.map(MAP.MESA, x, z) > 0.5 ? ' - mesa country' : '');
+  if (world.meta.layout === 'S') return land + (world.map(MAP.MESA, x, z) > 0.5 ? ' - badlands' : '');
   const reg = xk > 41 ? 'High Desert plateau' : xk > 38 ? 'the Trench' : (xk > 27 && yk < 40) || (xk > 30) ? 'the Spine' : yk > 43 ? 'Northern Highlands' : yk > 33 && xk < 23 ? 'the Sound' : xk < 14 ? 'Coast Range' : 'Central Valley';
   return `${reg} - ${land}`;
 }
