@@ -1,1 +1,100 @@
-{"name":"The Leviathan","version":2,"variant":"B","layout":"S","wind":0.5,"cold":null,"play":{"x0":3000,"size":50000},"seed":799539,"sizeM":56000,"heightRes":4096,"mapRes":1024,"lakeRes":2048,"riverMaskRes":2048,"hOffset":300,"hScale":0.125,"seaLevel":0,"maxElevation":3626,"landKm2":2384,"riverKm":908,"mapChannels":["rock","strat","precip","forest","dark","wet","sand","ao","mesa","flow","ice"],"lakes":[],"landmarks":[{"name":"Central Valley (ocean shore)","x":23741,"z":17903,"h":6,"note":"low ground on the shore of the central ocean"},{"name":"The Crown","x":39833,"z":39368,"h":3626,"note":"the great massif"},{"name":"The Badlands","x":13886,"z":42114,"h":0,"note":"where the canyon river leaves the arid country"},{"name":"Central ocean","x":22355,"z":19288,"h":0,"note":"the middle of the world"}],"config":{"K0":0.0000052,"levels":[[256,110,20000],[512,60,10000],[1024,40,6000],[2048,30,8000],[4096,18,7000]],"ELA":1700,"Q_RIVER":1200000}}
+{
+ "name": "The Leviathan",
+ "version": 2,
+ "variant": "B",
+ "layout": "S",
+ "wind": 0.5,
+ "cold": null,
+ "play": {
+  "x0": 3000,
+  "size": 50000
+ },
+ "seed": 442777,
+ "sizeM": 56000,
+ "heightRes": 4096,
+ "mapRes": 1024,
+ "lakeRes": 2048,
+ "riverMaskRes": 2048,
+ "hOffset": 300,
+ "hScale": 0.125,
+ "seaLevel": 0,
+ "maxElevation": 4716,
+ "landKm2": 2390,
+ "riverKm": 959,
+ "mapChannels": [
+  "rock",
+  "strat",
+  "precip",
+  "forest",
+  "dark",
+  "wet",
+  "sand",
+  "ao",
+  "mesa",
+  "flow",
+  "ice"
+ ],
+ "lakes": [],
+ "landmarks": [
+  {
+   "name": "Central Valley (ocean shore)",
+   "x": 32354,
+   "z": 18970,
+   "h": 10,
+   "note": "low ground on the shore of the central ocean"
+  },
+  {
+   "name": "The Crown",
+   "x": 18341,
+   "z": 41241,
+   "h": 4716,
+   "note": "the highest summit of the great range"
+  },
+  {
+   "name": "The Badlands",
+   "x": 32350,
+   "z": 44503,
+   "h": 0,
+   "note": "the dry tableland in the lee of the great range"
+  },
+  {
+   "name": "Central ocean",
+   "x": 35179,
+   "z": 23948,
+   "h": 0,
+   "note": "the middle of the world"
+  }
+ ],
+ "config": {
+  "K0": 0.0000052,
+  "levels": [
+   [
+    256,
+    110,
+    20000
+   ],
+   [
+    512,
+    60,
+    10000
+   ],
+   [
+    1024,
+    40,
+    6000
+   ],
+   [
+    2048,
+    30,
+    8000
+   ],
+   [
+    4096,
+    18,
+    7000
+   ]
+  ],
+  "ELA": 1700,
+  "Q_RIVER": 1200000
+ }
+}

@@ -39,8 +39,8 @@ export async function finishWorld(world, cfg, ROOT, log) {
   const dryEast = (P) => { if (!VB) return P; if (VS) { let m = 0, k = 0; for (let c = 0; c < n; c++) if (!sea[c]) { m += P[c]; k++; } m /= Math.max(1, k);   // gentler rain shadows: lee slopes stay green, only the mesa country is truly dry
       for (let c = 0; c < n; c++) { // the arid country is truly dry; what green it has follows its watercourses (see the riparian pass below)
         const aw = smoothstep(0.08, 0.6, mesaWide[c]);
-        P[c] = (0.22 * m + 0.82 * P[c]) * (1 - 0.86 * aw) * (1 - 0.4 * smoothstep(0.02, 0.3, mesaHalo[c]) * (1 - aw)); } return P; } for (let j = 0; j < N; j++) for (let i = 0; i < N; i++) P[j * N + i] *= 1 - 0.74 * smoothstep(VC ? 14 : 31, VC ? 25 : 40.5, VC ? 0.906 * (KM0 + (i + 0.5) / N * KMS) - 0.423 * (KM0 + (j + 0.5) / N * KMS) + 2.2 * noise2(i / N * 6, j / N * 6, seed + 83) : KM0 + (i + 0.5) / N * KMS + (W ? (KM0 + (j + 0.5) / N * KMS - 25) * W * 0.6 + 2.2 * noise2(i / N * 6, j / N * 6, seed + 83) : 0)); return P; };
-  let P = dryEast(computePrecip(h, sea, N, dx, W));
+        P[c] = (0.36 * m + 0.72 * P[c]) * (1 - 0.86 * aw) * (1 - 0.3 * smoothstep(0.02, 0.3, mesaHalo[c]) * (1 - aw)); } return P; } for (let j = 0; j < N; j++) for (let i = 0; i < N; i++) P[j * N + i] *= 1 - 0.74 * smoothstep(VC ? 14 : 31, VC ? 25 : 40.5, VC ? 0.906 * (KM0 + (i + 0.5) / N * KMS) - 0.423 * (KM0 + (j + 0.5) / N * KMS) + 2.2 * noise2(i / N * 6, j / N * 6, seed + 83) : KM0 + (i + 0.5) / N * KMS + (W ? (KM0 + (j + 0.5) / N * KMS - 25) * W * 0.6 + 2.2 * noise2(i / N * 6, j / N * 6, seed + 83) : 0)); return P; };
+  let P = dryEast(computePrecip(h, sea, N, dx, W, cfg.variant === 'S'));
 
   // ---- A. ice flux from a mass-balance accumulation --------------------------------------------
   flood(ctx, h, sea, dx); route(ctx, sea, dx, seed + 900); accumulate(ctx, sea, P, dx);
@@ -242,7 +242,7 @@ export async function finishWorld(world, cfg, ROOT, log) {
   }
 
   // ---- F. final hydrology ---------------------------------------------------------------------
-  P = dryEast(computePrecip(h, sea, N, dx, W));
+  P = dryEast(computePrecip(h, sea, N, dx, W, cfg.variant === 'S'));
   flood(ctx, h, sea, dx); route(ctx, sea, dx, seed + 901); accumulate(ctx, sea, P, dx);
   const { f, Q, rec } = ctx;
   const surf = new Float32Array(n); // water-or-ground surface
@@ -435,7 +435,7 @@ export async function finishWorld(world, cfg, ROOT, log) {
     const D = smoothstep(1.0, 1.45, pe) * smoothstep(1000, 550, z) * smoothstep(0.7, 0.35, sl) * smoothstep(0.5, 0.8, F);
     mDark[m] = Math.round(255 * sat(D));
     // sand: beaches, and dune fields on dry, flat, low-lying plateau ground
-    let sand = smoothstep(2.6, 0.8, z) * smoothstep(0.08, 0.03, sl);
+    let sand = smoothstep(2.6, 0.8, z) * smoothstep(0.08, 0.03, sl) * (VS ? smoothstep(9, 3, wdist[m]) : 1);   // seeded worlds: a beach is a strip by the water, not every low flat
     // seeded worlds: no dune fields on the tableland itself, only a little blown sand on the flats of the dry skirt around it
     if (VS && p < 0.44 && mMesa[m] < 90 && !mRip[m]) sand = Math.max(sand, smoothstep(0.44, 0.3, p) * smoothstep(0.06, 0.022, sl) * smoothstep(0.08, 0.36, fbm(xk / 3.1, yk / 3.1, 2, seed + 73)));
     if (!VS && p < 0.34 && mRock[m] !== ROCK.ALLUVIUM && mMesa[m] > 140) sand = Math.max(sand, smoothstep(0.34, 0.26, p) * smoothstep(0.05, 0.02, sl) * smoothstep(-0.1, 0.2, fbm(xk / 4.5, yk / 4.5, 2, seed + 73)) * smoothstep(40, 8, qk));

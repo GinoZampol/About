@@ -204,7 +204,9 @@ export function boxBlur(src, N, r, out) {
 // Orographic precipitation: moist westerlies marched across the terrain. 1.0 ~ 1000 mm/yr.
 // `slope` tilts the wind: 0 = from due west; 0.5 = from the south-west quarter (air tracks rise half a
 // cell north per cell east), which stops climate belts lining up with the north-south ranges.
-export function computePrecip(h, sea, N, dx, slope = 0) {
+// `seaReset`: air that has crossed open water has taken up moisture again, so a rain shadow ends at the far shore
+// of a sea instead of running on to the edge of the world (used by the seeded worlds).
+export function computePrecip(h, sea, N, dx, slope = 0, seaReset = false) {
   const hp = new Float32Array(N * N);
   for (let c = 0; c < N * N; c++) hp[c] = h[c] > 0 ? h[c] : 0;
   const r = Math.max(1, Math.round(1400 / dx));
@@ -217,7 +219,7 @@ export function computePrecip(h, sea, N, dx, slope = 0) {
       const j = j0 + Math.floor(i * slope); if (j < 0 || j >= N) continue;
       const c = j * N + i;
       const s = (hs[j * N + Math.min(N - 1, i + 1)] - hs[j * N + Math.max(0, i - 1)]) / (2 * dx);
-      crest = Math.max(hs[c], crest - 12 * km);
+      crest = Math.max(hs[c], crest - (seaReset && sea[c] ? 260 : 12) * km);
       const Me = Math.min(M, Math.exp(-crest / 1350) * 1.25);
       let p = Me * (0.85 + 9.5 * Math.max(0, s));
       if (s < 0) p *= Math.max(0.35, 1 + 7 * s);

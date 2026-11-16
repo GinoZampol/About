@@ -91,7 +91,7 @@ export function erodeWorld(cfg) {
     }
     const ctx = makeCtx(N);
     for (let it = 0; it < iters; it++) {
-      if (it % 15 === 0) P = computePrecip(h, g.sea, N, dx, cfg.wind || 0);
+      if (it % 15 === 0) P = computePrecip(h, g.sea, N, dx, cfg.wind || 0, cfg.variant === 'S');
       erodeStep(ctx, h, g.sea, g, P, dx, dt, cfg.K0, cfg.seed + res);
     }
     let mx = 0; for (let c = 0; c < N * N; c++) if (h[c] > mx) mx = h[c];
