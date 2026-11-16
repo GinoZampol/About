@@ -89,11 +89,11 @@ function fieldsFor(design, N) {
     kmod: resample(design.kmod, R, N), strat: resample(design.strat, R, N), h0: resample(design.h0, R, N), gorge: resample(design.gorge, R, N), mesa: resample(design.mesa, R, N), erg: resample(design.erg, R, N),
   };
   const sea = new Uint8Array(N * N);
-  if (CFG.variant === 'S') seaFrom(g.h0, N, sea);
-  else for (let c = 0; c < N * N; c++) {
-    sea[c] = g.land[c] < 0 ? 1 : 0;
+  // the sea is fixed from the design, as in 1B: clean coasts that erosion shapes but never floods or drains
+  for (let c = 0; c < N * N; c++) {
+    sea[c] = g.land[c] < 0 || (CFG.variant === 'S' && isEdge(c % N, (c / N) | 0, N)) ? 1 : 0;
     // sea floor comes straight from the shoreline distance (interpolating h0 across the coast would lift it)
-    if (sea[c]) g.h0[c] = -Math.min(260, 3 + 55 * Math.pow(-g.land[c], 1.3));
+    if (sea[c] && g.land[c] < 0) g.h0[c] = -Math.min(260, 3 + 55 * Math.pow(-g.land[c], 1.3));   // (edge-ring outlets keep their land height)
     else if (g.h0[c] < 1.5) g.h0[c] = 1.5;
   }
   g.sea = sea;
@@ -114,7 +114,7 @@ export function erodeWorld(cfg) {
   // Seeded world: the great massif's uplift rate is calibrated with a quick probe run of the first level, so every
   // world's highest summit lands near its target (4.5-5.5 km, from the seed) rather than anywhere from 3 to 10 km
   // depending on the shape of the thickened zone. (The finer levels add about 27% to the probe's height.)
-  if (cfg.variant === 'S' && cfg.uScale === undefined) {
+  if (false) {   // (calibration probe: replaced by the 1B-style massif, whose height needs no calibration)
     const probe = erodeWorld({ ...cfg, levels: [cfg.levels[0]], uScale: 1, probe: true });
     let mx = 0; for (const v of probe.h) if (v > mx) mx = v;
     const target = 4500 + 1000 * hash2(7, 7, cfg.seed);
@@ -138,8 +138,7 @@ export function erodeWorld(cfg) {
       const amp = 0.02 * dx;
       for (let j = 0; j < res; j++) for (let i = 0; i < res; i++) {
         const c = j * res + i;
-        if (cfg.variant === 'S') { if (h[c] >= 0) h[c] = Math.max(0.5, h[c]) + (hash2(i, j, cfg.seed + res) - 0.5) * amp; }
-        else if (g.sea[c]) h[c] = g.h0[c];
+        if (g.sea[c]) h[c] = g.h0[c];
         else h[c] = Math.max(0.5, h[c]) + (hash2(i, j, cfg.seed + res) - 0.5) * amp;
       }
     }
@@ -158,22 +157,17 @@ export function erodeWorld(cfg) {
       if (r < 5.2 && vh > 250) g.rock[j * N + i] = ROCK.BASALT;
     }
     const ctx = makeCtx(N), VSF = cfg.variant === 'S';
-    if (VSF) seaFrom(h, N, g.sea);
     // the country that kept its sedimentary cover is dry, but its rivers (fed from beyond it, and by storms) still cut canyons:
     // over the long run it gets most of the rain the relief would give
     const arid = VSF ? boxBlur(g.mesa, N, Math.max(1, Math.round(300 / dx))) : null;
     for (let it = 0; it < iters; it++) {
-      if (VSF && it % 15 === 0) seaFrom(h, N, g.sea);
       if (it % 15 === 0) { P = cfg.variant === 'S' ? computePrecipDir(h, g.sea, N, dx, getLayout(cfg.seed).dir, getLayout(cfg.seed).windSlope, true) : computePrecip(h, g.sea, N, dx, cfg.wind || 0); if (arid) for (let c = 0; c < N * N; c++) P[c] *= 1 - 0.35 * Math.min(1, arid[c] * 1.4); }
       erodeStep(ctx, h, g.sea, g, P, dx, dt, cfg.K0, cfg.seed + res);
       // the sea floor (and the edge ring, which keeps pace with the land beyond it) moves with the crust
-      // (only sinking: shallow sea is kept shallow by waves and sediment, so the sea keeps the extent the basin gives it)
-      if (VSF) for (let c = 0; c < N * N; c++) if (g.sea[c]) h[c] = Math.max(-380, h[c] + Math.min(0, g.U[c]) * dt);
     }
     let mx = 0; for (let c = 0; c < N * N; c++) if (h[c] > mx) mx = h[c];
     log(`level ${res}: ${iters} it, max elevation ${mx.toFixed(0)} m`);
   }
-  if (cfg.variant === 'S' && !cfg.probe) { settleSea(h, N, cfg.sizeM / N, log, getLayout(cfg.seed).seaShare); seaFrom(h, N, g.sea); }
   return { h, N, g, P };
 }
 
@@ -204,7 +198,6 @@ if (import.meta.url === `file://${process.argv[1]}`) {
     const N = CFG.res;
     const design = buildDesign(Math.min(1024, N), CFG.seed, CFG.domain);
     const g = fieldsFor(design, N);
-    if (CFG.variant === 'S') seaFrom(h, N, g.sea);
     for (let j = 0; j < N; j++) for (let i = 0; i < N; i++) {
       const [vh, r] = volcanoHeight((i + 0.5) / N * WORLD_KM, (j + 0.5) / N * WORLD_KM, CFG.seed);
       if (r < 5.2 && vh > 250) g.rock[j * N + i] = ROCK.BASALT;

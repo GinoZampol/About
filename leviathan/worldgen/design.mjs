@@ -198,6 +198,8 @@ export function buildDesign(R, seed, domain = { x0: 0, size: WORLD_KM }) {
     const c = j * R + i; if (shelf) shelf[c] = p.shelf || 0;
     d.land[c] = p.land; d.U[c] = p.U; d.h0[c] = p.h0; d.rock[c] = p.rock; d.kmod[c] = p.kmod; d.strat[c] = p.strat; d.gorge[c] = p.gG; d.mesa[c] = p.plateau; d.erg[c] = p.erg;
   }
+  // seeded world: one sea, no lakes, no specks (see oneSea below), then its coasts are left to erosion
+  if (VARIANT === 'S') oneSea(d, R, domain.size / R, seed, domain);
   if (shelf) {
     // Relief grows with distance from the sea: rolling ground and ranges start from a coastal lowland instead of
     // standing straight out of the water. Tablelands are exempt, so where one meets the sea it ends in a cliff.

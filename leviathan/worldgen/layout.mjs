@@ -60,10 +60,15 @@ function tect(L, xk, yk) {
   const flank = smoothstep(0.85, 2.3, dB) * (0.25 + 1.25 * sat(0.5 + 1.1 * fbm(xk / 15 + L.o[5], yk / 15, 3, s + 62)));
   const reg = -0.5 * (1 - smoothstep(0.45, 1.05, dB)) + 0.02 * flank;
   const th = thick(L, xk, yk, wx, wy, dB), t = L.thMax ? (th - L.th50) / (L.thMax - L.th50) : 0;
-  const mt = Math.pow(smoothstep(0.42, 0.85, t), 1.6) * (0.9 + 0.2 * noise2(xk / 2.4, yk / 2.4, s + 23));      // mountain uplift (0..1)
+  // the great massif, built the way the 1B world's was: a broad crustal bulge (Gaussian, 5.4 km) along a short axis
+  // at the thickest point of the crust, uplifting fast enough to stand over 5 km
+  let gC = 0;
+  if (L.mseg) { const [ax, ay, bx, by] = L.mseg, dx = bx - ax, dy = by - ay; let u = ((wx - ax) * dx + (wy - ay) * dy) / (dx * dx + dy * dy); u = Math.max(0, Math.min(1, u));
+    const d = Math.hypot(ax + dx * u - wx, ay + dy * u - wy); gC = gauss(d, 5.4) * (0.86 + 0.26 * noise2(u * 1.7 + L.o[0], 5.3, s + 28) + 0.1 * noise2(xk / 1.6, yk / 1.6, s + 29)); }
+  const mt = Math.pow(smoothstep(0.42, 0.85, t), 1.6) * (0.9 + 0.2 * noise2(xk / 2.4, yk / 2.4, s + 23)) * (1 - Math.min(1, gC * 2));   // lesser mountains (0..1)
   const foot = smoothstep(0.22, 0.5, t) * (1 - smoothstep(0.55, 0.8, t));                                       // the rising ground around it
   const hill = sat(smoothstep(0.05, 0.42, fbm(wx / 9.5 + L.o[1], wy / 9.5, 3, s + 25)) * smoothstep(0.95, 1.45, dB) + 0.7 * foot) * (1 - sat(mt * 3));
-  return { wx, wy, dB, reg, t, mt, hill };
+  return { wx, wy, dB, reg, t, mt, hill, gC };
 }
 
 export function getLayout(seed) {
@@ -89,6 +94,10 @@ export function getLayout(seed) {
   // needle in one world and a sprawling plateau in another.
   { const pv = []; for (let j = 0; j < G; j++) for (let i = 0; i < G; i++) if (inPlay(gridAt(i), gridAt(j))) pv.push(raw0[j * G + i]);
     pv.sort((a, b) => a - b); const q = pv[Math.floor(pv.length * 0.98)]; L.thMax = L.th50 + Math.max(0.05, (q - L.th50) / 0.75); }
+  { // the thickest point inside the world (kept 9 km in from the border) carries the great massif
+    let best = -1e9, bx = 25, by = 25;
+    for (let j = 0; j < G; j++) for (let i = 0; i < G; i++) { const x = gridAt(i), y = gridAt(j); if (Math.min(x, y, PLAY - x, PLAY - y) < 9) continue; const v = raw0[j * G + i]; if (v > best) { best = v; bx = x; by = y; } }
+    const f = tect(L, bx, by), a = r() * Math.PI; L.mseg = [f.wx - Math.cos(a) * 2, f.wy - Math.sin(a) * 2, f.wx + Math.cos(a) * 2, f.wy + Math.sin(a) * 2]; L.massif = [bx, by]; }
 
   // 2. volcanic centres in the deep basin, and one limestone block
   const T = new Array(n);
@@ -126,7 +135,7 @@ export function getLayout(seed) {
   const score = new Float32Array(n).fill(-9), land = [];
   for (let c = 0; c < n; c++) {
     const x = gridAt(c % G), y = gridAt((c / G) | 0);
-    if (sea[c] || seaD[c] < 2 || T[c].dB < 1.0 || T[c].t > 0.34 || Math.min(x, y, PLAY - x, PLAY - y) < -2.5) continue;
+    if (sea[c] || seaD[c] < 2 || T[c].dB < 1.0 || T[c].t > 0.34 || T[c].gC > 0.08 || Math.min(x, y, PLAY - x, PLAY - y) < -2.5) continue;
     score[c] = -P[c] + 0.06 * Math.min(seaD[c], 9) - 0.6 * T[c].hill + 0.12 * fbm(x / 13 + L.o[5], y / 13, 2, seed + 31); if (inPlay(x, y)) land.push(c);
   }
   L.table = new Float32Array(n); L.tdist = new Float32Array(n);
@@ -196,11 +205,11 @@ function forcing(L, xk, yk, f, plateau) {
   // uplift rate (mm/yr)
   // away from hills and mountains the crust barely moves, so most of the land stays low plains
   let U = reg + 0.006 + 0.02 * smoothstep(0.1, 0.65, fbm(xk / 7.5, yk / 7.5, 3, s + 31));
-  U += 3.5 * mt + 0.3 * hill * (1 - plateau) + 1.15 * isl + 0.62 * chalk;
+  U += 2.5 * f.gC + 1.8 * mt + 0.3 * hill * (1 - plateau) + 1.15 * isl + 0.62 * chalk;
   U += 0.012 * (0.5 + 0.5 * noise2(xk / 1.1, yk / 1.1, s + 35)) * (1 - plateau);
   U = U * (1 - plateau) + plateau * Math.max(U, 0.085);   // the block keeps rising slowly, so its rivers keep cutting down into it
   // the starting surface: an old lowland, plus the uplift (or sinking) already expressed
-  const h0raw = 30 + 25 * fbm(xk / 6, yk / 6, 3, s + 33) + U * 1e-3 * T0;
+  const h0raw = 30 + 25 * fbm(xk / 6, yk / 6, 3, s + 33) + U * 1e-3 * T0 + 400 * f.gC;
   return { U, h0raw, isl, chalk };
 }
 
