@@ -228,7 +228,7 @@ export async function finishWorld(world, cfg, ROOT, log) {
       }
       comps.push({ area: area * dx * dx, lvl, maxD, cx: sx / area, cy: sy / area, cells });
     }
-    const keep = comps.filter((c) => c.area > 0.15e6 && c.maxD > 4).sort((a, b) => b.area - a.area).slice(0, 14);
+    const keep = comps.filter((c) => c.area > 0.15e6 && c.maxD > 4).sort((a, b) => b.area - a.area).slice(0, VS ? 0 : 14);   // seeded worlds keep no lakes: every basin silts up
     const keepSet = new Set(keep);
     log('basins: ' + comps.slice().sort((a, b) => b.area - a.area).slice(0, 10).map((c) => `${(c.area / 1e6).toFixed(2)}km2/${c.maxD.toFixed(0)}m@${(c.cx / N * 50).toFixed(0)},${(c.cy / N * 50).toFixed(0)}`).join(' '));
     for (const cp of comps.slice().sort((a, b) => b.area - a.area)) {

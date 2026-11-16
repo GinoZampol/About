@@ -201,6 +201,7 @@ export function buildDesign(R, seed, domain = { x0: 0, size: WORLD_KM }) {
   if (shelf) {
     // Relief grows with distance from the sea: rolling ground and ranges start from a coastal lowland instead of
     // standing straight out of the water. Tablelands are exempt, so where one meets the sea it ends in a cliff.
+    oneSea(d, R, domain.size / R, seed);
     const dist = new Float32Array(n).fill(1e9), cell = domain.size / R, D = 1.41421356;
     for (let c = 0; c < n; c++) if (d.land[c] < 0) dist[c] = 0;
     for (let j = 0; j < R; j++) for (let i = 0; i < R; i++) { const c = j * R + i; let v = dist[c];
@@ -215,4 +216,68 @@ export function buildDesign(R, seed, domain = { x0: 0, size: WORLD_KM }) {
     }
   }
   return d;
+}
+
+// One sea, no lakes. Water bodies cut off from the main sea are joined to it by a strait along the cheapest
+// route (short, over the lowest ground, never through hills, mountains or tableland), as long as the body
+// is big enough to be worth the strait. Whatever still cannot be reached is filled in as low ground,
+// unless it touches the edge of the world, where it reads as sea continuing beyond the border.
+function oneSea(d, R, cellKm, seed) {
+  const n = R * R, comp = new Int32Array(n), stack = new Int32Array(n), cost = new Float32Array(n), prev = new Int32Array(n);
+  const label = () => {
+    comp.fill(-1); const sizes = [], edge = []; let nc = 0;
+    for (let s0 = 0; s0 < n; s0++) {
+      if (d.land[s0] >= 0 || comp[s0] >= 0) continue;
+      let sp = 0, cnt = 0, e = false; stack[sp++] = s0; comp[s0] = nc;
+      while (sp) {
+        const c = stack[--sp], i = c % R, j = (c / R) | 0; cnt++; if (i === 0 || j === 0 || i === R - 1 || j === R - 1) e = true;
+        for (let dj = -1; dj <= 1; dj++) for (let di = -1; di <= 1; di++) { const x = i + di, y = j + dj; if (x < 0 || y < 0 || x >= R || y >= R) continue; const q = y * R + x; if (d.land[q] < 0 && comp[q] < 0) { comp[q] = nc; stack[sp++] = q; } }
+      }
+      sizes.push(cnt); edge.push(e); nc++;
+    }
+    let big = 0; for (let k = 1; k < nc; k++) if (sizes[k] > sizes[big]) big = k;
+    return { sizes, edge, nc, big };
+  };
+  // what it costs to cut a strait through one cell
+  const weight = (q) => (d.land[q] < 0 ? 0.12 : d.mesa[q] > 0.25 || d.U[q] > 0.45e-3 ? Infinity : 1 + 0.5 * d.land[q] + 2.2e4 * Math.max(0, d.U[q] - 0.03e-3));
+  const hk = new Float32Array(n * 2), hv = new Int32Array(n * 2);
+  for (let round = 0; round < 5; round++) {
+    const L = label(); if (L.nc <= 1) return;
+    // cheapest route from the main sea to everywhere (Dijkstra, binary heap)
+    cost.fill(Infinity); let hn = 0;
+    const push = (k, v) => { let i = hn++; while (i > 0) { const p = (i - 1) >> 1; if (hk[p] <= k) break; hk[i] = hk[p]; hv[i] = hv[p]; i = p; } hk[i] = k; hv[i] = v; };
+    const pop = () => { const v = hv[0], k = hk[--hn], w = hv[hn]; let i = 0; for (;;) { let c = 2 * i + 1; if (c >= hn) break; if (c + 1 < hn && hk[c + 1] < hk[c]) c++; if (hk[c] >= k) break; hk[i] = hk[c]; hv[i] = hv[c]; i = c; } hk[i] = k; hv[i] = w; return v; };
+    for (let c = 0; c < n; c++) if (comp[c] === L.big) { cost[c] = 0; prev[c] = -1; const i = c % R, j = (c / R) | 0; if (i && j && i < R - 1 && j < R - 1 && (d.land[c - 1] >= 0 || d.land[c + 1] >= 0 || d.land[c - R] >= 0 || d.land[c + R] >= 0)) push(0, c); }
+    while (hn) {
+      const k0 = hk[0], c = pop(); if (k0 > cost[c] || k0 > 30) continue;
+      const i = c % R, j = (c / R) | 0;
+      for (let dj = -1; dj <= 1; dj++) for (let di = -1; di <= 1; di++) {
+        if (!di && !dj) continue; const x = i + di, y = j + dj; if (x < 0 || y < 0 || x >= R || y >= R) continue;
+        const q = y * R + x; if (comp[q] === L.big) continue;
+        const w = weight(q); if (w === Infinity) continue;
+        const nk = k0 + w * cellKm * (di && dj ? 1.4142 : 1); if (nk < cost[q]) { cost[q] = nk; prev[q] = c; if (hn < hk.length - 1) push(nk, q); }
+      }
+    }
+    // the cheapest landing point of every other body, and whether the strait is worth it
+    const best = new Int32Array(L.nc).fill(-1);
+    for (let c = 0; c < n; c++) { const k = comp[c]; if (k >= 0 && k !== L.big && cost[c] < Infinity && (best[k] < 0 || cost[c] < cost[best[k]])) best[k] = c; }
+    let carved = 0;
+    for (let k = 0; k < L.nc; k++) {
+      if (k === L.big || best[k] < 0) continue;
+      const areaKm2 = L.sizes[k] * cellKm * cellKm; if (cost[best[k]] > Math.min(26, 5 + 2.6 * Math.sqrt(areaKm2))) continue;
+      for (let c = best[k]; c >= 0 && comp[c] !== L.big; c = prev[c]) {
+        if (d.land[c] < 0) continue;
+        const i = c % R, j = (c / R) | 0, wKm = 0.75 + 0.55 * noise2(i * cellKm / 2.3, j * cellKm / 2.3, seed + 97), rc = Math.max(1, wKm / 2 / cellKm), ri = Math.ceil(rc);
+        for (let dj = -ri; dj <= ri; dj++) for (let di = -ri; di <= ri; di++) {
+          const x = i + di, y = j + dj; if (x < 0 || y < 0 || x >= R || y >= R) continue;
+          const t = Math.hypot(di, dj) / rc; if (t >= 1) continue;
+          const q = y * R + x, v = -0.32 * (1 - t * t) - 0.02; if (v < d.land[q]) d.land[q] = v;
+        }
+        carved++;
+      }
+    }
+    if (!carved) break;
+  }
+  const L = label();
+  for (let c = 0; c < n; c++) { const k = comp[c]; if (k >= 0 && k !== L.big && !L.edge[k]) { d.land[c] = 0.35; d.h0[c] = 4 + 3 * Math.min(1, -Math.min(0, d.h0[c]) / 40); } }
 }

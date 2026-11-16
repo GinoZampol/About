@@ -59,17 +59,19 @@ function tendency(L, xk, yk, f, bare = false) {
   // (left out when the sea level is being chosen, so adding islands does not move the coasts)
   const isl = bare ? 0 : 0.6 * smoothstep(0.37, 0.53, noise2(f.sx / 3.7 + 7.7, f.sy / 3.7 + 3.1, seed + 91)) + 0.45 * smoothstep(0.43, 0.56, noise2(f.sx / 1.5 + 1.3, f.sy / 1.5 + 9.4, seed + 92));
   const mts = 1.3 * (f.gC + f.gA) + 0.9 * gauss(f.dCr, 10) + 0.7 * gauss(f.d2, 7);      // mountains stand well inland
+  // islands rise only in open water, well clear of the shores, so they never plug a strait
+  const open = (e) => e + (bare ? 0 : isl * smoothstep(L.T - 0.05, L.T - 0.2, e));
   if (L.sea === 'sounds') {
     // A web of sounds instead of one open basin: the sea follows the zero lines of broad, warped noise fields, which
     // wind across the whole map, branch, and enclose islands. Relief closes them, so they keep to the lowlands.
     const n1 = noise2(f.sx / 20, f.sy / 20, seed + 81), n2 = noise2(f.sx / 26 + 31.7, f.sy / 26 - 12.3, seed + 82);
     // reaches widen into bays and pinch into narrows along their length
     const ch = Math.min(Math.abs(n1), Math.abs(n2) + 0.07) / (0.45 + 1.1 * sat(0.5 + 1.1 * fbm(xk / 8.5, yk / 8.5, 2, seed + 83)));
-    return 0.9 * sat(ch / 0.3) + 0.5 * (smoothstep(1, 15, f.rr) - 0.5) + 0.13 * fbm(xk / 5.5, yk / 5.5, 3, seed + 62) + 0.05 * fbm(xk / 1.7, yk / 1.7, 3, seed + 63)
-      + isl + mts + 2.2 * f.gHl + 0.9 * f.table + 0.12 * f.up + 0.55 * smoothstep(0.08, 0.55, f.belt);   // the sounds keep clear of the ranges and their foothill belts
+    return open(0.9 * sat(ch / 0.3) + 0.5 * (smoothstep(1, 15, f.rr) - 0.5) + 0.13 * fbm(xk / 5.5, yk / 5.5, 3, seed + 62) + 0.05 * fbm(xk / 1.7, yk / 1.7, 3, seed + 63)
+      + mts + 2.2 * f.gHl + 0.9 * f.table + 0.12 * f.up + 0.55 * smoothstep(0.08, 0.55, f.belt));   // the sounds keep clear of the ranges and their foothill belts
   }
-  return 0.6 * (smoothstep(2, 21, f.rr) - 0.5) - 0.8 * f.rift + 0.72 * fbm(xk / 15, yk / 15, 4, seed + 61) + 0.32 * fbm(xk / 5.5, yk / 5.5, 3, seed + 62)
-    + 0.1 * fbm(xk / 1.7, yk / 1.7, 3, seed + 63) + isl + mts + 1.6 * f.gHl + 0.9 * f.table + 0.22 * f.up;
+  return open(0.6 * (smoothstep(2, 21, f.rr) - 0.5) - 0.8 * f.rift + 0.72 * fbm(xk / 15, yk / 15, 4, seed + 61) + 0.32 * fbm(xk / 5.5, yk / 5.5, 3, seed + 62)
+    + 0.1 * fbm(xk / 1.7, yk / 1.7, 3, seed + 63) + mts + 1.6 * f.gHl + 0.9 * f.table + 0.22 * f.up);
 }
 
 // 'basin' = one open central sea; 'sounds' = a tighter, branching sea that threads the lowlands
