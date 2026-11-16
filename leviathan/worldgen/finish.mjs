@@ -6,7 +6,7 @@ import zlib from 'node:zlib';
 import { noise2, fbm, smoothstep, sat, hash2 } from '../shared/noise.mjs';
 import { ROCK, ROCK_TALUS, rockAt, strengthBand } from '../shared/geology.mjs';
 import { encodeU16, H_OFFSET, H_SCALE } from '../shared/codec.mjs';
-import { makeCtx, flood, route, accumulate, computePrecip, boxBlur, DX8, DY8, DD8 } from './erosion.mjs';
+import { makeCtx, flood, route, accumulate, computePrecip, computePrecipDir, boxBlur, DX8, DY8, DD8 } from './erosion.mjs';
 import { renderMap } from './preview.mjs';
 import { VOLCANO, GORGE, WORLD_KM } from './design.mjs';
 import { getLayout, seededDesign } from './layout.mjs';
@@ -39,8 +39,8 @@ export async function finishWorld(world, cfg, ROOT, log) {
   const dryEast = (P) => { if (!VB) return P; if (VS) { let m = 0, k = 0; for (let c = 0; c < n; c++) if (!sea[c]) { m += P[c]; k++; } m /= Math.max(1, k);   // gentler rain shadows: lee slopes stay green, only the mesa country is truly dry
       for (let c = 0; c < n; c++) { // the arid country is truly dry; what green it has follows its watercourses (see the riparian pass below)
         const aw = smoothstep(0.08, 0.6, mesaWide[c]);
-        P[c] = (0.36 * m + 0.72 * P[c]) * (1 - 0.86 * aw) * (1 - 0.3 * smoothstep(0.02, 0.3, mesaHalo[c]) * (1 - aw)); } return P; } for (let j = 0; j < N; j++) for (let i = 0; i < N; i++) P[j * N + i] *= 1 - 0.74 * smoothstep(VC ? 14 : 31, VC ? 25 : 40.5, VC ? 0.906 * (KM0 + (i + 0.5) / N * KMS) - 0.423 * (KM0 + (j + 0.5) / N * KMS) + 2.2 * noise2(i / N * 6, j / N * 6, seed + 83) : KM0 + (i + 0.5) / N * KMS + (W ? (KM0 + (j + 0.5) / N * KMS - 25) * W * 0.6 + 2.2 * noise2(i / N * 6, j / N * 6, seed + 83) : 0)); return P; };
-  let P = dryEast(computePrecip(h, sea, N, dx, W, cfg.variant === 'S'));
+        P[c] = (0.3 * m + 0.78 * P[c]) * (1 - 0.82 * aw) * (1 - 0.22 * smoothstep(0.02, 0.3, mesaHalo[c]) * (1 - aw)); } return P; } for (let j = 0; j < N; j++) for (let i = 0; i < N; i++) P[j * N + i] *= 1 - 0.74 * smoothstep(VC ? 14 : 31, VC ? 25 : 40.5, VC ? 0.906 * (KM0 + (i + 0.5) / N * KMS) - 0.423 * (KM0 + (j + 0.5) / N * KMS) + 2.2 * noise2(i / N * 6, j / N * 6, seed + 83) : KM0 + (i + 0.5) / N * KMS + (W ? (KM0 + (j + 0.5) / N * KMS - 25) * W * 0.6 + 2.2 * noise2(i / N * 6, j / N * 6, seed + 83) : 0)); return P; };
+  let P = dryEast(cfg.variant === 'S' ? computePrecipDir(h, sea, N, dx, getLayout(seed).dir, getLayout(seed).windSlope, true) : computePrecip(h, sea, N, dx, W));
 
   // ---- A. ice flux from a mass-balance accumulation --------------------------------------------
   flood(ctx, h, sea, dx); route(ctx, sea, dx, seed + 900); accumulate(ctx, sea, P, dx);
@@ -242,7 +242,7 @@ export async function finishWorld(world, cfg, ROOT, log) {
   }
 
   // ---- F. final hydrology ---------------------------------------------------------------------
-  P = dryEast(computePrecip(h, sea, N, dx, W, cfg.variant === 'S'));
+  P = dryEast(cfg.variant === 'S' ? computePrecipDir(h, sea, N, dx, getLayout(seed).dir, getLayout(seed).windSlope, true) : computePrecip(h, sea, N, dx, W));
   flood(ctx, h, sea, dx); route(ctx, sea, dx, seed + 901); accumulate(ctx, sea, P, dx);
   const { f, Q, rec } = ctx;
   const surf = new Float32Array(n); // water-or-ground surface

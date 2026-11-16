@@ -232,3 +232,15 @@ export function computePrecip(h, sea, N, dx, slope = 0, seaReset = false) {
   }
   return boxBlur(P, N, Math.max(1, Math.round(900 / dx)));
 }
+
+// The same rain model with the wind blowing from any side: dir 0 = from the west (toward +x), 1 = from the east,
+// 2 = from the south (toward +y), 3 = from the north. The fields are turned so the wind runs along +x, then turned back.
+export function computePrecipDir(h, sea, N, dx, dir, slope = 0, seaReset = false) {
+  if (!dir) return computePrecip(h, sea, N, dx, slope, seaReset);
+  const n = N * N, h2 = new Float32Array(n), s2 = new Uint8Array(n);
+  const map = dir === 1 ? (i, j) => j * N + (N - 1 - i) : dir === 2 ? (i, j) => i * N + j : (i, j) => i * N + (N - 1 - j);
+  for (let j = 0; j < N; j++) for (let i = 0; i < N; i++) { const c = j * N + i, q = map(i, j); h2[q] = h[c]; s2[q] = sea[c]; }
+  const P2 = computePrecip(h2, s2, N, dx, slope, seaReset), P = new Float32Array(n);
+  for (let j = 0; j < N; j++) for (let i = 0; i < N; i++) P[j * N + i] = P2[map(i, j)];
+  return P;
+}
