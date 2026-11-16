@@ -35,19 +35,24 @@ function fields(L, xk, yk) {
   const seed = L.seed;
   const sx = xk + 3.2 * fbm(xk / 19, yk / 19, 3, seed + 11) + 1.1 * fbm(xk / 6, yk / 6, 3, seed + 12) + 0.3 * fbm(xk / 1.9, yk / 1.9, 2, seed + 15);
   const sy = yk + 3.2 * fbm(xk / 19, yk / 19, 3, seed + 13) + 1.1 * fbm(xk / 6, yk / 6, 3, seed + 14) + 0.3 * fbm(xk / 1.9, yk / 1.9, 2, seed + 16);
-  const cN = Math.min(1.2, convergence(L, sx, sy, 2.2) * L.norm), cW = Math.max(-1.2, Math.min(1.2, convergence(L, sx, sy, 5.5) * L.norm));   // range core, and the broad belt around it
+  const cN = Math.min(1.35, convergence(L, sx, sy, 3.0) * L.norm), cW = Math.max(-1.2, Math.min(1.2, convergence(L, sx, sy, 5.5) * L.norm));   // range core, and the broad belt around it
   // along-strike variety: summits and passes
   const m = Math.max(0, cN) * (0.62 + 0.5 * fbm(xk / 8, yk / 8, 2, seed + 21) + 0.16 * noise2(xk / 2.4, yk / 2.4, seed + 22));
-  const gC = Math.max(0, m - 0.5) * 1.6, gA = Math.min(m, 0.5);
-  const gHl = 0.3 * Math.max(0, cW) * (1 - sat(m * 1.6)) * (0.6 + 0.6 * smoothstep(-0.3, 0.4, fbm(xk / 7, yk / 7, 3, seed + 23)));
+  // the two guided places: the great mountain with its back to one corner, the arid canyon country in another
+  const [dCr] = segDist(sx, sy, L.massifSeg[0], L.massifSeg[1], L.massifSeg[2], L.massifSeg[3]);
+  const gC = gauss(dCr, 5.3) * (0.88 + 0.2 * noise2(xk / 3.1, yk / 3.1, seed + 28) + 0.1 * noise2(xk / 1.6, yk / 1.6, seed + 29));
+  const dA = Math.hypot(sx - L.arid.x, sy - L.arid.y) + 2.6 * fbm(xk / 6.5, yk / 6.5, 3, seed + 65);
+  const gA = Math.min(m, 0.62) * (1 - smoothstep(L.arid.rad + 3, L.arid.rad - 2, dA));
+  const table = smoothstep(L.arid.rad, L.arid.rad - 3.2, dA) * (1 - smoothstep(0.08, 0.4, gC)) * (1 - smoothstep(0.06, 0.3, gA));
+  const gHl = 0.22 * gauss(dCr, 11) * (1 - sat(gC * 1.5)) + (1 - table) * 0.3 * Math.max(0, cW) * (1 - sat(m * 1.6)) * (0.6 + 0.6 * smoothstep(-0.3, 0.4, fbm(xk / 7, yk / 7, 3, seed + 23)));
   const rift = Math.max(0, -cW);
-  return { sx, sy, rr: Math.hypot(sx - L.hot[0], sy - L.hot[1]), gC, gA, gHl, rift };
+  return { sx, sy, rr: Math.hypot(sx - L.hot[0], sy - L.hot[1]), gC, gA, gHl, rift, table, dA };
 }
 // elevation tendency: rifts and the spreading centre sink, ranges and their belts rise, broad swells do the rest
 function tendency(L, xk, yk, f) {
   const seed = L.seed;
   return 0.6 * (smoothstep(2, 21, f.rr) - 0.5) - 0.8 * f.rift + 0.72 * fbm(xk / 15, yk / 15, 4, seed + 61) + 0.32 * fbm(xk / 5.5, yk / 5.5, 3, seed + 62)
-    + 0.1 * fbm(xk / 1.7, yk / 1.7, 3, seed + 63) + 1.3 * (f.gC + f.gA) + 1.6 * f.gHl;
+    + 0.1 * fbm(xk / 1.7, yk / 1.7, 3, seed + 63) + 1.3 * (f.gC + f.gA) + 1.6 * f.gHl + 0.9 * f.table;
 }
 
 let cache = null;
@@ -56,40 +61,41 @@ export function getLayout(seed) {
   const r = mulberry32((Math.imul(seed | 0, 2654435761) ^ 0x9e3779b9) >>> 0);
   // a spreading centre lies somewhere under the middle of the world: plates drift away from it, each with
   // its own extra motion, so the middle is pulled apart (sea) and the plates collide further out (ranges)
-  const L = { seed, plates: [], hot: [25 + (r() - 0.5) * 8, 25 + (r() - 0.5) * 8], norm: 1, _a: [0, 0], _b: [0, 0] };
+  const L = { seed, plates: [], massifSeg: [0, 0, 1, 1], arid: { x: -99, y: -99, rad: 1 }, hot: [25 + (r() - 0.5) * 8, 25 + (r() - 0.5) * 8], norm: 1, _a: [0, 0], _b: [0, 0] };
   for (let k = 0, n = 7 + Math.floor(r() * 3); k < n; k++) {
     const x = -4 + r() * 58, y = -4 + r() * 58, dl = Math.hypot(x - L.hot[0], y - L.hot[1]) || 1, a = r() * Math.PI * 2, v = 0.55 + 0.5 * r();
     L.plates.push([x, y, 0.45 * (x - L.hot[0]) / dl + Math.cos(a) * v, 0.45 * (y - L.hot[1]) / dl + Math.sin(a) * v]);
   }
   L._d = new Float64Array(L.plates.length);
+  { // which corner gets the mountain and which the arid country is the seed's choice
+    const C = [[0, 0], [50, 0], [50, 50], [0, 50]], km = Math.floor(r() * 4), ka = (km + 1 + Math.floor(r() * 3)) % 4;
+    const cm = C[km], ux = Math.sign(25 - cm[0]) * Math.SQRT1_2, uy = Math.sign(25 - cm[1]) * Math.SQRT1_2, d = 14.5 + r() * 2.5, t = (r() - 0.5) * 0.9;
+    const mx = cm[0] + ux * d, my = cm[1] + uy * d, px = -uy * Math.cos(t) - ux * Math.sin(t), py = ux * Math.cos(t) - uy * Math.sin(t);
+    L.massifSeg = [mx - px * 2.6, my - py * 2.6, mx + px * 2.6, my + py * 2.6];
+    const ca = C[ka], ax = Math.sign(25 - ca[0]) * Math.SQRT1_2, ay = Math.sign(25 - ca[1]) * Math.SQRT1_2, rad = 17 + r() * 3, sgn = r() < 0.5 ? 1 : -1;
+    L.arid = { x: ca[0] - ax * 2, y: ca[1] - ay * 2, rad };
+    const P = [ca[0] + ax * rad * 0.45, ca[1] + ay * rad * 0.45];
+    L.mouth = [ca[0] + ax * (rad - 1), ca[1] + ay * (rad - 1)];
+    L.gorge = [[P[0] - ax * 2, P[1] - ay * 2], [P[0] + ax * rad * 0.25 - ay * (r() - 0.5) * 3, P[1] + ay * rad * 0.25 + ax * (r() - 0.5) * 3], [ca[0] + ax * (rad + 3), ca[1] + ay * (rad + 3)]];
+    L.sand = [P[0] - ax * 1.5 - ay * sgn * 3.6, P[1] - ay * 1.5 + ax * sgn * 3.6, 2.6 + r() * 0.8, 3.2 + r() * 0.9];
+    L.badlands = [P[0] + ay * sgn * 4.2, P[1] - ax * sgn * 4.2, 2.6 + r() * 0.8, 3.0 + r() * 0.8];
+  }
   const G = 96, at = (i) => (i + 0.5) / G * 50;
   // the hardest collision in this world sets the scale: it becomes the great range
   // (the 98th percentile rather than the single highest sample, so one sharp corner does not dwarf everything else)
-  const cs = []; for (let j = 0; j < G; j++) for (let i = 0; i < G; i++) cs.push(convergence(L, at(i), at(j), 2.2));
+  const cs = []; for (let j = 0; j < G; j++) for (let i = 0; i < G; i++) cs.push(convergence(L, at(i), at(j), 3.0));
   cs.sort((p, q) => p - q); L.norm = 1 / Math.max(1e-6, cs[Math.floor(cs.length * 0.98)]);
   // sea level: the quantile of the tendency field that leaves the chosen share of the world under water
-  const seaShare = 0.24 + r() * 0.08, E = new Float32Array(G * G);
-  let best = [25, 25, 0], bestA = [25, 25, 0];
+  const seaShare = 0.34 + r() * 0.08, E = new Float32Array(G * G);
+  let bestA = [25, 25, 0];
   for (let j = 0; j < G; j++) for (let i = 0; i < G; i++) {
     const xk = at(i), yk = at(j), f = fields(L, xk, yk); E[j * G + i] = tendency(L, xk, yk, f);
-    if (f.gC > best[2]) best = [xk, yk, f.gC];
-  }
-  for (let j = 0; j < G; j++) for (let i = 0; i < G; i++) {     // the finest range well away from the great one
-    const xk = at(i), yk = at(j), f = fields(L, xk, yk), sc = f.gA * smoothstep(8, 16, Math.hypot(xk - best[0], yk - best[1])); if (sc > bestA[2]) bestA = [xk, yk, sc];
+    if (f.gA > bestA[2]) bestA = [xk, yk, f.gA];
   }
   L.T = Float32Array.from(E).sort()[Math.floor(seaShare * G * G)];
   let cx = 0, cy = 0, cn = 0;
   for (let j = 0; j < G; j++) for (let i = 0; i < G; i++) if (E[j * G + i] < L.T) { cx += at(i); cy += at(j); cn++; }
-  L.c = [cx / cn, cy / cn]; L.massif = best; L.alpsCentre = bestA;
-  // the tableland: the interior of the plate that lies farthest from the sea and from the great range
-  let pb = 0, ps = -1e9;
-  L.plates.forEach((p, k) => { if (p[0] < 5 || p[0] > 45 || p[1] < 5 || p[1] > 45) return; const sc = Math.hypot(p[0] - L.c[0], p[1] - L.c[1]) + 0.6 * Math.hypot(p[0] - best[0], p[1] - best[1]) - (tendency(L, p[0], p[1], fields(L, p[0], p[1])) < L.T + 0.4 ? 100 : 0); if (sc > ps) { ps = sc; pb = k; } });
-  const P = L.plates[pb], tc = Math.hypot(L.c[0] - P[0], L.c[1] - P[1]) || 1, ux = (L.c[0] - P[0]) / tc, uy = (L.c[1] - P[1]) / tc, sgn = r() < 0.5 ? 1 : -1;
-  L.table = { plate: pb, x: P[0], y: P[1], rad: 4.8 + r() * 1.2 };
-  L.mouth = [P[0] + ux * (L.table.rad + 0.5), P[1] + uy * (L.table.rad + 0.5)];
-  L.gorge = [[P[0] + ux * 1.5, P[1] + uy * 1.5], [P[0] + ux * (L.table.rad - 1.5) - uy * (r() - 0.5) * 2, P[1] + uy * (L.table.rad - 1.5) + ux * (r() - 0.5) * 2], [P[0] + ux * (L.table.rad + 4), P[1] + uy * (L.table.rad + 4)]];
-  L.sand = [P[0] - ux * 2.2 - uy * sgn * 2.2, P[1] - uy * 2.2 + ux * sgn * 2.2, 2.4 + r() * 0.8, 3.0 + r() * 0.9];
-  L.badlands = [P[0] + uy * sgn * 3.4, P[1] - ux * sgn * 3.4, 2 + r() * 0.6, 2.4 + r() * 0.7];
+  L.c = [cx / cn, cy / cn]; L.massif = [(L.massifSeg[0] + L.massifSeg[2]) / 2, (L.massifSeg[1] + L.massifSeg[3]) / 2]; L.alpsCentre = bestA;
   return (cache = L);
 }
 
@@ -97,9 +103,8 @@ export function seededDesign(xk, yk, seed) {
   const L = getLayout(seed), f = fields(L, xk, yk), { sx, sy, gC, gA, gHl } = f;
   // ---- land / sea: whatever lies below the level is sea ------------------------------------------
   const land = (tendency(L, xk, yk, f) - L.T) * 13;
-  // ---- the tableland ---------------------------------------------------------------------------
-  const T = L.table, dT = Math.hypot(sx - T.x, sy - T.y) + 1.6 * fbm(xk / 4.5, yk / 4.5, 3, seed + 65);
-  const plateau = smoothstep(T.rad, T.rad - 2.2, dT) * smoothstep(0.5, 2.5, land) * (1 - smoothstep(0.08, 0.4, gC)) * (1 - smoothstep(0.06, 0.3, gA));
+  // ---- the canyon country --------------------------------------------------------------------
+  const plateau = f.table * smoothstep(0.5, 2.5, land);
   let dG = 1e9; for (let k = 0; k < L.gorge.length - 1; k++) dG = Math.min(dG, segDist(sx + 0.35 * noise2(xk / 3, yk / 3, seed + 23), sy + 0.5 * noise2(xk / 3.5, yk / 3.5, seed + 24), L.gorge[k][0], L.gorge[k][1], L.gorge[k + 1][0], L.gorge[k + 1][1])[0]);
   const gG = gauss(dG, 1.05) * smoothstep(0, 0.3, plateau + gauss(Math.hypot(sx - L.mouth[0], sy - L.mouth[1]), 3)), dGM = Math.hypot(sx - L.mouth[0], sy - L.mouth[1]);
 
