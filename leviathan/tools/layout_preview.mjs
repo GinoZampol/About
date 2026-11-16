@@ -1,16 +1,16 @@
 // Top-view previews of seeded layouts, before spending minutes on a full generation.
-//   node tools/layout_preview.mjs out.png [--sea=sounds|basin] [--tile=360] [--cols=3] seed seed ...
+//   node tools/layout_preview.mjs out.png [--sea=sounds|basin] [--second=auto|none] [--tile=360] [--cols=3] seed seed ...
 // Shows the design the generator starts from (sea, plains, hills, ranges, tableland), with the coastal
 // lowland rule applied; erosion, rivers and vegetation come later and are not in this picture.
 import { buildDesign, setVariant } from '../worldgen/design.mjs';
-import { setSeaStyle } from '../worldgen/layout.mjs';
+import { setSeaStyle, setSecond } from '../worldgen/layout.mjs';
 import { writePNG } from '../worldgen/png.mjs';
 const args = process.argv.slice(2), opt = (k, d) => { const a = args.find((x) => x.startsWith(`--${k}=`)); return a ? a.split('=')[1] : d; };
 const pos = args.filter((a) => !a.startsWith('--')), out = pos[0], seeds = pos.slice(1).map(Number);
 const T = +opt('tile', 360), cols = +opt('cols', 3), styles = opt('sea', 'basin').split(',');
 const tiles = []; for (const st of styles) for (const s of seeds) tiles.push([st, s]);
 const rows = Math.ceil(tiles.length / cols), W = cols * T, H = rows * T, rgb = new Uint8Array(W * H * 3);
-setVariant('S');
+setVariant('S'); setSecond(opt('second', 'auto'));
 tiles.forEach(([style, seed], k) => {
   setSeaStyle(style);
   const d = buildDesign(T, seed, { x0: 0, size: 50 }), ox = (k % cols) * T, oy = Math.floor(k / cols) * T;

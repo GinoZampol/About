@@ -47,20 +47,25 @@ function fields(L, xk, yk) {
   // rises into hill country instead, in patches rather than continuous belts.
   const gA = 0;
   const table = smoothstep(L.arid.rad, L.arid.rad - 1.6, dA) * (1 - smoothstep(0.08, 0.4, gC));
-  const gHl = (0.13 * gauss(dCr, 7) + 0.1 * gauss(d2, 5.5)) * (1 - sat(gC * 1.5)) + (1 - table) * 0.24 * smoothstep(0.2, 0.85, cW) * smoothstep(-0.25, 0.3, fbm(xk / 7, yk / 7, 3, seed + 23));
+  const gHl = (0.13 * gauss(dCr, 7) + 0.1 * gauss(d2, 5.5)) * (1 - sat(gC * 1.5)) + (1 - table) * 0.24 * smoothstep(0.2, 0.9, cW) * smoothstep(-0.25, 0.3, fbm(xk / 7, yk / 7, 3, seed + 23));
   const rift = Math.max(0, -cW);
-  return { sx, sy, rr: Math.hypot(sx - L.hot[0], sy - L.hot[1]), gC, gA, gHl: gHl + 0.05 * smoothstep(0.05, 0.5, fbm(xk / 5.5, yk / 5.5, 3, seed + 24)) * (1 - table), rift, table, dA, dCr, d2, belt: Math.max(0, cW),
+  return { sx, sy, rr: Math.hypot(sx - L.hot[0], sy - L.hot[1]), gC, gA, gHl: gHl + 0.035 * smoothstep(0.05, 0.5, fbm(xk / 5.5, yk / 5.5, 3, seed + 24)) * (1 - table), rift, table, dA, dCr, d2, belt: Math.max(0, cW),
     up: smoothstep(0.12, 0.24, fbm(xk / 12, yk / 12, 3, seed + 71) + 0.06 * fbm(xk / 2.2, yk / 2.2, 3, seed + 72)) * (1 - table) };   // gentle uplands with a real edge
 }
 // elevation tendency: rifts and the spreading centre sink, ranges and their belts rise, broad swells do the rest
 function tendency(L, xk, yk, f, bare = false) {
   const seed = L.seed;
-  // scattered rises of the sea floor: where they stand in water they are islands and skerries, on land they change nothing much
-  // (left out when the sea level is being chosen, so adding islands does not move the coasts)
-  const isl = bare ? 0 : 0.7 * smoothstep(0.46, 0.58, noise2(f.sx / 4.4 + 7.7, f.sy / 4.4 + 3.1, seed + 91)) + 0.5 * smoothstep(0.54, 0.62, noise2(f.sx / 1.9 + 1.3, f.sy / 1.9 + 9.4, seed + 92));
   const mts = 1.3 * (f.gC + f.gA) + 0.9 * gauss(f.dCr, 10) + 0.7 * gauss(f.d2, 7);      // mountains stand well inland
-  // islands rise only in open water, well clear of the shores, so they never plug a strait
-  const open = (e) => e + (bare ? 0 : isl * smoothstep(L.T - 0.05, L.T - 0.2, e));
+  // a few major islands stand in open water (their places are chosen in getLayout, once the sea is known)
+  const open = (e) => {
+    if (bare || !L.islands) return e;
+    for (const q of L.islands) {
+      const dx = f.sx - q[0], dy = f.sy - q[1], ca = Math.cos(q[3]), sa = Math.sin(q[3]);
+      const d = Math.hypot((dx * ca + dy * sa) / q[4], (-dx * sa + dy * ca) * q[4]) / (q[2] * (1 + 0.38 * fbm(xk / (q[2] * 1.4) + q[0], yk / (q[2] * 1.4), 3, seed + 93) + 0.12 * noise2(xk / 0.45, yk / 0.45, seed + 94)));
+      if (d < 1.2) e = Math.max(e, L.T + 0.6 * smoothstep(1.15, 0.5, d) - 0.25);
+    }
+    return e;
+  };
   if (L.sea === 'sounds') {
     // A web of sounds instead of one open basin: the sea follows the zero lines of broad, warped noise fields, which
     // wind across the whole map, branch, and enclose islands. Relief closes them, so they keep to the lowlands.
@@ -74,6 +79,9 @@ function tendency(L, xk, yk, f, bare = false) {
     + 0.1 * fbm(xk / 1.7, yk / 1.7, 3, seed + 63) + mts + 1.6 * f.gHl + 0.9 * f.table + 0.22 * f.up);
 }
 
+// whether the seed may add its occasional second mountain ('auto'), or the great mountain stands alone ('none')
+let SECOND = 'auto';
+export function setSecond(s) { SECOND = s === 'none' ? 'none' : 'auto'; cache = null; }
 // 'basin' = one open central sea; 'sounds' = a tighter, branching sea that threads the lowlands
 let SEA = 'basin';
 export function setSeaStyle(s) { SEA = s === 'sounds' ? 'sounds' : 'basin'; cache = null; }
@@ -83,7 +91,7 @@ export function getLayout(seed) {
   const r = mulberry32((Math.imul(seed | 0, 2654435761) ^ 0x9e3779b9) >>> 0);
   // a spreading centre lies somewhere under the middle of the world: plates drift away from it, each with
   // its own extra motion, so the middle is pulled apart (sea) and the plates collide further out (ranges)
-  const L = { seed, sea: SEA, second: null, plates: [], massifSeg: [0, 0, 1, 1], arid: { x: -99, y: -99, rad: 1 }, hot: [25 + (r() - 0.5) * 8, 25 + (r() - 0.5) * 8], norm: 1, _a: [0, 0], _b: [0, 0] };
+  const L = { seed, sea: SEA, second: null, islands: null, plates: [], massifSeg: [0, 0, 1, 1], arid: { x: -99, y: -99, rad: 1 }, hot: [25 + (r() - 0.5) * 8, 25 + (r() - 0.5) * 8], norm: 1, _a: [0, 0], _b: [0, 0] };
   for (let k = 0, n = 7 + Math.floor(r() * 3); k < n; k++) {
     const x = -4 + r() * 58, y = -4 + r() * 58, dl = Math.hypot(x - L.hot[0], y - L.hot[1]) || 1, a = r() * Math.PI * 2, v = 0.55 + 0.5 * r();
     L.plates.push([x, y, 0.45 * (x - L.hot[0]) / dl + Math.cos(a) * v, 0.45 * (y - L.hot[1]) / dl + Math.sin(a) * v]);
@@ -110,7 +118,7 @@ export function getLayout(seed) {
   cs.sort((p, q) => p - q); L.norm = 1 / Math.max(1e-6, cs[Math.floor(cs.length * 0.98)]);
   // sea level: the quantile of the tendency field that leaves the chosen share of the world under water
   const seaShare = (SEA === 'sounds' ? 0.19 : 0.25) + r() * 0.05, E = new Float32Array(G * G);
-  if (r() < 0.35) {                         // the second mountain, in one of the two corners still free
+  if (r() < 0.35 && SECOND !== 'none') {    // the second mountain, in one of the two corners still free
     const C = [[0, 0], [50, 0], [50, 50], [0, 50]], free = [0, 1, 2, 3].filter((k) => !L.corners.includes(k)), cs2 = C[free[Math.floor(r() * free.length)]];
     const ux = Math.sign(25 - cs2[0]) * Math.SQRT1_2, uy = Math.sign(25 - cs2[1]) * Math.SQRT1_2, d = 15 + r() * 6, j = (r() - 0.5) * 9;
     L.second = [cs2[0] + ux * d - uy * j, cs2[1] + uy * d + ux * j, 2.4 + r() * 0.4, 0.56 + r() * 0.12];
@@ -123,6 +131,14 @@ export function getLayout(seed) {
   L.T = Float32Array.from(E).sort()[Math.floor(seaShare * G * G)];
   let cx = 0, cy = 0, cn = 0;
   for (let j = 0; j < G; j++) for (let i = 0; i < G; i++) if (E[j * G + i] < L.T) { cx += at(i); cy += at(j); cn++; }
+  { // one to three major islands, in open water well clear of every shore and of each other
+    const cand = []; for (let j = 6; j < G - 6; j++) for (let i = 6; i < G - 6; i++) if (E[j * G + i] < L.T - 0.2) cand.push([at(i), at(j)]);
+    L.islands = [];
+    for (let k = 0, want = 1 + Math.floor(r() * 3), tries = 0; k < want && cand.length && tries < 300; tries++) {
+      const c = cand[Math.floor(r() * cand.length)]; if (L.islands.some((q) => Math.hypot(q[0] - c[0], q[1] - c[1]) < 8)) continue;
+      const f = fields(L, c[0], c[1]); L.islands.push([f.sx, f.sy, 1.3 + r() * 1.3, r() * Math.PI, 1.15 + r() * 0.45]); k++;
+    }
+  }
   L.c = [cx / cn, cy / cn]; L.massif = [(L.massifSeg[0] + L.massifSeg[2]) / 2, (L.massifSeg[1] + L.massifSeg[3]) / 2]; L.alpsCentre = bestA;
   return (cache = L);
 }
