@@ -106,7 +106,7 @@ function fieldsFor(design, N) {
     tm[j * N + i] = Math.max(0.5, Math.min(1.9, v));
   }
   g.tmod = tm;
-  if (CFG.variant === 'S') { const cq = new Float32Array(N * N); for (let c = 0; c < N * N; c++) cq[c] = g.mesa[c] > 0.5 ? 1.8e5 : 0; g.cutQ = cq; }
+  if (CFG.variant === 'S') { const cq = new Float32Array(N * N); for (let c = 0; c < N * N; c++) cq[c] = g.mesa[c] > 0.5 ? 6e4 : 0; g.cutQ = cq; }
   return g;
 }
 
@@ -161,8 +161,11 @@ export function erodeWorld(cfg) {
     // over the long run it gets most of the rain the relief would give
     const arid = VSF ? boxBlur(g.mesa, N, Math.max(1, Math.round(300 / dx))) : null;
     for (let it = 0; it < iters; it++) {
-      if (it % 15 === 0) { P = cfg.variant === 'S' ? computePrecipDir(h, g.sea, N, dx, getLayout(cfg.seed).dir, getLayout(cfg.seed).windSlope, true) : computePrecip(h, g.sea, N, dx, cfg.wind || 0); if (arid) for (let c = 0; c < N * N; c++) P[c] *= 1 - 0.35 * Math.min(1, arid[c] * 1.4); }
+      if (it % 15 === 0) { P = cfg.variant === 'S' ? computePrecipDir(h, g.sea, N, dx, getLayout(cfg.seed).dir, getLayout(cfg.seed).windSlope, true) : computePrecip(h, g.sea, N, dx, cfg.wind || 0); if (arid) for (let c = 0; c < N * N; c++) P[c] *= 1 - 0.2 * Math.min(1, arid[c] * 1.4); }
       erodeStep(ctx, h, g.sea, g, P, dx, dt, cfg.K0, cfg.seed + res);
+      // the ring at the edge of the simulated area stands for the land beyond it: it keeps the height of the land just
+      // inside (a free outflow boundary), so rivers leave the world without cutting an escarpment along its edge
+      if (VSF) for (let j = 0; j < N; j++) for (let i = 0; i < N; i++) if (isEdge(i, j, N)) { const c = j * N + i, q = Math.min(N - 3, Math.max(2, j)) * N + Math.min(N - 3, Math.max(2, i)); if (!g.sea[q]) h[c] = h[q]; }
       // the sea floor (and the edge ring, which keeps pace with the land beyond it) moves with the crust
     }
     let mx = 0; for (let c = 0; c < N * N; c++) if (h[c] > mx) mx = h[c];

@@ -207,7 +207,9 @@ function forcing(L, xk, yk, f, plateau) {
   let U = reg + 0.006 + 0.02 * smoothstep(0.1, 0.65, fbm(xk / 7.5, yk / 7.5, 3, s + 31));
   U += 2.5 * f.gC + 1.8 * mt + 0.3 * hill * (1 - plateau) + 1.15 * isl + 0.62 * chalk;
   U += 0.012 * (0.5 + 0.5 * noise2(xk / 1.1, yk / 1.1, s + 35)) * (1 - plateau);
-  U = U * (1 - plateau) + plateau * Math.max(U, 0.085);   // the block keeps rising slowly, so its rivers keep cutting down into it
+  // The block rises steadily from a low start (as the Colorado Plateau did): the rivers already flowing across it keep
+  // cutting down as it rises, so canyons run right through its interior instead of only nibbling at its edges.
+  U = U * (1 - plateau) + plateau * Math.max(U, 0.3);
   // the starting surface: an old lowland, plus the uplift (or sinking) already expressed
   const h0raw = 30 + 25 * fbm(xk / 6, yk / 6, 3, s + 33) + U * 1e-3 * T0 + 400 * f.gC;
   return { U, h0raw, isl, chalk };
@@ -219,7 +221,7 @@ export function seededDesign(xk, yk, seed) {
   let h0 = p.h0raw - L.z0;
   if (p.chalk > 0) h0 = Math.max(h0, 6 + 110 * p.chalk);                                                       // the block stands as a flat-topped island
   const plateau = cover * smoothstep(-40, 40, h0);
-  if (plateau > 0) h0 += plateau * (820 + 38 * Math.min(10, sample(L.tdist, xk, yk)) + 45 * fbm(xk / 5, yk / 5, 3, seed + 34));
+  if (plateau > 0) h0 += plateau * (300 + 14 * Math.min(10, sample(L.tdist, xk, yk)) + 30 * fbm(xk / 5, yk / 5, 3, seed + 34));
   h0 = h0 < 0 ? Math.max(-380, h0) : Math.max(1.5, h0);
   // rock
   let rock = ROCK.ALLUVIUM;
