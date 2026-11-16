@@ -122,7 +122,7 @@ export function getLayout(seed) {
   const score = new Float32Array(n).fill(-9), land = [];
   for (let c = 0; c < n; c++) {
     const x = gridAt(c % G), y = gridAt((c / G) | 0);
-    if (sea[c] || seaD[c] < 2.5 || T[c].dB < 1.05 || T[c].t > 0.27 || Math.min(x, y, PLAY - x, PLAY - y) < -2.5) continue;
+    if (sea[c] || seaD[c] < 2 || T[c].dB < 1.0 || T[c].t > 0.34 || Math.min(x, y, PLAY - x, PLAY - y) < -2.5) continue;
     score[c] = -P[c] + 0.06 * Math.min(seaD[c], 9) - 0.6 * T[c].hill + 0.12 * fbm(x / 13 + L.o[5], y / 13, 2, seed + 31); if (inPlay(x, y)) land.push(c);
   }
   L.table = new Float32Array(n); L.tdist = new Float32Array(n);
@@ -130,23 +130,33 @@ export function getLayout(seed) {
   const nLand = (() => { let k = 0; for (let c = 0; c < n; c++) if (!sea[c] && inPlay(gridAt(c % G), gridAt((c / G) | 0))) k++; return k; })();
   if (land.length) {
     const target = Math.min(land.length, Math.round(nLand * (0.075 + r() * 0.03))), rad = Math.sqrt(target * (SIZE / G) ** 2 / Math.PI);
-    // it grows from the best spot that leaves it room to be a whole country inside the world
-    // it grows from the middle of the best broad region (score averaged over a country-sized window, with ground
-    // that cannot carry the cover counting against it), so it comes out as one whole country, not a strip
+    // One country, roughly round, as an eroded outlier of an old basin's cover is. It is centred on the best spot
+    // that leaves it room to lie wholly inside the world (score averaged over a country-sized window, ground that
+    // cannot carry the cover counting against it); its outline is a warped circle; it keeps only ground that can
+    // carry the cover and is connected to its centre. So it is never a strip along the border or a scatter of pieces.
     const avg = new Float32Array(n), w = Math.max(2, Math.round(rad * 0.8 / (SIZE / G)));
     { const tmp = new Float32Array(n), v = (c) => (score[c] > -9 ? score[c] : -3.5);
       for (let j = 0; j < G; j++) for (let i = 0; i < G; i++) { let a = 0; for (let d = -w; d <= w; d++) a += v(j * G + Math.min(G - 1, Math.max(0, i + d))); tmp[j * G + i] = a; }
       for (let j = 0; j < G; j++) for (let i = 0; i < G; i++) { let a = 0; for (let d = -w; d <= w; d++) a += tmp[Math.min(G - 1, Math.max(0, j + d)) * G + i]; avg[j * G + i] = a; } }
-    let start = land[0]; for (const c of land) if (avg[c] > avg[start]) start = c;
-    const seen = new Uint8Array(n), hk = [], hv = [];
-    const sx0 = gridAt(start % G), sy0 = gridAt((start / G) | 0), pri = (q) => score[q] - 0.3 * Math.hypot(gridAt(q % G) - sx0, gridAt((q / G) | 0) - sy0);
-    const push = (k, v) => { let i = hk.length; hk.push(k); hv.push(v); while (i > 0) { const p = (i - 1) >> 1; if (hk[p] >= hk[i]) break; [hk[p], hk[i]] = [hk[i], hk[p]]; [hv[p], hv[i]] = [hv[i], hv[p]]; i = p; } };
-    const pop = () => { const v = hv[0], lk = hk.pop(), lv = hv.pop(); if (hk.length) { hk[0] = lk; hv[0] = lv; let i = 0; for (;;) { let q = 2 * i + 1; if (q >= hk.length) break; if (q + 1 < hk.length && hk[q + 1] > hk[q]) q++; if (hk[q] <= hk[i]) break; [hk[q], hk[i]] = [hk[i], hk[q]]; [hv[q], hv[i]] = [hv[i], hv[q]]; i = q; } } return v; };
-    push(score[start], start); seen[start] = 1;
-    for (let got = 0; got < target && hk.length;) {
-      const c = pop(), i = c % G, j = (c / G) | 0; L.table[c] = 1; if (inPlay(gridAt(i), gridAt(j))) got++; tx += gridAt(i); ty += gridAt(j); tn++;
-      for (const q of [c - 1, c + 1, c - G, c + G]) { if (q < 0 || q >= n || seen[q] || score[q] <= -9 || Math.abs((q % G) - i) > 1) continue; seen[q] = 1; push(pri(q), q); }
+    let start = -1;
+    for (const c of land) { const x = gridAt(c % G), y = gridAt((c / G) | 0); if (Math.min(x, y, PLAY - x, PLAY - y) < rad + 2) continue; if (start < 0 || avg[c] > avg[start]) start = c; }
+    if (start < 0) { start = land[0]; for (const c of land) if (avg[c] > avg[start]) start = c; }
+    // the circle widens until the connected ground inside it reaches the cover's share of the world
+    const sx0 = gridAt(start % G), sy0 = gridAt((start / G) | 0), inside = new Uint8Array(n);
+    let comp = [];
+    for (let k = 1.1; k < 1.75; k += 0.1) {
+      inside.fill(0);
+      for (let c = 0; c < n; c++) {
+        if (score[c] <= -9) continue;
+        const x = gridAt(c % G), y = gridAt((c / G) | 0), a = Math.atan2(y - sy0, x - sx0);
+        const R = rad * k * (1 + 0.22 * noise2(Math.cos(a) * 1.6 + L.o[3], Math.sin(a) * 1.6, seed + 32) + 0.08 * noise2(Math.cos(a) * 4.5 + L.o[4], Math.sin(a) * 4.5, seed + 33));
+        if (Math.hypot(x - sx0, y - sy0) < R) inside[c] = 1;
+      }
+      inside[start] = 1; comp = [start]; const got = new Uint8Array(n); got[start] = 1;
+      for (let h = 0; h < comp.length; h++) { const c = comp[h], i = c % G; for (const q of [c - 1, c + 1, c - G, c + G]) { if (q < 0 || q >= n || Math.abs((q % G) - i) > 1 || !inside[q] || got[q]) continue; got[q] = 1; comp.push(q); } }
+      if (comp.filter((c) => inPlay(gridAt(c % G), gridAt((c / G) | 0))).length >= target) break;
     }
+    for (const c of comp) { L.table[c] = 1; tx += gridAt(c % G); ty += gridAt((c / G) | 0); tn++; }
     // distance in from the edge of the cover (km): the tableland stands higher toward its interior
     const D = L.tdist, cell = SIZE / G; for (let c = 0; c < n; c++) D[c] = L.table[c] ? 1e9 : 0;
     for (let pass = 0; pass < 2; pass++) for (let k = 0; k < n; k++) {
@@ -182,7 +192,7 @@ function forcing(L, xk, yk, f, plateau) {
 }
 
 export function seededDesign(xk, yk, seed) {
-  const L = getLayout(seed), f = tect(L, xk, yk), cover = smoothstep(0.42, 0.62, sample(L.table, xk, yk) + 0.2 * fbm(xk / 4.6, yk / 4.6, 3, seed + 65) + 0.07 * fbm(xk / 1.5, yk / 1.5, 2, seed + 66));   // an eroded, ragged edge
+  const L = getLayout(seed), f = tect(L, xk, yk), cover = smoothstep(0.42, 0.62, sample(L.table, xk, yk) + 0.13 * fbm(xk / 4.6, yk / 4.6, 3, seed + 65) + 0.05 * fbm(xk / 1.5, yk / 1.5, 2, seed + 66));   // an eroded, ragged edge
   const p = forcing(L, xk, yk, f, cover), { mt, hill } = f;
   let h0 = p.h0raw - L.z0;
   if (p.chalk > 0) h0 = Math.max(h0, 6 + 110 * p.chalk);                                                       // the block stands as a flat-topped island
