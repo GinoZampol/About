@@ -60,6 +60,15 @@ URL options: `?quality=low|medium|high`, `?data=/data_b4/`, `?pos=x,heightAboveG
 
 All worlds share every line of code after the large-scale forcing.
 
+## What makes a good world
+
+What World 241191 has, and what to look for in a seed (`tools/seed_score.mjs` measures it):
+
+- **Big badlands** (about a quarter of the land): one contained canyon country, the game's Wild West.
+- **Islands** in open water, several km² each: footholds for maritime powers.
+- **One huge mountain**, broad and over 6 km, in one corner: the world's landmark.
+- **Large heartlands** apart from the mountain and the badlands: room for continental powers.
+
 ## 2. Pipeline at a glance
 
 ```
@@ -360,6 +369,7 @@ an Unreal project.
 | `tools/screenshot.mjs` | in-engine screenshots of named views (`--data=/data_b4/`) |
 | `tools/build_pages.sh` | builds the public site into the repository's top-level `docs/` |
 | `tools/bake_seeded.sh <seed>` | bakes a seeded world into `data_s<seed>/`; an existing bake is first kept as `data_s<seed>-v<n>/`, so no published world is ever removed |
+| `tools/seed_score.mjs [count \| seeds]` | scores seeds in seconds for what makes a good world: badlands share, islands, great-massif height, and the largest heartlands (ordinary land, neither mountain nor badlands) |
 | `tools/seeded_menu.py` | the menu page of the seeded worlds, with a small map of each (called by `build_pages.sh`) |
 | `tools/build_web.mjs` | single-file web bundle (data wrapped losslessly in PNG) |
 | `tools/perf.mjs`, `tools/scout.mjs` | performance measurement, scouting views |
