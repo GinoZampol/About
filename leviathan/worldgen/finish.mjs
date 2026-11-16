@@ -545,7 +545,7 @@ export async function finishWorld(world, cfg, ROOT, log) {
       if (d < sd) { sd = d; sb = c; }
     }
     if (sb >= 0) { const [x, y] = cellXY(sb); landmarks.push(lm('Central Valley (ocean shore)', { x, z: S - y, h: h[sb] }, 'low ground on the shore of the central ocean')); }
-    landmarks.push(lm('The Crown', peak(1, 49, 1, 49), 'the highest summit of the great range'));
+    landmarks.push(lm('The Crown', peak(1, (cfg.playW || 50) - 1, 1, (cfg.playH || 50) - 1), 'the highest summit of the great range'));
     if (L.alpsCentre && L.alpsCentre[2] > 0.05) landmarks.push(lm('The Horns', peak(L.alpsCentre[0] - 6, L.alpsCentre[0] + 6, L.alpsCentre[1] - 6, L.alpsCentre[1] + 6), 'the alpine peaks'));
     landmarks.push(lm('The Badlands', km(L.tableC[0], L.tableC[1]), 'the dry tableland that kept its sedimentary cover'));
     landmarks.push(lm('Central ocean', km(L.c[0], L.c[1]), 'the sinking basin at the heart of the world'));
@@ -553,7 +553,7 @@ export async function finishWorld(world, cfg, ROOT, log) {
   }
   let landCells = 0, hmax = 0; for (let c = 0; c < n; c++) { if (!sea[c]) landCells++; if (h[c] > hmax) hmax = h[c]; }
   const meta = {
-    name: 'The Leviathan', version: 2, variant: VB ? 'B' : 'A', layout: cfg.variant, wind: cfg.wind || 0, cold: VB && cfg.variant !== 'S' ? { z0: S - (COLD.y0 - KM0) * 1000, z1: S - (COLD.y1 - KM0) * 1000, drop: COLD.drop } : null, play: { x0: -KM0 * 1000, size: WORLD_KM * 1000 }, seed, sizeM: S, heightRes: N, mapRes: M, lakeRes: LN, riverMaskRes: RN,
+    name: 'The Leviathan', version: 2, variant: VB ? 'B' : 'A', layout: cfg.variant, wind: cfg.wind || 0, cold: VB && cfg.variant !== 'S' ? { z0: S - (COLD.y0 - KM0) * 1000, z1: S - (COLD.y1 - KM0) * 1000, drop: COLD.drop } : null, play: { x0: -KM0 * 1000, size: (cfg.playW || WORLD_KM) * 1000, z0: S - ((cfg.playH || WORLD_KM) - KM0) * 1000, sizeZ: (cfg.playH || WORLD_KM) * 1000 }, seed, sizeM: S, heightRes: N, mapRes: M, lakeRes: LN, riverMaskRes: RN,
     hOffset: H_OFFSET, hScale: H_SCALE, seaLevel: 0, maxElevation: Math.round(hmax),
     landKm2: Math.round(landCells * dx * dx / 1e6), riverKm: Math.round(totalLen / 1000),
     mapChannels: ['rock', 'strat', 'precip', 'forest', 'dark', 'wet', 'sand', 'ao', 'mesa', 'flow', 'ice'],

@@ -13,8 +13,10 @@ for d in sorted(glob.glob(os.path.join(L, 'data_s*'))):
     if os.path.exists(src):
         im = Image.open(src).convert('RGB')
         # crop to the playable 50 km (the map covers the 56 km generated domain)
-        n = im.size[0]; m = round(n * 3 / 56)
-        im = im.crop((m, m, n - m, n - m)).resize((420, 420), Image.LANCZOS)
+        # crop to the playable rectangle (the map covers the whole generated domain, north up)
+        n = im.size[0]; S = meta.get('sizeM', 56000); pl = meta.get('play', {'x0': 3000, 'size': 50000})
+        x0, w = pl['x0'], pl['size']; z0, h = pl.get('z0', x0), pl.get('sizeZ', w)
+        im = im.crop((round(x0 / S * n), round(z0 / S * n), round((x0 + w) / S * n), round((z0 + h) / S * n))).resize((420, round(420 * h / w)), Image.LANCZOS)
         im.save(os.path.join(OUT, f's{seed}', 'map.jpg'), quality=84)
     names = [l['name'] for l in meta.get('landmarks', [])]
     cards.append((seed, meta.get('maxElevation', 0), meta.get('landKm2', 0), names))
@@ -23,10 +25,10 @@ for d in sorted(glob.glob(os.path.join(L, 'data_s*'))):
 def label(s):
     seed, *tags = s.split('-')
     names = ['first', 'second', 'third', 'fourth', 'fifth', 'sixth', 'seventh', 'eighth', 'ninth', 'tenth']
-    lab = lambda t: 'open edges' if t == 'open' else (f'{names[int(t[1:]) - 1]} bake' if t[0] == 'v' and t[1:].isdigit() and int(t[1:]) <= 10 else f'bake {t[1:]}' if t[0] == 'v' else t)
+    lab = lambda t: t.replace('x', ' × ') + ' km' if 'x' in t and t.replace('x', '').isdigit() else 'open edges' if t == 'open' else (f'{names[int(t[1:]) - 1]} bake' if t[0] == 'v' and t[1:].isdigit() and int(t[1:]) <= 10 else f'bake {t[1:]}' if t[0] == 'v' else t)
     return f'World {seed}' + ''.join(f' ({lab(t)})' for t in tags)
 def card(s, h):
-    return (f'<a class="card" href="play/?data=../s{s}/"><img src="s{s}/map.jpg" alt="Map of {label(s)}" width="420" height="420" loading="lazy">'
+    return (f'<a class="card" href="play/?data=../s{s}/"><img src="s{s}/map.jpg" alt="Map of {label(s)}" loading="lazy">'
             f'<b>{label(s)}</b><span>Highest summit {h:,} m</span></a>')
 older = lambda s: '-v' in s
 current = [c for c in cards if not older(c[0])]

@@ -5,7 +5,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { hash2, noise2 } from '../shared/noise.mjs';
 import { buildDesign, volcanoHeight, WORLD_KM, setVariant } from './design.mjs';
-import { getLayout, setEdgeFade } from './layout.mjs';
+import { getLayout, setEdgeFade, setPlay } from './layout.mjs';
 import { makeCtx, erodeStep, upsample2, resample, computePrecip, computePrecipDir, flood, route, accumulate, boxBlur } from './erosion.mjs';
 import { renderMap } from './preview.mjs';
 import { ROCK } from '../shared/geology.mjs';
@@ -14,7 +14,10 @@ const ROOT = path.dirname(path.dirname(fileURLToPath(import.meta.url)));
 const arg = (k, d) => { const i = process.argv.indexOf('--' + k); return i > 0 ? process.argv[i + 1] : d; };
 export const MARGIN_KM = 3;      // generated margin around the playable 50 km: keeps edge-of-simulation artefacts (rivers
                                  // running along the boundary, ranges sagging to nothing) outside the visible world
+// seeded worlds may be rectangular: --size 80x40 gives an 80 km (east-west) by 40 km (north-south) playable world
+const [PLAY_W, PLAY_H] = arg('size', '50x50').split('x').map(Number), PLAY_MAX = Math.max(PLAY_W, PLAY_H);
 export const CFG = {
+  playW: PLAY_W, playH: PLAY_H,
   // --seed random picks a fresh seed and prints it; the number is stored in world.json so the world can be rebuilt
   seed: arg('seed', 7) === 'random' ? Math.floor(Math.random() * 1e6) : +arg('seed', 7),
   variant: arg('variant', 'A'),
@@ -23,8 +26,8 @@ export const CFG = {
   outDir: arg('out', arg('variant', 'A') === 'B' ? 'data_b' : 'data'),          // 'A' = original; 'B' = central sea, cold north, coastal marshes
   res: +arg('res', 4096),
   // the generated world is the 50 km playable square plus MARGIN_KM of equally detailed land on every side
-  sizeM: (WORLD_KM + 2 * MARGIN_KM) * 1000,
-  domain: { x0: -MARGIN_KM, size: WORLD_KM + 2 * MARGIN_KM },
+  sizeM: (PLAY_MAX + 2 * MARGIN_KM) * 1000,
+  domain: { x0: -MARGIN_KM, size: PLAY_MAX + 2 * MARGIN_KM },
   K0: 5.2e-6,
   // multigrid schedule: [resolution, iterations, dt years]
   levels: [[256, 110, 20000], [512, 60, 10000], [1024, 40, 6000], [2048, 30, 8000], [4096, 18, 7000]],
@@ -192,8 +195,8 @@ function stats(h, N, g) {
 
 if (import.meta.url === `file://${process.argv[1]}`) {
   const stage = arg('stage', 'all');
-  setVariant(CFG.variant); setEdgeFade(CFG.edges === 'open' ? 0 : 1);
-  const cacheFile = path.join(CACHE, `eroded_${CFG.res}_${CFG.seed}${CFG.variant === 'A' ? '' : '_' + CFG.variant}${CFG.wind ? '_w' + CFG.wind : ''}${CFG.edges === 'open' ? '_open' : ''}.f32`);
+  setVariant(CFG.variant); setEdgeFade(CFG.edges === 'open' ? 0 : 1); setPlay(CFG.playW, CFG.playH);
+  const cacheFile = path.join(CACHE, `eroded_${CFG.res}_${CFG.seed}${CFG.variant === 'A' ? '' : '_' + CFG.variant}${CFG.wind ? '_w' + CFG.wind : ''}${CFG.edges === 'open' ? '_open' : ''}${PLAY_W !== 50 || PLAY_H !== 50 ? `_${PLAY_W}x${PLAY_H}` : ''}.f32`);
   let world;
   if (stage === 'finish' && fs.existsSync(cacheFile)) {
     const buf = fs.readFileSync(cacheFile);
