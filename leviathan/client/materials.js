@@ -157,13 +157,13 @@ void main() {
   float prairie = uVariantB * (1.0 - smoothstep(0.2, 0.6, forest)) * smoothstep(0.36, 0.52, precip) * (1.0 - smoothstep(0.85, 1.05, precip)) * (1.0 - mesa) * (1.0 - smoothstep(300.0, 700.0, hc)) * (1.0 - wet);
   float gust = texture2D(uNoise, vWPos.xz / 310.0 + uTime * vec2(0.014, 0.006)).r;
   grass = mix(grass, mix(S(vec3(0.33, 0.37, 0.16)), S(vec3(0.47, 0.44, 0.22)), n3.b) * (0.82 + 0.36 * gust), prairie * 0.75);
-  grass *= (0.70 + 0.60 * n2.g) * (0.82 + 0.36 * n1.r) * (0.88 + 0.24 * n3.a);
+  grass *= (0.88 + 0.24 * n2.g) * (0.9 + 0.2 * n1.r) * (0.94 + 0.12 * n3.a);
   grass = mix(grass, grass * vec3(1.12, 1.05, 0.86), n3.b * 0.3);                     // cured, seeding patches
   grass = mix(grass, grass * vec3(0.78, 0.94, 0.80), smoothstep(0.55, 0.8, n2.a) * 0.5); // rank, darker swards
   vec3 soil = mix(S(vec3(0.38, 0.32, 0.24)), S(vec3(0.52, 0.46, 0.36)), n3.g);
   soil = mix(soil, mix(S(vec3(0.55, 0.40, 0.29)), S(vec3(0.66, 0.56, 0.42)), n3.g), mesa);
-  soil *= 0.82 + 0.36 * n1.g;
-  float veg = smoothstep(0.1, 0.62, max(m, precip * 0.85 - 0.3 * mesa) + (n2.r - 0.5) * 0.25 * mix(0.4, 1.0, detailF) + (n1.b - 0.5) * 0.14 * detailF);
+  soil *= 0.9 + 0.2 * n1.g;
+  float veg = smoothstep(0.1, 0.62, max(m, precip * 0.85 - 0.3 * mesa) + (n2.r - 0.5) * 0.12 * mix(0.4, 1.0, detailF) + (n1.b - 0.5) * 0.1 * detailF);
   float bare = (1.0 - 0.7 * smoothstep(0.4, 0.6, m)) * mix(0.12, smoothstep(0.62, 0.8, n1.g * 0.45 + n2.b * 0.55 + tanS * 0.22 - curv * 0.12), detailF);  // slips, trails, thin soil on spurs
   vec3 ground = mix(soil, grass, veg * (1.0 - bare * 0.65));
   vec3 litter = mix(S(vec3(0.26, 0.20, 0.12)), S(vec3(0.19, 0.24, 0.10)), n2.b * (0.5 + 0.5 * dark)) * (0.8 + 0.4 * n1.a);
@@ -197,7 +197,7 @@ void main() {
   int i01 = int(texture2D(uRock, (tf + vec2(0.5, 1.5)) / rs).r * 255.0 + 0.5), i11 = int(texture2D(uRock, (tf + vec2(1.5, 1.5)) / rs).r * 255.0 + 0.5);
   vec3 rc = mix(mix(i00 == 6 ? mesaC : rockColor(i00), i10 == 6 ? mesaC : rockColor(i10), fr.x), mix(i01 == 6 ? mesaC : rockColor(i01), i11 == 6 ? mesaC : rockColor(i11), fr.x), fr.y);
   rc = mix(rc, rc * vec3(1.06, 0.98, 0.9), n3.b) * (0.8 + 0.4 * n3.a);
-  rc *= (0.72 + 0.56 * n2.g) * (0.86 + 0.28 * n1.b);
+  rc *= (0.84 + 0.32 * n2.g) * (0.9 + 0.2 * n1.b);
   // water stains and joints run down the face
   vec2 perp = normalize(vec2(-N.z, N.x) + 1e-4);
   float streak = texture2D(uNoise, vec2(dot(vWPos.xz, perp) / 9.0, h / 75.0)).r;

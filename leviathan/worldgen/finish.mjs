@@ -40,7 +40,7 @@ export async function finishWorld(world, cfg, ROOT, log) {
   if (VS) { const r = Math.max(2, Math.round(300 / dx)); mesaWide = boxBlur(boxBlur(g.mesa, N, r), N, r); const r2 = Math.max(2, Math.round(1500 / dx)); mesaHalo = boxBlur(boxBlur(g.mesa, N, r2), N, r2); }
   const dryEast = (P) => { if (!VB) return P; if (VS) { let m = 0, k = 0; for (let c = 0; c < n; c++) if (!sea[c]) { m += P[c]; k++; } m /= Math.max(1, k);   // gentler rain shadows: lee slopes stay green, only the mesa country is truly dry
       for (let c = 0; c < n; c++) { // the arid country is truly dry; what green it has follows its watercourses (see the riparian pass below)
-        const aw = smoothstep(0.08, 0.6, mesaWide[c]);
+        const aw = smoothstep(0.02, 0.3, mesaWide[c]);   // (dry right to the badlands' edge: no green rim along it)
         // the badlands are truly dry; elsewhere the rain shadows grade lee country to dry steppe, never to desert
         P[c] = Math.max(0.42, 0.45 * m + 0.62 * P[c]) * (1 - 0.82 * aw); } return P; }   /* (0.58 m: the central sea keeps every other shore moist, so only the badlands are truly dry) */ for (let j = 0; j < N; j++) for (let i = 0; i < N; i++) P[j * N + i] *= 1 - 0.74 * smoothstep(VC ? 14 : 31, VC ? 25 : 40.5, VC ? 0.906 * (KM0 + (i + 0.5) / N * KMS) - 0.423 * (KM0 + (j + 0.5) / N * KMS) + 2.2 * noise2(i / N * 6, j / N * 6, seed + 83) : KM0 + (i + 0.5) / N * KMS + (W ? (KM0 + (j + 0.5) / N * KMS - 25) * W * 0.6 + 2.2 * noise2(i / N * 6, j / N * 6, seed + 83) : 0)); return P; };
   let P = dryEast(cfg.variant === 'S' ? computePrecipDir(h, sea, N, dx, getLayout(seed).dir, getLayout(seed).windSlope, true) : computePrecip(h, sea, N, dx, W));

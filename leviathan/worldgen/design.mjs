@@ -192,10 +192,11 @@ export function buildDesign(R, seed, domain = { x0: 0, size: WORLD_KM }) {
     R, land: new Float32Array(n), U: new Float32Array(n), h0: new Float32Array(n), rock: new Uint8Array(n),
     kmod: new Float32Array(n), strat: new Float32Array(n), gorge: new Float32Array(n), mesa: new Float32Array(n), erg: new Float32Array(n),
   };
-  const shelf = null;   // (the seeded world's coasts, lakes and islands come out of the simulation; see generate.mjs)
+  // seeded world: relief builds up away from the sea everywhere, badlands included, so no coast is a smooth wall
+  const shelf = VARIANT === 'S' ? new Float32Array(n) : null;
   for (let j = 0; j < R; j++) for (let i = 0; i < R; i++) {
     const p = designAt(domain.x0 + (i + 0.5) / R * domain.size, domain.x0 + (j + 0.5) / R * domain.size, seed);
-    const c = j * R + i; if (shelf) shelf[c] = p.shelf || 0;
+    const c = j * R + i; if (shelf) shelf[c] = 0;
     d.land[c] = p.land; d.U[c] = p.U; d.h0[c] = p.h0; d.rock[c] = p.rock; d.kmod[c] = p.kmod; d.strat[c] = p.strat; d.gorge[c] = p.gG; d.mesa[c] = p.plateau; d.erg[c] = p.erg;
   }
   // seeded world: one sea, no lakes, no specks (see oneSea below), then its coasts are left to erosion
@@ -203,7 +204,6 @@ export function buildDesign(R, seed, domain = { x0: 0, size: WORLD_KM }) {
   if (shelf) {
     // Relief grows with distance from the sea: rolling ground and ranges start from a coastal lowland instead of
     // standing straight out of the water. Tablelands are exempt, so where one meets the sea it ends in a cliff.
-    if (!process.env.LEV_RAW_SEA) oneSea(d, R, domain.size / R, seed, domain);
     const dist = new Float32Array(n).fill(1e9), cell = domain.size / R, D = 1.41421356;
     for (let c = 0; c < n; c++) if (d.land[c] < 0) dist[c] = 0;
     for (let j = 0; j < R; j++) for (let i = 0; i < R; i++) { const c = j * R + i; let v = dist[c];
