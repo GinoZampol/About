@@ -99,21 +99,42 @@ export function getLayout(seed) {
   const play = []; for (let c = 0; c < n; c++) if (inPlay(gridAt(c % G), gridAt((c / G) | 0))) play.push(z[c]);
   play.sort((a, b) => a - b); L.z0 = play[Math.floor(play.length * (0.27 + r() * 0.07))];
 
-  // 4. the climate on the relief the uplift is building; the driest country keeps its sedimentary cover
+  // 4. The sedimentary cover. Flat-lying sandstone and shale survive only where three things hold, as they do in
+  //    nature: the crust there was never thickened (where it was, the basement has been pushed up and the cover
+  //    stripped off it, so canyon country and alpine mountains do not mix); the country is far from the sea (the
+  //    central sea feeds moisture to every shore around it); and it lies in the lee of high ground. Where those
+  //    hold best is one region, grown outward as a single compact country, a small part of the world.
   const hp = new Float32Array(n), sea = new Uint8Array(n);
   for (let c = 0; c < n; c++) { const zz = z[c] - L.z0; sea[c] = zz < 0 ? 1 : 0; hp[c] = Math.max(0, zz + 0.84e3 * Math.max(0, U[c])); }
   const P = computePrecipDir(hp, sea, G, SIZE * 1000 / G, L.dir, L.windSlope, true);
+  const seaD = new Float32Array(n);                                                        // km to the nearest sea
+  { const cell = SIZE / G; for (let c = 0; c < n; c++) seaD[c] = sea[c] ? 0 : 1e9;
+    for (let pass = 0; pass < 2; pass++) for (let k = 0; k < n; k++) {
+      const c = pass ? n - 1 - k : k, i = c % G, j = (c / G) | 0; if (!seaD[c]) continue;
+      const nb = pass ? [[i + 1, j], [i, j + 1], [i + 1, j + 1], [i - 1, j + 1]] : [[i - 1, j], [i, j - 1], [i - 1, j - 1], [i + 1, j - 1]];
+      for (const [x, y] of nb) if (x >= 0 && y >= 0 && x < G && y < G) seaD[c] = Math.min(seaD[c], seaD[y * G + x] + cell * Math.hypot(x - i, y - j));
+    } }
   const score = new Float32Array(n).fill(-9), land = [];
   for (let c = 0; c < n; c++) {
-    const x = gridAt(c % G), y = gridAt((c / G) | 0); if (sea[c] || T[c].dB < 1.45) continue;
-    score[c] = -P[c] - 2.5 * T[c].mt - 0.6 * T[c].hill + 0.15 * fbm(x / 13 + L.o[5], y / 13, 2, seed + 31); if (inPlay(x, y)) land.push(c);
+    const x = gridAt(c % G), y = gridAt((c / G) | 0);
+    if (sea[c] || seaD[c] < 2.5 || T[c].dB < 1.05 || T[c].t > 0.27 || Math.min(x, y, PLAY - x, PLAY - y) < -2.5) continue;
+    score[c] = -P[c] + 0.06 * Math.min(seaD[c], 9) - 0.6 * T[c].hill + 0.12 * fbm(x / 13 + L.o[5], y / 13, 2, seed + 31); if (inPlay(x, y)) land.push(c);
   }
   L.table = new Float32Array(n); L.tdist = new Float32Array(n);
   let tx = 0, ty = 0, tn = 0;
+  const nLand = (() => { let k = 0; for (let c = 0; c < n; c++) if (!sea[c] && inPlay(gridAt(c % G), gridAt((c / G) | 0))) k++; return k; })();
   if (land.length) {
-    let start = land[0]; for (const c of land) if (score[c] > score[start]) start = c;
-    const target = Math.round(land.length * (0.11 + r() * 0.04)), seen = new Uint8Array(n), hk = [], hv = [];
-    const sx0 = gridAt(start % G), sy0 = gridAt((start / G) | 0), pri = (q) => score[q] - 0.02 * Math.hypot(gridAt(q % G) - sx0, gridAt((q / G) | 0) - sy0);
+    const target = Math.min(land.length, Math.round(nLand * (0.075 + r() * 0.03))), rad = Math.sqrt(target * (SIZE / G) ** 2 / Math.PI);
+    // it grows from the best spot that leaves it room to be a whole country inside the world
+    // it grows from the middle of the best broad region (score averaged over a country-sized window, with ground
+    // that cannot carry the cover counting against it), so it comes out as one whole country, not a strip
+    const avg = new Float32Array(n), w = Math.max(2, Math.round(rad * 0.8 / (SIZE / G)));
+    { const tmp = new Float32Array(n), v = (c) => (score[c] > -9 ? score[c] : -3.5);
+      for (let j = 0; j < G; j++) for (let i = 0; i < G; i++) { let a = 0; for (let d = -w; d <= w; d++) a += v(j * G + Math.min(G - 1, Math.max(0, i + d))); tmp[j * G + i] = a; }
+      for (let j = 0; j < G; j++) for (let i = 0; i < G; i++) { let a = 0; for (let d = -w; d <= w; d++) a += tmp[Math.min(G - 1, Math.max(0, j + d)) * G + i]; avg[j * G + i] = a; } }
+    let start = land[0]; for (const c of land) if (avg[c] > avg[start]) start = c;
+    const seen = new Uint8Array(n), hk = [], hv = [];
+    const sx0 = gridAt(start % G), sy0 = gridAt((start / G) | 0), pri = (q) => score[q] - 0.3 * Math.hypot(gridAt(q % G) - sx0, gridAt((q / G) | 0) - sy0);
     const push = (k, v) => { let i = hk.length; hk.push(k); hv.push(v); while (i > 0) { const p = (i - 1) >> 1; if (hk[p] >= hk[i]) break; [hk[p], hk[i]] = [hk[i], hk[p]]; [hv[p], hv[i]] = [hv[i], hv[p]]; i = p; } };
     const pop = () => { const v = hv[0], lk = hk.pop(), lv = hv.pop(); if (hk.length) { hk[0] = lk; hv[0] = lv; let i = 0; for (;;) { let q = 2 * i + 1; if (q >= hk.length) break; if (q + 1 < hk.length && hk[q + 1] > hk[q]) q++; if (hk[q] <= hk[i]) break; [hk[q], hk[i]] = [hk[i], hk[q]]; [hv[q], hv[i]] = [hv[i], hv[q]]; i = q; } } return v; };
     push(score[start], start); seen[start] = 1;
@@ -155,7 +176,7 @@ function forcing(L, xk, yk, f, plateau) {
 }
 
 export function seededDesign(xk, yk, seed) {
-  const L = getLayout(seed), f = tect(L, xk, yk), cover = smoothstep(0.42, 0.62, sample(L.table, xk, yk) + 0.12 * fbm(xk / 3.2, yk / 3.2, 3, seed + 65));
+  const L = getLayout(seed), f = tect(L, xk, yk), cover = smoothstep(0.42, 0.62, sample(L.table, xk, yk) + 0.2 * fbm(xk / 4.6, yk / 4.6, 3, seed + 65) + 0.07 * fbm(xk / 1.5, yk / 1.5, 2, seed + 66));   // an eroded, ragged edge
   const p = forcing(L, xk, yk, f, cover), { mt, hill } = f;
   let h0 = p.h0raw - L.z0;
   if (p.chalk > 0) h0 = Math.max(h0, 6 + 110 * p.chalk);                                                       // the block stands as a flat-topped island
