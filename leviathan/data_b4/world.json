@@ -18,9 +18,9 @@
  "hOffset": 300,
  "hScale": 0.125,
  "seaLevel": 0,
- "maxElevation": 6982,
- "landKm2": 2137,
- "riverKm": 731,
+ "maxElevation": 7010,
+ "landKm2": 2147,
+ "riverKm": 765,
  "mapChannels": [
   "rock",
   "strat",
@@ -36,32 +36,32 @@
  ],
  "lakes": [
   {
-   "level": 81.27,
-   "areaKm2": 0.64,
-   "x": 35507,
-   "z": 31330
+   "level": 81.07,
+   "areaKm2": 0.66,
+   "x": 35466,
+   "z": 31315
   }
  ],
  "landmarks": [
   {
    "name": "Central Valley (ocean shore)",
-   "x": 21854,
-   "z": 3384,
-   "h": 13,
+   "x": 12749,
+   "z": 7239,
+   "h": 28,
    "note": "low ground on the shore of the central ocean"
   },
   {
    "name": "The Crown",
-   "x": 42075,
-   "z": 38972,
-   "h": 6982,
+   "x": 42622,
+   "z": 38370,
+   "h": 7010,
    "note": "the great massif"
   },
   {
    "name": "The Horns",
-   "x": 41337,
-   "z": 23222,
-   "h": 3468,
+   "x": 41378,
+   "z": 23263,
+   "h": 3398,
    "note": "the alpine peaks"
   },
   {
@@ -80,17 +80,17 @@
   },
   {
    "name": "Central ocean",
-   "x": 20263,
-   "z": 16622,
+   "x": 20195,
+   "z": 16528,
    "h": 0,
    "note": "the middle of the world"
   },
   {
    "name": "Lake 1",
-   "x": 35507,
-   "z": 31330,
+   "x": 35466,
+   "z": 31315,
    "h": 81,
-   "note": "0.6 km2"
+   "note": "0.7 km2"
   }
  ],
  "config": {

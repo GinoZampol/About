@@ -42,9 +42,9 @@ function fields(L, xk, yk) {
   const [dCr] = segDist(sx, sy, L.massifSeg[0], L.massifSeg[1], L.massifSeg[2], L.massifSeg[3]);
   const gC = gauss(dCr, 5.3) * (0.88 + 0.2 * noise2(xk / 3.1, yk / 3.1, seed + 28) + 0.1 * noise2(xk / 1.6, yk / 1.6, seed + 29));
   const dA = Math.hypot(sx - L.arid.x, sy - L.arid.y) + 2.6 * fbm(xk / 6.5, yk / 6.5, 3, seed + 65);
-  const gA = Math.min(m, 0.62) * (1 - smoothstep(L.arid.rad + 3, L.arid.rad - 2, dA));
+  const gA = Math.min(m, 0.45) * smoothstep(0.12, 0.3, m) * (1 - smoothstep(L.arid.rad + 3, L.arid.rad - 2, dA));
   const table = smoothstep(L.arid.rad, L.arid.rad - 3.2, dA) * (1 - smoothstep(0.08, 0.4, gC)) * (1 - smoothstep(0.06, 0.3, gA));
-  const gHl = 0.22 * gauss(dCr, 11) * (1 - sat(gC * 1.5)) + (1 - table) * 0.3 * Math.max(0, cW) * (1 - sat(m * 1.6)) * (0.6 + 0.6 * smoothstep(-0.3, 0.4, fbm(xk / 7, yk / 7, 3, seed + 23)));
+  const gHl = 0.13 * gauss(dCr, 10) * (1 - sat(gC * 1.5)) + (1 - table) * 0.2 * smoothstep(0.25, 0.9, cW) * (1 - sat(m * 1.6)) * smoothstep(-0.25, 0.3, fbm(xk / 7, yk / 7, 3, seed + 23));
   const rift = Math.max(0, -cW);
   return { sx, sy, rr: Math.hypot(sx - L.hot[0], sy - L.hot[1]), gC, gA, gHl: gHl + 0.035 * smoothstep(0.05, 0.5, fbm(xk / 5.5, yk / 5.5, 3, seed + 24)) * (1 - table), rift, table, dA, dCr,
     up: smoothstep(0.12, 0.24, fbm(xk / 12, yk / 12, 3, seed + 71) + 0.06 * fbm(xk / 2.2, yk / 2.2, 3, seed + 72)) * (1 - table) };   // gentle uplands with a real edge
