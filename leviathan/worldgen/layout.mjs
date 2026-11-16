@@ -39,8 +39,8 @@ function warp(L, xk, yk) {
   return [xk + 5.5 * fbm(xk / 24 + L.o[0], yk / 24, 3, s + 11) + 1.6 * fbm(xk / 7.5, yk / 7.5 + L.o[1], 3, s + 12),
           yk + 5.5 * fbm(xk / 24, yk / 24 + L.o[2], 3, s + 13) + 1.6 * fbm(xk / 7.5 + L.o[3], yk / 7.5, 3, s + 14)];
 }
-// crustal thickening before it is scaled to this world; kept off the border (so the great massif is never cut
-// off by it) and out of the sinking basin
+// crustal thickening before it is scaled to this world; kept out of the sinking basin, and weaker within 9 km of the
+// border so the great massif stands inside the world rather than cut in half by it
 function thick(L, xk, yk, wx, wy, dB) {
   const s = L.seed;
   return fbm(wx / 33 + L.o[2], wy / 33 + L.o[3], 2, s + 21) + 0.3 * fbm(wx / 12, wy / 12 + L.o[4], 2, s + 22)
@@ -131,15 +131,15 @@ export function getLayout(seed) {
   if (land.length) {
     const target = Math.min(land.length, Math.round(nLand * (0.075 + r() * 0.03))), rad = Math.sqrt(target * (SIZE / G) ** 2 / Math.PI);
     // One country, roughly round, as an eroded outlier of an old basin's cover is. It is centred on the best spot
-    // that leaves it room to lie wholly inside the world (score averaged over a country-sized window, ground that
-    // cannot carry the cover counting against it); its outline is a warped circle; it keeps only ground that can
-    // carry the cover and is connected to its centre. So it is never a strip along the border or a scatter of pieces.
+    // (score averaged over a country-sized window, ground that cannot carry the cover counting against it); its
+    // outline is a warped circle; it keeps only ground that can carry the cover and is connected to its centre, and
+    // where it reaches the border it simply carries on past it. So it is never a strip or a scatter of pieces.
     const avg = new Float32Array(n), w = Math.max(2, Math.round(rad * 0.8 / (SIZE / G)));
     { const tmp = new Float32Array(n), v = (c) => (score[c] > -9 ? score[c] : -3.5);
       for (let j = 0; j < G; j++) for (let i = 0; i < G; i++) { let a = 0; for (let d = -w; d <= w; d++) a += v(j * G + Math.min(G - 1, Math.max(0, i + d))); tmp[j * G + i] = a; }
       for (let j = 0; j < G; j++) for (let i = 0; i < G; i++) { let a = 0; for (let d = -w; d <= w; d++) a += tmp[Math.min(G - 1, Math.max(0, j + d)) * G + i]; avg[j * G + i] = a; } }
     let start = -1;
-    for (const c of land) { const x = gridAt(c % G), y = gridAt((c / G) | 0); if (Math.min(x, y, PLAY - x, PLAY - y) < rad + 2) continue; if (start < 0 || avg[c] > avg[start]) start = c; }
+    for (const c of land) { const x = gridAt(c % G), y = gridAt((c / G) | 0); if (Math.min(x, y, PLAY - x, PLAY - y) < 0.5) continue; if (start < 0 || avg[c] > avg[start]) start = c; }
     if (start < 0) { start = land[0]; for (const c of land) if (avg[c] > avg[start]) start = c; }
     // the circle widens until the connected ground inside it reaches the cover's share of the world
     const sx0 = gridAt(start % G), sy0 = gridAt((start / G) | 0), inside = new Uint8Array(n);
