@@ -430,8 +430,9 @@ export async function finishWorld(world, cfg, ROOT, log) {
     F *= 0.75 + 0.25 * smoothstep(-0.25, 0.15, fbm(xk / 0.9, yk / 0.9, 3, seed + 72));   // glades and meadows
     F *= 1 - 0.85 * smoothstep(0.75, 1, wet);
     // variant B: the lowland south of the central sea is open prairie; trees keep to the watercourses
-    // seeded worlds: flat lowland is open grassland, with trees along the watercourses; hills and mountains are wooded
-    if (VS) { const pr = smoothstep(0.17, 0.07, sl) * smoothstep(420, 160, z); F *= 1 - pr * (0.9 - 0.75 * smoothstep(4, 1, wdist[m])); }
+    // seeded worlds: mostly wooded country; some of the flat lowland is open grassland, in broad patches, with trees
+    // along the watercourses
+    if (VS) { const pr = smoothstep(0.17, 0.07, sl) * smoothstep(420, 160, z) * smoothstep(0.05, 0.35, fbm(xk / 7, yk / 7, 3, seed + 77)); F *= 1 - pr * (0.9 - 0.75 * smoothstep(4, 1, wdist[m])); }
     if (VB && !VS) { const pr = smoothstep(1.05, 0.72, pe) * smoothstep(0.24, 0.1, sl) * smoothstep(360, 200, z) * (1 - smoothstep(0.2, 0.4, coldAt(yk))); F *= 1 - pr * (0.85 - 0.85 * smoothstep(5, 1, wdist[m])); }
     F *= 1 - (mMesa[m] / 255) * smoothstep(0.22, 0.45, sl);                               // no woods on mesa walls and ledges                                           // open marsh
     if (z < 3) F *= smoothstep(1.0, 3, z);
