@@ -120,12 +120,15 @@ export function erodeStep(ctx, h, sea, g, P, dx, dt, K0, seed) {
   flood(ctx, h, sea, dx);
   route(ctx, sea, dx, seed);
   accumulate(ctx, sea, P, dx);
-  const { U, rock, kmod, strat, tmod } = g;
+  const { U, rock, kmod, strat, tmod, cutQ } = g;
   for (let q = 0; q < cnt; q++) {
     const c = order[q], r = rec[c], L = recD[c];
     const hr = sea[r] ? Math.max(0, h[r]) : h[r];
     const rk = rockAt(rock[c], f[c], strat[c]);
-    const fct = K0 * ROCK_K[rk] * kmod[c] * Math.sqrt(Q[c]) * dt / L;
+    let fct = K0 * ROCK_K[rk] * kmod[c] * Math.sqrt(Q[c]) * dt / L;
+    // dry tableland: only channels gathering enough water cut into the caprock; the rest of the surface is a dry
+    // wash that barely lowers, so flat mesa tops survive between canyons (g.cutQ: drainage threshold per cell, m²)
+    if (cutQ && cutQ[c] > 0) { const t = Math.min(1, Math.max(0, (Q[c] - cutQ[c]) / (9 * cutQ[c]))); fct *= 0.03 + 0.97 * t * t * (3 - 2 * t); }
     let hn = (f[c] + U[c] * dt + fct * hr) / (1 + fct);
     const lim = hr + ROCK_TALUS[rk] * tmod[c] * strengthBand(rk, f[c], strat[c]) * L;
     if (hn > lim) hn = lim;

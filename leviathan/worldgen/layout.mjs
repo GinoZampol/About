@@ -161,6 +161,11 @@ export function getLayout(seed) {
       if (comp.filter((c) => inPlay(gridAt(c % G), gridAt((c / G) | 0))).length >= target) break;
     }
     for (const c of comp) { L.table[c] = 1; tx += gridAt(c % G); ty += gridAt((c / G) | 0); tn++; }
+    // no islands of other country inside it: ground the badlands enclose is badlands too
+    { const out = new Uint8Array(n), st = [];
+      for (let i = 0; i < G; i++) for (const c of [i, (G - 1) * G + i, i * G, i * G + G - 1]) if (!L.table[c] && !out[c]) { out[c] = 1; st.push(c); }
+      while (st.length) { const c = st.pop(), i = c % G; for (const q of [c - 1, c + 1, c - G, c + G]) { if (q < 0 || q >= n || Math.abs((q % G) - i) > 1 || out[q] || L.table[q]) continue; out[q] = 1; st.push(q); } }
+      for (let c = 0; c < n; c++) if (!L.table[c] && !out[c]) { L.table[c] = 1; tx += gridAt(c % G); ty += gridAt((c / G) | 0); tn++; } }
     // Beyond the border the world goes on: where the badlands reach the border they carry straight on through the
     // hidden margin to the edge of the simulation, so they neither end nor slope down just past the wall.
     { const k = (v) => Math.min(G - 1, Math.max(0, Math.floor((Math.min(PLAY - 0.05, Math.max(0.05, v)) - X0) / SIZE * G)));
@@ -193,7 +198,7 @@ function forcing(L, xk, yk, f, plateau) {
   let U = reg + 0.006 + 0.02 * smoothstep(0.1, 0.65, fbm(xk / 7.5, yk / 7.5, 3, s + 31));
   U += 3.5 * mt + 0.3 * hill * (1 - plateau) + 1.15 * isl + 0.62 * chalk;
   U += 0.012 * (0.5 + 0.5 * noise2(xk / 1.1, yk / 1.1, s + 35)) * (1 - plateau);
-  U = U * (1 - plateau) + plateau * Math.max(U, 0.05);
+  U = U * (1 - plateau) + plateau * Math.max(U, 0.085);   // the block keeps rising slowly, so its rivers keep cutting down into it
   // the starting surface: an old lowland, plus the uplift (or sinking) already expressed
   const h0raw = 30 + 25 * fbm(xk / 6, yk / 6, 3, s + 33) + U * 1e-3 * T0;
   return { U, h0raw, isl, chalk };

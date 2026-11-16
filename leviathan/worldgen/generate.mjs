@@ -106,6 +106,7 @@ function fieldsFor(design, N) {
     tm[j * N + i] = Math.max(0.5, Math.min(1.9, v));
   }
   g.tmod = tm;
+  if (CFG.variant === 'S') { const cq = new Float32Array(N * N); for (let c = 0; c < N * N; c++) cq[c] = g.mesa[c] > 0.5 ? 1.8e5 : 0; g.cutQ = cq; }
   return g;
 }
 
@@ -158,11 +159,12 @@ export function erodeWorld(cfg) {
     }
     const ctx = makeCtx(N), VSF = cfg.variant === 'S';
     if (VSF) seaFrom(h, N, g.sea);
-    // the country that kept its sedimentary cover is the arid interior: the rain there is a fraction of what the relief alone would give
+    // the country that kept its sedimentary cover is dry, but its rivers (fed from beyond it, and by storms) still cut canyons:
+    // over the long run it gets most of the rain the relief would give
     const arid = VSF ? boxBlur(g.mesa, N, Math.max(1, Math.round(300 / dx))) : null;
     for (let it = 0; it < iters; it++) {
       if (VSF && it % 15 === 0) seaFrom(h, N, g.sea);
-      if (it % 15 === 0) { P = cfg.variant === 'S' ? computePrecipDir(h, g.sea, N, dx, getLayout(cfg.seed).dir, getLayout(cfg.seed).windSlope, true) : computePrecip(h, g.sea, N, dx, cfg.wind || 0); if (arid) for (let c = 0; c < N * N; c++) P[c] *= 1 - 0.75 * Math.min(1, arid[c] * 1.4); }
+      if (it % 15 === 0) { P = cfg.variant === 'S' ? computePrecipDir(h, g.sea, N, dx, getLayout(cfg.seed).dir, getLayout(cfg.seed).windSlope, true) : computePrecip(h, g.sea, N, dx, cfg.wind || 0); if (arid) for (let c = 0; c < N * N; c++) P[c] *= 1 - 0.35 * Math.min(1, arid[c] * 1.4); }
       erodeStep(ctx, h, g.sea, g, P, dx, dt, cfg.K0, cfg.seed + res);
       // the sea floor (and the edge ring, which keeps pace with the land beyond it) moves with the crust
       // (only sinking: shallow sea is kept shallow by waves and sediment, so the sea keeps the extent the basin gives it)

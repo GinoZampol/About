@@ -393,7 +393,8 @@ export async function finishWorld(world, cfg, ROOT, log) {
   // surface. The strip follows the thalweg, spreads only over the flat floor (a few metres above the stream) and
   // widens downstream. In well-watered country this changes nothing.
   const mRip = new Float32Array(mn);
-  if (VS) for (let j = 0; j < M; j++) for (let i = 0; i < M; i++) {
+  // (switched off: the badlands are bare throughout, without green ribbons or pockets)
+  if (false) for (let j = 0; j < M; j++) for (let i = 0; i < M; i++) {
     const m = j * M + i; if (mWater[m] || mP[m] > 0.6) continue;
     const area = mQ[m] / 1e6 / Math.max(0.08, mP[m]);                 // drainage gathered here, undoing the local dryness
     const src = smoothstep(7, 36, area) * smoothstep(0.3, 0.1, mSlope[m]); if (src <= 0.02) continue;
