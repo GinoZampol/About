@@ -172,8 +172,11 @@ export function getLayout(seed) {
     for (const c of comp) { L.table[c] = 1; tx += gridAt(c % G); ty += gridAt((c / G) | 0); tn++; }
     // no islands of other country inside it: ground the badlands enclose is badlands too
     { const out = new Uint8Array(n), st = [];
-      for (let i = 0; i < G; i++) for (const c of [i, (G - 1) * G + i, i * G, i * G + G - 1]) if (!L.table[c] && !out[c]) { out[c] = 1; st.push(c); }
-      while (st.length) { const c = st.pop(), i = c % G; for (const q of [c - 1, c + 1, c - G, c + G]) { if (q < 0 || q >= n || Math.abs((q % G) - i) > 1 || out[q] || L.table[q]) continue; out[q] = 1; st.push(q); } }
+      // (a gap narrower than about 1.5 km does not count as a way out, so a valley pinched off by the cover is enclosed too)
+      const near = new Uint8Array(n); for (let c = 0; c < n; c++) if (L.table[c]) { const i = c % G, j = (c / G) | 0; for (let b = -2; b <= 2; b++) for (let a = -2; a <= 2; a++) { const x = i + a, y = j + b; if (x >= 0 && y >= 0 && x < G && y < G) near[y * G + x] = 1; } }
+      for (let i = 0; i < G; i++) for (const c of [i, (G - 1) * G + i, i * G, i * G + G - 1]) if (!near[c] && !out[c]) { out[c] = 1; st.push(c); }
+      while (st.length) { const c = st.pop(), i = c % G; for (const q of [c - 1, c + 1, c - G, c + G]) { if (q < 0 || q >= n || Math.abs((q % G) - i) > 1 || out[q] || near[q]) continue; out[q] = 1; st.push(q); } }
+      for (let c = 0; c < n; c++) if (near[c] && !L.table[c]) { const i = c % G, j = (c / G) | 0; let o = false; for (const q of [c - 1, c + 1, c - G, c + G]) if (q >= 0 && q < n && Math.abs((q % G) - i) <= 1 && out[q]) o = true; if (o) out[c] = 1; }
       for (let c = 0; c < n; c++) if (!L.table[c] && !out[c]) { L.table[c] = 1; tx += gridAt(c % G); ty += gridAt((c / G) | 0); tn++; } }
     // Beyond the border the world goes on: where the badlands reach the border they carry straight on through the
     // hidden margin to the edge of the simulation, so they neither end nor slope down just past the wall.
@@ -189,6 +192,11 @@ export function getLayout(seed) {
     for (let pass = 0; pass < 2; pass++) { const t = Float32Array.from(L.table); for (let j = 1; j < G - 1; j++) for (let i = 1; i < G - 1; i++) { const c = j * G + i; L.table[c] = (t[c] * 2 + t[c - 1] + t[c + 1] + t[c - G] + t[c + G]) / 6; } }
   }
   L.tableC = tn ? [tx / tn, ty / tn] : [25, 25]; L.c = L.B;
+  { // within about 5 km of the badlands no lesser mountain rises: undeformed cover country is bordered by low ground
+    const w = Math.round(5 / (SIZE / G)), tmp = new Float32Array(n), nb = new Float32Array(n);
+    for (let j = 0; j < G; j++) for (let i = 0; i < G; i++) { let a = 0; for (let d = -w; d <= w; d++) a = Math.max(a, L.table[j * G + Math.min(G - 1, Math.max(0, i + d))]); tmp[j * G + i] = a; }
+    for (let j = 0; j < G; j++) for (let i = 0; i < G; i++) { let a = 0; for (let d = -w; d <= w; d++) a = Math.max(a, tmp[Math.min(G - 1, Math.max(0, j + d)) * G + i]); nb[j * G + i] = a; }
+    L.tableNear = nb; }
   L.seaShare = 0.3 + r() * 0.06;                  // the share of the world the sea covers once it has risen to its present level
   return (cache = L);
 }
@@ -205,11 +213,12 @@ function forcing(L, xk, yk, f, plateau) {
   // uplift rate (mm/yr)
   // away from hills and mountains the crust barely moves, so most of the land stays low plains
   let U = reg + 0.006 + 0.02 * smoothstep(0.1, 0.65, fbm(xk / 7.5, yk / 7.5, 3, s + 31));
-  U += 1.55 * f.gC + 0.7 * mt + 0.3 * hill * (1 - plateau) + 1.15 * isl + 0.62 * chalk;
+  const nearT = L.tableNear ? sample(L.tableNear, xk, yk) : 0;
+  U += 1.55 * f.gC + 0.7 * mt * (1 - nearT) + 0.3 * hill * (1 - plateau) + 1.15 * isl + 0.62 * chalk;
   U += 0.012 * (0.5 + 0.5 * noise2(xk / 1.1, yk / 1.1, s + 35)) * (1 - plateau);
   // The block rises steadily from a low start (as the Colorado Plateau did): the rivers already flowing across it keep
   // cutting down as it rises, so canyons run right through its interior instead of only nibbling at its edges.
-  U = U * (1 - plateau) + plateau * Math.max(U, 0.3);
+  U = U * (1 - plateau) + plateau * 0.3;   // one block rising as a whole: no mountain grows up inside it
   // the starting surface: an old lowland, plus the uplift (or sinking) already expressed
   const h0raw = 30 + 25 * fbm(xk / 6, yk / 6, 3, s + 33) + U * 1e-3 * T0 + 400 * f.gC;
   return { U, h0raw, isl, chalk };

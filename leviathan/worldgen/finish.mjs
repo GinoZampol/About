@@ -426,14 +426,23 @@ export async function finishWorld(world, cfg, ROOT, log) {
     // trees climb higher in sheltered hollows and stop lower on exposed spurs; the limit is a wide, ragged zone
     const treeline = -COLD.drop * 0.9 * coldAt(yk) + 1930 + 90 * noise2(xk / 3, yk / 3, seed + 70) + Math.max(-220, Math.min(260, (hBlur[m] - z) * 3)) + 170 * fbm(xk / 0.6, yk / 0.6, 3, seed + 74);
     // (rain on flat ground varies only west to east in the model; break that up so no boundary runs straight)
-    const pe = (p + 0.16 * fbm(xk / 5.5, yk / 5.5, 3, seed + 76)) * (1 + 0.5 * smoothstep(14, 0, wdist[m])) + 0.25 * smoothstep(10, 150, qk) + 0.12 * fbm(xk / 2.4, yk / 2.4, 3, seed + 71);
+    // water available to plants. Seeded worlds use no noise here: rain, plus water gathered from upslope (hollows and
+    // valley floors hold it, spurs and crests shed it), plus groundwater beside rivers and the sea
+    const hollow = Math.max(-1, Math.min(1, (hBlur[m] - z) / 60));
+    const pe = VS ? p * (1 + 0.45 * smoothstep(14, 0, wdist[m])) + 0.3 * smoothstep(5, 120, qk) + 0.28 * hollow
+      : (p + 0.16 * fbm(xk / 5.5, yk / 5.5, 3, seed + 76)) * (1 + 0.5 * smoothstep(14, 0, wdist[m])) + 0.25 * smoothstep(10, 150, qk) + 0.12 * fbm(xk / 2.4, yk / 2.4, 3, seed + 71);
     let F = smoothstep(0.42, 0.95, pe) * (1 - smoothstep(treeline - 450, treeline + 60, z)) * (1 - smoothstep(0.8, 1.7, sl + 0.3 * fbm(xk / 0.45, yk / 0.45, 2, seed + 75)));
-    F *= 0.75 + 0.25 * smoothstep(-0.25, 0.15, fbm(xk / 0.9, yk / 0.9, 3, seed + 72));   // glades and meadows
+    if (!VS) F *= 0.75 + 0.25 * smoothstep(-0.25, 0.15, fbm(xk / 0.9, yk / 0.9, 3, seed + 72));   // glades and meadows
     F *= 1 - 0.85 * smoothstep(0.75, 1, wet);
     // variant B: the lowland south of the central sea is open prairie; trees keep to the watercourses
     // seeded worlds: mostly wooded country; some of the flat lowland is open grassland, in broad patches, with trees
     // along the watercourses
-    if (VS) { const pr = smoothstep(0.17, 0.07, sl) * smoothstep(420, 160, z) * smoothstep(0.05, 0.35, fbm(xk / 7, yk / 7, 3, seed + 77)); F *= 1 - pr * (0.9 - 0.75 * smoothstep(4, 1, wdist[m])); }
+    // seeded worlds: grassland where the constraints put it, not where noise does. Open, gently sloping lowland that is
+    // well drained (not a hollow or a valley floor) and not over-watered is prairie; woods hold the slopes, the hollows,
+    // the valley floors and the river banks, where water gathers and soil is sheltered.
+    if (VS) { const drained = smoothstep(0.18, -0.25, hollow) * smoothstep(40, 6, qk);
+      const pr = smoothstep(0.27, 0.1, sl) * smoothstep(900, 350, z) * smoothstep(1.8, 1.2, pe) * (0.45 + 0.55 * drained);
+      F *= 1 - pr * (0.95 - 0.8 * smoothstep(3, 0.8, wdist[m])); }
     if (VB && !VS) { const pr = smoothstep(1.05, 0.72, pe) * smoothstep(0.24, 0.1, sl) * smoothstep(360, 200, z) * (1 - smoothstep(0.2, 0.4, coldAt(yk))); F *= 1 - pr * (0.85 - 0.85 * smoothstep(5, 1, wdist[m])); }
     F *= 1 - (mMesa[m] / 255) * smoothstep(0.22, 0.45, sl);                               // no woods on mesa walls and ledges                                           // open marsh
     if (z < 3) F *= smoothstep(1.0, 3, z);
