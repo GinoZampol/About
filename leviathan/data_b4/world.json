@@ -3,13 +3,13 @@
  "version": 2,
  "variant": "B",
  "layout": "S",
- "wind": 0.5,
+ "wind": 0,
  "cold": null,
  "play": {
   "x0": 3000,
   "size": 50000
  },
- "seed": 442777,
+ "seed": 397119,
  "sizeM": 56000,
  "heightRes": 4096,
  "mapRes": 1024,
@@ -18,9 +18,9 @@
  "hOffset": 300,
  "hScale": 0.125,
  "seaLevel": 0,
- "maxElevation": 4716,
- "landKm2": 2390,
- "riverKm": 959,
+ "maxElevation": 5092,
+ "landKm2": 2282,
+ "riverKm": 774,
  "mapChannels": [
   "rock",
   "strat",
@@ -38,31 +38,31 @@
  "landmarks": [
   {
    "name": "Central Valley (ocean shore)",
-   "x": 32354,
-   "z": 18970,
-   "h": 10,
+   "x": 14144,
+   "z": 25532,
+   "h": 22,
    "note": "low ground on the shore of the central ocean"
   },
   {
    "name": "The Crown",
-   "x": 18341,
-   "z": 41241,
-   "h": 4716,
+   "x": 19353,
+   "z": 42239,
+   "h": 5092,
    "note": "the highest summit of the great range"
   },
   {
    "name": "The Badlands",
-   "x": 32350,
-   "z": 44503,
+   "x": 49910,
+   "z": 38263,
    "h": 0,
-   "note": "the dry tableland in the lee of the great range"
+   "note": "the dry tableland that kept its sedimentary cover"
   },
   {
    "name": "Central ocean",
-   "x": 35179,
-   "z": 23948,
+   "x": 24593,
+   "z": 23397,
    "h": 0,
-   "note": "the middle of the world"
+   "note": "the sinking basin at the heart of the world"
   }
  ],
  "config": {

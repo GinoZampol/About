@@ -192,7 +192,7 @@ export function buildDesign(R, seed, domain = { x0: 0, size: WORLD_KM }) {
     R, land: new Float32Array(n), U: new Float32Array(n), h0: new Float32Array(n), rock: new Uint8Array(n),
     kmod: new Float32Array(n), strat: new Float32Array(n), gorge: new Float32Array(n), mesa: new Float32Array(n), erg: new Float32Array(n),
   };
-  const shelf = VARIANT === 'S' ? new Float32Array(n) : null;
+  const shelf = null;   // (the seeded world's coasts, lakes and islands come out of the simulation; see generate.mjs)
   for (let j = 0; j < R; j++) for (let i = 0; i < R; i++) {
     const p = designAt(domain.x0 + (i + 0.5) / R * domain.size, domain.x0 + (j + 0.5) / R * domain.size, seed);
     const c = j * R + i; if (shelf) shelf[c] = p.shelf || 0;

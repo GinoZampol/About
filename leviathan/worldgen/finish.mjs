@@ -9,7 +9,7 @@ import { encodeU16, H_OFFSET, H_SCALE } from '../shared/codec.mjs';
 import { makeCtx, flood, route, accumulate, computePrecip, computePrecipDir, boxBlur, DX8, DY8, DD8 } from './erosion.mjs';
 import { renderMap } from './preview.mjs';
 import { VOLCANO, GORGE, WORLD_KM } from './design.mjs';
-import { getLayout, seededDesign } from './layout.mjs';
+import { getLayout } from './layout.mjs';
 
 const ELA = 1700;          // ice-age equilibrium line altitude (m)
 const Q_RIVER = 1.2e6;     // effective drainage (m^2) where a perennial channel starts
@@ -165,9 +165,9 @@ export async function finishWorld(world, cfg, ROOT, log) {
     const cap = n * 3, hk = new Float32Array(cap), hi = new Int32Array(cap); let hs = 0, lowered = 0;
     const push = (c, k) => { if (hs >= cap) return; let i = hs++; while (i > 0) { const p = (i - 1) >> 1; if (hk[p] <= k) break; hk[i] = hk[p]; hi[i] = hi[p]; i = p; } hk[i] = k; hi[i] = c; };
     const pop = () => { const top = hi[0]; hs--; if (hs > 0) { const k = hk[hs], c = hi[hs]; let i = 0; for (;;) { let l = 2 * i + 1; if (l >= hs) break; if (l + 1 < hs && hk[l + 1] < hk[l]) l++; if (hk[l] >= k) break; hk[i] = hk[l]; hi[i] = hi[l]; i = l; } hk[i] = k; hi[i] = c; } return top; };
-    for (let c = 0; c < n; c++) push(c, sea[c] ? 0 : h[c]);
+    for (let c = 0; c < n; c++) push(c, sea[c] ? Math.max(0, h[c]) : h[c]);
     while (hs > 0) {
-      const k0 = hk[0], c = pop(), hc = sea[c] ? 0 : h[c];
+      const k0 = hk[0], c = pop(), hc = sea[c] ? Math.max(0, h[c]) : h[c];
       if (k0 > hc + 1e-3) continue;                    // stale entry
       const i = c % N, j = (c / N) | 0;
       for (let k = 0; k < 8; k++) {
@@ -191,7 +191,7 @@ export async function finishWorld(world, cfg, ROOT, log) {
     for (let c = 0; c < n; c++) {
       if (sea[c]) continue;
       const A = Q[c] / a; if (A < 2.5 || A > 5000) continue;
-      const r = rec[c], sl = (h[c] - (sea[r] ? 0 : h[r])) / recD[c];
+      const r = rec[c], sl = (h[c] - (sea[r] ? Math.max(0, h[r]) : h[r])) / recD[c];
       const sf = smoothstep(0.22, 0.7, sl); if (sf <= 0) continue;
       cut[c] = Math.min(42, 2.7 * Math.pow(A, 0.42)) * sf * smoothstep(5000, 1800, A) * rockF[g.rock[c]];
     }
@@ -246,7 +246,7 @@ export async function finishWorld(world, cfg, ROOT, log) {
   flood(ctx, h, sea, dx); route(ctx, sea, dx, seed + 901); accumulate(ctx, sea, P, dx);
   const { f, Q, rec } = ctx;
   const surf = new Float32Array(n); // water-or-ground surface
-  for (let c = 0; c < n; c++) surf[c] = sea[c] ? 0 : lakeId[c] ? lakes[lakeId[c] - 1].level : h[c];
+  for (let c = 0; c < n; c++) surf[c] = sea[c] ? Math.max(0, h[c]) : lakeId[c] ? lakes[lakeId[c] - 1].level : h[c];
 
   // ---- G. river network as smooth polylines ---------------------------------------------------
   const isRiver = new Uint8Array(n), nd = new Uint8Array(n);
@@ -524,14 +524,14 @@ export async function finishWorld(world, cfg, ROOT, log) {
     let sb = -1, sd = 1e18;
     for (let j = 8; j < N - 8; j += 6) for (let i = 8; i < N - 8; i += 6) {
       const c = j * N + i; if (sea[c] || lakeId[c] || h[c] < 5 || h[c] > 45 || Math.abs(h[c] - h[c + 6]) > 1.5 || Math.abs(h[c] - h[c + 6 * N]) > 1.5) continue;
-      const [x, y] = cellXY(c), d = Math.hypot(x / 1000 + KM0 - L.c[0], y / 1000 + KM0 - L.c[1]); if (seededDesign(x / 1000 + KM0, y / 1000 + KM0, seed).land < 1.2) continue;   // mainland shore, not an island
+      const [x, y] = cellXY(c), d = Math.hypot(x / 1000 + KM0 - L.c[0], y / 1000 + KM0 - L.c[1]); if (d < L.RB * 0.85) continue;   // mainland shore, not an island in the basin
       if (d < sd) { sd = d; sb = c; }
     }
     if (sb >= 0) { const [x, y] = cellXY(sb); landmarks.push(lm('Central Valley (ocean shore)', { x, z: S - y, h: h[sb] }, 'low ground on the shore of the central ocean')); }
     landmarks.push(lm('The Crown', peak(1, 49, 1, 49), 'the highest summit of the great range'));
-    if (L.alpsCentre[2] > 0.05) landmarks.push(lm('The Horns', peak(L.alpsCentre[0] - 6, L.alpsCentre[0] + 6, L.alpsCentre[1] - 6, L.alpsCentre[1] + 6), 'the alpine peaks'));
-    landmarks.push(lm('The Badlands', km(L.tableC[0], L.tableC[1]), 'the dry tableland in the lee of the great range'));
-    landmarks.push(lm('Central ocean', km(L.c[0], L.c[1]), 'the middle of the world'));
+    if (L.alpsCentre && L.alpsCentre[2] > 0.05) landmarks.push(lm('The Horns', peak(L.alpsCentre[0] - 6, L.alpsCentre[0] + 6, L.alpsCentre[1] - 6, L.alpsCentre[1] + 6), 'the alpine peaks'));
+    landmarks.push(lm('The Badlands', km(L.tableC[0], L.tableC[1]), 'the dry tableland that kept its sedimentary cover'));
+    landmarks.push(lm('Central ocean', km(L.c[0], L.c[1]), 'the sinking basin at the heart of the world'));
     lakes.slice(0, 3).forEach((l, k) => landmarks.push(lm(`Lake ${k + 1}`, { x: l.x, z: S - l.y, h: l.level }, `${l.areaKm2.toFixed(1)} km2`)));
   }
   let landCells = 0, hmax = 0; for (let c = 0; c < n; c++) { if (!sea[c]) landCells++; if (h[c] > hmax) hmax = h[c]; }

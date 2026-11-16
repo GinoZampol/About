@@ -52,12 +52,13 @@ export function flood(ctx, h, sea, dx) {
       const x = i + DX8[k], y = j + DY8[k];
       if (x >= 0 && y >= 0 && x < N && y < N && !sea[y * N + x]) { coast = true; break; }
     }
-    if (coast) push(c, 0);
+    if (coast) push(c, h[c] > 0 ? h[c] : 0);   // (an edge outlet enters the queue at its own level, not before the sea)
   }
   for (;;) {
     let c;
     if (qh < qt) c = pit[qh++]; else if (hs > 0) c = pop(); else break;
-    let cz = 0;
+    // a sink drains at its own level: the sea at 0, an outlet at the edge of the generated world at its own height
+    let cz = f[c] > 0 ? f[c] : 0;
     if (!sea[c]) { rank[c] = cnt; order[cnt++] = c; cz = f[c]; }
     const i = c % N, j = (c / N) | 0;
     for (let k = 0; k < 8; k++) {
@@ -122,7 +123,7 @@ export function erodeStep(ctx, h, sea, g, P, dx, dt, K0, seed) {
   const { U, rock, kmod, strat, tmod } = g;
   for (let q = 0; q < cnt; q++) {
     const c = order[q], r = rec[c], L = recD[c];
-    const hr = sea[r] ? 0 : h[r];
+    const hr = sea[r] ? Math.max(0, h[r]) : h[r];
     const rk = rockAt(rock[c], f[c], strat[c]);
     const fct = K0 * ROCK_K[rk] * kmod[c] * Math.sqrt(Q[c]) * dt / L;
     let hn = (f[c] + U[c] * dt + fct * hr) / (1 + fct);

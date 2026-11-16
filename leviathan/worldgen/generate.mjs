@@ -6,7 +6,7 @@ import { fileURLToPath } from 'node:url';
 import { hash2, noise2 } from '../shared/noise.mjs';
 import { buildDesign, volcanoHeight, WORLD_KM, setVariant } from './design.mjs';
 import { getLayout } from './layout.mjs';
-import { makeCtx, erodeStep, upsample2, resample, computePrecip, computePrecipDir, flood, route, accumulate } from './erosion.mjs';
+import { makeCtx, erodeStep, upsample2, resample, computePrecip, computePrecipDir, flood, route, accumulate, boxBlur } from './erosion.mjs';
 import { renderMap } from './preview.mjs';
 import { ROCK } from '../shared/geology.mjs';
 
@@ -31,6 +31,57 @@ export const CFG = {
 const CACHE = path.join(ROOT, '.cache'); fs.mkdirSync(CACHE, { recursive: true });
 const T0 = Date.now(); const log = (...a) => console.log(`[${((Date.now() - T0) / 1000).toFixed(1)}s]`, ...a);
 
+// Seeded world: the sea is wherever the ground is below sea level, plus a two-cell ring at the edge of the
+// generated domain that stands for the land continuing beyond it (an outlet at its own height, so rivers on the
+// outer flanks leave the world instead of ponding against its edge). The ring lies in the hidden margin.
+const isEdge = (i, j, N) => i < 2 || j < 2 || i >= N - 2 || j >= N - 2;
+function seaFrom(h, N, sea = new Uint8Array(N * N)) {
+  for (let j = 0; j < N; j++) for (let i = 0; i < N; i++) { const c = j * N + i; sea[c] = h[c] < 0 || isEdge(i, j, N) ? 1 : 0; }
+  return sea;
+}
+// After the simulation: the sea rises to its present level (as it did after the last ice age), drowning the
+// lower ends of the valleys the rivers cut while it stood lower; that is what gives the coast its bays, inlets and
+// headlands. The rise is whatever brings the sea to its share of the world (at least 20 m, at most 150 m). Water
+// below sea level then cut off from the open sea is a lagoon or pond: small ones are filled in (they would have
+// silted up), and specks of land too small to be islands go under.
+function settleSea(h, N, dx, log, share) {
+  const n = N * N, comp = new Int32Array(n).fill(-1), stack = new Int32Array(n), a = (dx / 1000) ** 2;
+  let filled = 0, drowned = 0;
+  { const m = Math.round(MARGIN_KM / (WORLD_KM + 2 * MARGIN_KM) * N), z = [];
+    for (let j = m; j < N - m; j += 2) for (let i = m; i < N - m; i += 2) z.push(h[j * N + i]);
+    z.sort((p, q) => p - q);
+    const rise = Math.max(20, Math.min(150, z[Math.floor(z.length * share)]));
+    for (let c = 0; c < n; c++) h[c] -= rise;
+    log(`sea rose ${rise.toFixed(0)} m to its present level`); }
+  // sediment builds a shelf off every shore: the sea floor deepens gradually away from land instead of dropping
+  // off the old shoreline in a cliff
+  { const d = new Float32Array(n), D = Math.SQRT2 * dx;
+    for (let c = 0; c < n; c++) d[c] = h[c] >= 0 ? 0 : 1e9;
+    for (let pass = 0; pass < 2; pass++) for (let k = 0; k < n; k++) {
+      const c = pass ? n - 1 - k : k, i = c % N, j = (c / N) | 0; if (!d[c]) continue;
+      const nb = pass ? [[i + 1, j, dx], [i, j + 1, dx], [i + 1, j + 1, D], [i - 1, j + 1, D]] : [[i - 1, j, dx], [i, j - 1, dx], [i - 1, j - 1, D], [i + 1, j - 1, D]];
+      for (const [x, y, w] of nb) if (x >= 0 && y >= 0 && x < N && y < N) d[c] = Math.min(d[c], d[y * N + x] + w);
+    }
+    for (let c = 0; c < n; c++) if (h[c] < 0) h[c] = Math.max(h[c], -(2 + 0.055 * d[c])); }
+  for (const water of [true, false]) {
+    comp.fill(-1);
+    for (let s0 = 0; s0 < n; s0++) {
+      const i0 = s0 % N, j0 = (s0 / N) | 0; if ((h[s0] < 0) !== water || comp[s0] >= 0 || isEdge(i0, j0, N)) continue;
+      let sp = 0, cnt = 0, edge = false; stack[sp++] = s0; comp[s0] = 1; const cells = [];
+      while (sp) {
+        const c = stack[--sp], i = c % N, j = (c / N) | 0; cnt++; if (cells.length < 200000) cells.push(c);
+        for (const [x, y] of [[i - 1, j], [i + 1, j], [i, j - 1], [i, j + 1]]) {
+          if (x < 0 || y < 0 || x >= N || y >= N) continue; if (isEdge(x, y, N)) { edge = true; continue; }
+          const q = y * N + x; if ((h[q] < 0) === water && comp[q] < 0) { comp[q] = 1; stack[sp++] = q; }
+        }
+      }
+      if (water && !edge && cnt * a < 3 && cnt <= cells.length) { for (const c of cells) h[c] = 1.5; filled += cnt; }
+      if (!water && !edge && cnt * a < 0.6 && cnt <= cells.length) { for (const c of cells) h[c] = -2; drowned += cnt; }
+    }
+  }
+  log(`sea settled: ${(filled * a).toFixed(1)} km2 of ponds filled, ${(drowned * a).toFixed(2)} km2 of specks drowned`);
+}
+
 function fieldsFor(design, N) {
   const R = design.R;
   const g = {
@@ -38,7 +89,8 @@ function fieldsFor(design, N) {
     kmod: resample(design.kmod, R, N), strat: resample(design.strat, R, N), h0: resample(design.h0, R, N), gorge: resample(design.gorge, R, N), mesa: resample(design.mesa, R, N), erg: resample(design.erg, R, N),
   };
   const sea = new Uint8Array(N * N);
-  for (let c = 0; c < N * N; c++) {
+  if (CFG.variant === 'S') seaFrom(g.h0, N, sea);
+  else for (let c = 0; c < N * N; c++) {
     sea[c] = g.land[c] < 0 ? 1 : 0;
     // sea floor comes straight from the shoreline distance (interpolating h0 across the coast would lift it)
     if (sea[c]) g.h0[c] = -Math.min(260, 3 + 55 * Math.pow(-g.land[c], 1.3));
@@ -71,7 +123,8 @@ export function erodeWorld(cfg) {
       const amp = 0.02 * dx;
       for (let j = 0; j < res; j++) for (let i = 0; i < res; i++) {
         const c = j * res + i;
-        if (g.sea[c]) h[c] = g.h0[c];
+        if (cfg.variant === 'S') { if (h[c] >= 0) h[c] = Math.max(0.5, h[c]) + (hash2(i, j, cfg.seed + res) - 0.5) * amp; }
+        else if (g.sea[c]) h[c] = g.h0[c];
         else h[c] = Math.max(0.5, h[c]) + (hash2(i, j, cfg.seed + res) - 0.5) * amp;
       }
     }
@@ -89,14 +142,21 @@ export function erodeWorld(cfg) {
       const [vh, r] = volcanoHeight((i + 0.5) / N * WORLD_KM, (j + 0.5) / N * WORLD_KM, cfg.seed);
       if (r < 5.2 && vh > 250) g.rock[j * N + i] = ROCK.BASALT;
     }
-    const ctx = makeCtx(N);
+    const ctx = makeCtx(N), VSF = cfg.variant === 'S';
+    if (VSF) seaFrom(h, N, g.sea);
+    // the country that kept its sedimentary cover is the arid interior: the rain there is a fraction of what the relief alone would give
+    const arid = VSF ? boxBlur(g.mesa, N, Math.max(1, Math.round(2500 / dx))) : null;
     for (let it = 0; it < iters; it++) {
-      if (it % 15 === 0) P = cfg.variant === 'S' ? computePrecipDir(h, g.sea, N, dx, getLayout(cfg.seed).dir, getLayout(cfg.seed).windSlope, true) : computePrecip(h, g.sea, N, dx, cfg.wind || 0);
+      if (VSF && it % 15 === 0) seaFrom(h, N, g.sea);
+      if (it % 15 === 0) { P = cfg.variant === 'S' ? computePrecipDir(h, g.sea, N, dx, getLayout(cfg.seed).dir, getLayout(cfg.seed).windSlope, true) : computePrecip(h, g.sea, N, dx, cfg.wind || 0); if (arid) for (let c = 0; c < N * N; c++) P[c] *= 1 - 0.75 * Math.min(1, arid[c] * 1.4); }
       erodeStep(ctx, h, g.sea, g, P, dx, dt, cfg.K0, cfg.seed + res);
+      // the sea floor (and the edge ring, which keeps pace with the land beyond it) moves with the crust
+      if (VSF) for (let c = 0; c < N * N; c++) if (g.sea[c]) h[c] = Math.max(-380, h[c] + g.U[c] * dt);
     }
     let mx = 0; for (let c = 0; c < N * N; c++) if (h[c] > mx) mx = h[c];
     log(`level ${res}: ${iters} it, max elevation ${mx.toFixed(0)} m`);
   }
+  if (cfg.variant === 'S') { settleSea(h, N, cfg.sizeM / N, log, getLayout(cfg.seed).seaShare); seaFrom(h, N, g.sea); }
   return { h, N, g, P };
 }
 
@@ -127,6 +187,7 @@ if (import.meta.url === `file://${process.argv[1]}`) {
     const N = CFG.res;
     const design = buildDesign(Math.min(1024, N), CFG.seed, CFG.domain);
     const g = fieldsFor(design, N);
+    if (CFG.variant === 'S') seaFrom(h, N, g.sea);
     for (let j = 0; j < N; j++) for (let i = 0; i < N; i++) {
       const [vh, r] = volcanoHeight((i + 0.5) / N * WORLD_KM, (j + 0.5) / N * WORLD_KM, CFG.seed);
       if (r < 5.2 && vh > 250) g.rock[j * N + i] = ROCK.BASALT;
