@@ -18,9 +18,9 @@
  "hOffset": 300,
  "hScale": 0.125,
  "seaLevel": 0,
- "maxElevation": 3957,
- "landKm2": 2210,
- "riverKm": 913,
+ "maxElevation": 6398,
+ "landKm2": 2241,
+ "riverKm": 932,
  "mapChannels": [
   "rock",
   "strat",
@@ -38,22 +38,22 @@
  "landmarks": [
   {
    "name": "Central Valley (ocean shore)",
-   "x": 39081,
-   "z": 18642,
-   "h": 10,
+   "x": 20460,
+   "z": 27911,
+   "h": 15,
    "note": "low ground on the shore of the central ocean"
   },
   {
    "name": "The Crown",
-   "x": 6788,
-   "z": 12503,
-   "h": 3957,
+   "x": 13310,
+   "z": 7622,
+   "h": 6398,
    "note": "the highest summit of the great range"
   },
   {
    "name": "The Badlands",
-   "x": 50012,
-   "z": 7030,
+   "x": 48717,
+   "z": 13116,
    "h": 0,
    "note": "the dry tableland that kept its sedimentary cover"
   },
