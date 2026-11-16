@@ -135,14 +135,14 @@ export function getLayout(seed) {
   const score = new Float32Array(n).fill(-9), land = [];
   for (let c = 0; c < n; c++) {
     const x = gridAt(c % G), y = gridAt((c / G) | 0);
-    if (sea[c] || seaD[c] < 1.2 || T[c].dB < 0.9 || T[c].t > 0.5 || T[c].gC > 0.08 || Math.min(x, y, PLAY - x, PLAY - y) < -2.5) continue;
+    if (sea[c] || seaD[c] < 0.4 || T[c].dB < 0.75 || T[c].t > 0.6 || T[c].gC > 0.08 || Math.min(x, y, PLAY - x, PLAY - y) < -2.5) continue;
     score[c] = -P[c] + 0.06 * Math.min(seaD[c], 9) - 0.6 * T[c].hill + 0.12 * fbm(x / 13 + L.o[5], y / 13, 2, seed + 31); if (inPlay(x, y)) land.push(c);
   }
   L.table = new Float32Array(n); L.tdist = new Float32Array(n);
   let tx = 0, ty = 0, tn = 0;
   const nLand = (() => { let k = 0; for (let c = 0; c < n; c++) if (!sea[c] && inPlay(gridAt(c % G), gridAt((c / G) | 0))) k++; return k; })();
   if (land.length) {
-    const target = Math.min(land.length, Math.round(nLand * (0.17 + r() * 0.04))), rad = Math.sqrt(target * (SIZE / G) ** 2 / Math.PI);
+    const target = Math.min(land.length, Math.round(nLand * (0.3 + r() * 0.05))), rad = Math.sqrt(target * (SIZE / G) ** 2 / Math.PI);
     // One country, roughly round, as an eroded outlier of an old basin's cover is. It is centred on the best spot
     // (score averaged over a country-sized window, ground that cannot carry the cover counting against it); its
     // outline is a warped circle; it keeps only ground that can carry the cover and is connected to its centre, and
@@ -157,7 +157,7 @@ export function getLayout(seed) {
     // the circle widens until the connected ground inside it reaches the cover's share of the world
     const sx0 = gridAt(start % G), sy0 = gridAt((start / G) | 0), inside = new Uint8Array(n);
     let comp = [];
-    for (let k = 1.1; k < 2.6; k += 0.1) {
+    for (let k = 1.1; k < 3.8; k += 0.1) {
       inside.fill(0);
       for (let c = 0; c < n; c++) {
         if (score[c] <= -9) continue;
