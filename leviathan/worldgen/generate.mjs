@@ -158,7 +158,7 @@ export function erodeWorld(cfg) {
     const ctx = makeCtx(N), VSF = cfg.variant === 'S';
     if (VSF) seaFrom(h, N, g.sea);
     // the country that kept its sedimentary cover is the arid interior: the rain there is a fraction of what the relief alone would give
-    const arid = VSF ? boxBlur(g.mesa, N, Math.max(1, Math.round(2500 / dx))) : null;
+    const arid = VSF ? boxBlur(g.mesa, N, Math.max(1, Math.round(300 / dx))) : null;
     for (let it = 0; it < iters; it++) {
       if (VSF && it % 15 === 0) seaFrom(h, N, g.sea);
       if (it % 15 === 0) { P = cfg.variant === 'S' ? computePrecipDir(h, g.sea, N, dx, getLayout(cfg.seed).dir, getLayout(cfg.seed).windSlope, true) : computePrecip(h, g.sea, N, dx, cfg.wind || 0); if (arid) for (let c = 0; c < N * N; c++) P[c] *= 1 - 0.75 * Math.min(1, arid[c] * 1.4); }

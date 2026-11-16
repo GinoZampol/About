@@ -35,11 +35,13 @@ export async function finishWorld(world, cfg, ROOT, log) {
   const VS = cfg.variant === 'S';
   let mesaWide = null;
   let mesaHalo = null;                     // a much wider, softer skirt around the arid country: dry savannah
-  if (VS) { const r = Math.max(2, Math.round(3200 / dx)); mesaWide = boxBlur(boxBlur(g.mesa, N, r), N, r); const r2 = Math.max(2, Math.round(6500 / dx)); mesaHalo = boxBlur(boxBlur(g.mesa, N, r2), N, r2); }
+  // the dryness follows the badlands' own outline closely (a few hundred metres of transition), so ground the
+  // badlands do not cover, including green pockets inside their outline, stays as green as its own rain makes it
+  if (VS) { const r = Math.max(2, Math.round(300 / dx)); mesaWide = boxBlur(boxBlur(g.mesa, N, r), N, r); const r2 = Math.max(2, Math.round(1500 / dx)); mesaHalo = boxBlur(boxBlur(g.mesa, N, r2), N, r2); }
   const dryEast = (P) => { if (!VB) return P; if (VS) { let m = 0, k = 0; for (let c = 0; c < n; c++) if (!sea[c]) { m += P[c]; k++; } m /= Math.max(1, k);   // gentler rain shadows: lee slopes stay green, only the mesa country is truly dry
       for (let c = 0; c < n; c++) { // the arid country is truly dry; what green it has follows its watercourses (see the riparian pass below)
         const aw = smoothstep(0.08, 0.6, mesaWide[c]);
-        P[c] = (0.58 * m + 0.48 * P[c]) * (1 - 0.82 * aw) * (1 - 0.22 * smoothstep(0.02, 0.3, mesaHalo[c]) * (1 - aw)); } return P; }   /* (0.58 m: the central sea keeps every other shore moist, so only the badlands are truly dry) */ for (let j = 0; j < N; j++) for (let i = 0; i < N; i++) P[j * N + i] *= 1 - 0.74 * smoothstep(VC ? 14 : 31, VC ? 25 : 40.5, VC ? 0.906 * (KM0 + (i + 0.5) / N * KMS) - 0.423 * (KM0 + (j + 0.5) / N * KMS) + 2.2 * noise2(i / N * 6, j / N * 6, seed + 83) : KM0 + (i + 0.5) / N * KMS + (W ? (KM0 + (j + 0.5) / N * KMS - 25) * W * 0.6 + 2.2 * noise2(i / N * 6, j / N * 6, seed + 83) : 0)); return P; };
+        P[c] = (0.58 * m + 0.48 * P[c]) * (1 - 0.82 * aw) * (1 - 0.12 * smoothstep(0.05, 0.4, mesaHalo[c]) * (1 - aw)); } return P; }   /* (0.58 m: the central sea keeps every other shore moist, so only the badlands are truly dry) */ for (let j = 0; j < N; j++) for (let i = 0; i < N; i++) P[j * N + i] *= 1 - 0.74 * smoothstep(VC ? 14 : 31, VC ? 25 : 40.5, VC ? 0.906 * (KM0 + (i + 0.5) / N * KMS) - 0.423 * (KM0 + (j + 0.5) / N * KMS) + 2.2 * noise2(i / N * 6, j / N * 6, seed + 83) : KM0 + (i + 0.5) / N * KMS + (W ? (KM0 + (j + 0.5) / N * KMS - 25) * W * 0.6 + 2.2 * noise2(i / N * 6, j / N * 6, seed + 83) : 0)); return P; };
   let P = dryEast(cfg.variant === 'S' ? computePrecipDir(h, sea, N, dx, getLayout(seed).dir, getLayout(seed).windSlope, true) : computePrecip(h, sea, N, dx, W));
 
   // ---- A. ice flux from a mass-balance accumulation --------------------------------------------
