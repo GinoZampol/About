@@ -144,12 +144,13 @@ void main() {
   float detailF = 1.0 - smoothstep(120.0, 700.0, dist);                   // fine speckle only where it can be resolved
 
   // ---- herb layer -------------------------------------------------------------------------------
-  vec3 lush = S(vec3(0.15, 0.29, 0.08)), mid = S(vec3(0.24, 0.36, 0.11)), dry = S(vec3(0.39, 0.41, 0.17)), steppe = S(vec3(0.53, 0.47, 0.33));
+  vec3 lush = S(vec3(0.17, 0.27, 0.09)), mid = S(vec3(0.27, 0.34, 0.13)), dry = S(vec3(0.44, 0.42, 0.21)), steppe = S(vec3(0.56, 0.49, 0.34));
   // open grassland is green; only truly dry country (the plateau side) cures to straw and steppe
   // broad, overlapping ramps: steppe, cured grass, green sward and lush growth grade into one another
-  vec3 grass = mix(dry, mid, smoothstep(0.24, 0.6, m));
-  grass = mix(grass, lush, smoothstep(0.6, 1.3, m));
-  grass = mix(steppe, grass, smoothstep(0.2, 0.62, m));
+  // (wide ramps driven by soil moisture: dry steppe, cured grass, green sward and lush growth all appear)
+  vec3 grass = mix(dry, mid, smoothstep(0.35, 0.95, m));
+  grass = mix(grass, lush, smoothstep(0.95, 1.6, m));
+  grass = mix(steppe, grass, smoothstep(0.25, 0.75, m));
   grass = mix(grass, mix(steppe, dry, 0.5), mesa * 0.55);          // plateau herbage is always on the dry side
   grass = mix(grass, S(vec3(0.38, 0.36, 0.22)), smoothstep(1450.0, 2050.0, hc));
   // variant B prairie: tall green-gold grass with the wind running over it in slow waves
@@ -256,7 +257,7 @@ void main() {
   float back = pow(max(dot(-V, uSunDir), 0.0), 4.0) * smoothstep(-0.05, 0.25, uSunDir.y);
   lit += vegW * sh * uSunCol * (graze * 0.07 * vec3(0.85, 0.95, 0.75) + back * col * vec3(1.1, 1.35, 0.6) * 0.55);
   float lum = dot(lit, vec3(0.2126, 0.7152, 0.0722));
-  lit = max(mix(vec3(lum), lit, 1.14), 0.0);
+  lit = max(mix(vec3(lum), lit, 1.06), 0.0);
   lit += uSunCol * sh * sn * 0.25 * pow(max(dot(N, normalize(V + uSunDir)), 0.0), 40.0);
   gl_FragColor = vec4(applyAtmosphere(lit, vWPos), 1.0);
   #include <tonemapping_fragment>
