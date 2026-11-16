@@ -55,7 +55,7 @@ URL options: `?quality=low|medium|high`, `?data=/data_b4/`, `?pos=x,heightAboveG
 | `data/` | `world/` | **Variant A**, the original: a west-to-east convergent-margin transect (ocean, Coast Range, Central Valley, the Spine, the Crown, the High Desert plateau). Hand-designed tectonic template, seed 7. |
 | `data_b/` | `world-b/` | **Variant 1B**: central sea with a strait to the west, one 5,361 m massif, a short alpine range, prairie, the mesa plateau with a sand sea, a cold north. Hand-designed template, seed 7. |
 | `data_b2/` | `world-b2/` | Variant 1B with seed 21 and a south-westerly rain wind. |
-| `data_b4/` | `world-s/` | **Seeded world (variant S)**: no template. The seed sets only physical causes and the erosion simulation makes the land (section 3.2). Current seed 397119. |
+| `data_s<seed>/` | `world-s/` | **Seeded worlds (variant S)**: no template. The seed sets only physical causes and the erosion simulation makes the land (section 3.2). `world-s/` is a menu with one card per baked seed; they share one client (`world-s/play/?data=../s<seed>/`). Seeds: 241191, 397119, 452182, 712933, 752500, 988063. |
 | commit `eda0fff` | `v5/` | Frozen version 5, kept for comparison (`git checkout eda0fff` restores code and data exactly). |
 
 All worlds share every line of code after the large-scale forcing.
@@ -353,6 +353,7 @@ an Unreal project.
 | `tools/layout_preview.mjs` | top-down previews of the seeded forcing for many seeds |
 | `tools/screenshot.mjs` | in-engine screenshots of named views (`--data=/data_b4/`) |
 | `tools/build_pages.sh` | builds the public site into the repository's top-level `docs/` |
+| `tools/seeded_menu.py` | the menu page of the seeded worlds, with a small map of each (called by `build_pages.sh`) |
 | `tools/build_web.mjs` | single-file web bundle (data wrapped losslessly in PNG) |
 | `tools/perf.mjs`, `tools/scout.mjs` | performance measurement, scouting views |
 | `worldgen/validate.mjs` | hydrology, terrain, seams, traversability, ecology, mining and determinism checks |

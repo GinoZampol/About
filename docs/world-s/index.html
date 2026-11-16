@@ -1,30 +1,30 @@
 <!doctype html>
-<html lang="en">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>The Leviathan (seeded world)</title>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Seeded worlds</title>
 <style>
-  html, body { margin: 0; height: 100%; background: #0b0e12; color: #e8e6df; font: 13px/1.45 ui-monospace, Menlo, Consolas, monospace; overflow: hidden; }
-  canvas#view { position: fixed; inset: 0; width: 100%; height: 100%; display: block; }
-  #hud { position: fixed; left: 12px; top: 10px; text-shadow: 0 1px 2px #000; white-space: pre; pointer-events: none; }
-  #help { position: fixed; right: 12px; top: 10px; text-align: right; text-shadow: 0 1px 2px #000; white-space: pre; pointer-events: none; opacity: .85; }
-  #loading { position: fixed; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; background: #0b0e12; gap: 14px; z-index: 5; }
-  #loading h1 { font: 600 28px/1 Georgia, serif; letter-spacing: .2em; margin: 0; }
-  #bar { width: 260px; height: 3px; background: #232a33; } #bar div { height: 100%; width: 0; background: #c8b68a; transition: width .2s; }
-  #map { position: fixed; right: 12px; bottom: 12px; width: min(42vh, 44vw); aspect-ratio: 1; border: 1px solid #0008; display: none; cursor: crosshair; image-rendering: auto; }
-  #places { position: fixed; left: 12px; bottom: 12px; display: none; flex-direction: column; gap: 3px; max-height: 60vh; overflow: auto; }
-  #places button { font: inherit; color: inherit; background: #0b0e12cc; border: 1px solid #ffffff22; padding: 3px 8px; text-align: left; cursor: pointer; }
-  #cross { position: fixed; left: 50%; top: 50%; width: 6px; height: 6px; margin: -3px; border-radius: 50%; background: #fff8; pointer-events: none; }
-  .noui #hud, .noui #help, .noui #cross { display: none; }
-</style>
-<script type="importmap">{ "imports": { "three": "../vendor/three.module.js", "three/addons/": "../vendor/addons/" } }</script>
-</head>
-<body>
-<canvas id="view"></canvas>
-<div id="hud"></div><div id="help"></div><div id="cross"></div>
-<canvas id="map" width="512" height="512"></canvas><div id="places"></div>
-<div id="loading"><h1>THE LEVIATHAN</h1><div id="bar"><div></div></div><div id="lmsg">loading world</div></div>
-<script type="module" src="client/main.js"></script>
-</body>
-</html>
+  :root { color-scheme: dark; }
+  body { margin: 0; background: #0b0e12; color: #e8e6df; font: 16px/1.5 Georgia, serif; }
+  main { max-width: 1100px; margin: 0 auto; padding: 2rem 16px 3rem; }
+  h1 { font-size: 1.7rem; letter-spacing: .16em; margin: 0 0 .3rem; }
+  p { color: #b9b5aa; margin: 0 0 1.6rem; max-width: 46rem; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr)); gap: 1rem; }
+  .card { display: block; color: inherit; text-decoration: none; border: 1px solid #ffffff22; padding: .6rem; }
+  .card:hover, .card:focus-visible { border-color: #c8b68a; outline: none; }
+  .card img { display: block; width: 100%; height: auto; margin-bottom: .5rem; }
+  .card b { display: block; font-weight: 600; } .card span { color: #b9b5aa; font-size: .9rem; }
+  .back { display: inline-block; color: #b9b5aa; margin-bottom: 1.2rem; text-decoration: none; }
+</style></head><body><main>
+<a class="back" href="../">&larr; All worlds</a>
+<h1>SEEDED WORLDS</h1>
+<p>Each world comes from a random seed alone. The seed sets the slow causes (a sinking basin, uneven uplift,
+one zone of thickened crust, volcanic islands, a rain wind) and an erosion simulation of about three million
+years makes the land. Each world downloads about 14 MB.</p>
+<div class="grid">
+<a class="card" href="play/?data=../s241191/"><img src="s241191/map.jpg" alt="Map of world 241191" width="420" height="420" loading="lazy"><b>World 241191</b><span>Highest summit 2,593 m</span></a>
+<a class="card" href="play/?data=../s397119/"><img src="s397119/map.jpg" alt="Map of world 397119" width="420" height="420" loading="lazy"><b>World 397119</b><span>Highest summit 4,950 m</span></a>
+<a class="card" href="play/?data=../s452182/"><img src="s452182/map.jpg" alt="Map of world 452182" width="420" height="420" loading="lazy"><b>World 452182</b><span>Highest summit 7,120 m</span></a>
+<a class="card" href="play/?data=../s712933/"><img src="s712933/map.jpg" alt="Map of world 712933" width="420" height="420" loading="lazy"><b>World 712933</b><span>Highest summit 3,505 m</span></a>
+<a class="card" href="play/?data=../s752500/"><img src="s752500/map.jpg" alt="Map of world 752500" width="420" height="420" loading="lazy"><b>World 752500</b><span>Highest summit 3,472 m</span></a>
+<a class="card" href="play/?data=../s988063/"><img src="s988063/map.jpg" alt="Map of world 988063" width="420" height="420" loading="lazy"><b>World 988063</b><span>Highest summit 3,178 m</span></a>
+</div>
+</main></body></html>

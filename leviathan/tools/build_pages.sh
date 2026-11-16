@@ -19,7 +19,16 @@ world() {  # $1 = target name, $2 = data dir, $3 = title
 world world data "The Leviathan"
 world world-b data_b "The Leviathan 1B"
 [ -d "$L/data_b2" ] && world world-b2 data_b2 "The Leviathan 1B (seed 21)"
-[ -d "$L/data_b4" ] && world world-s data_b4 "The Leviathan (seeded world)"
+# seeded worlds: one shared client in world-s/play/, each world's data in world-s/s<seed>/, and a menu page
+if ls -d "$L"/data_s* > /dev/null 2>&1; then
+  P="$OUT/world-s/play"; mkdir -p "$P/client" "$P/shared"
+  cp "$L"/client/*.js "$P/client/"; cp "$L"/shared/*.mjs "$P/shared/"
+  sed -e 's#"../node_modules/three/build/three.module.js"#"../../vendor/three.module.js"#' \
+      -e 's#"../node_modules/three/examples/jsm/"#"../../vendor/addons/"#' \
+      -e 's#src="./main.js"#src="client/main.js"#' -e "s#<title>The Leviathan</title>#<title>The Leviathan seeded world</title>#" "$L/client/index.html" > "$P/index.html"
+  for d in "$L"/data_s*; do s=${d##*/data_s}; mkdir -p "$OUT/world-s/s$s"; cp "$d"/* "$OUT/world-s/s$s/"; done
+  python3 "$L/tools/seeded_menu.py" "$L" "$OUT/world-s"
+fi
 # frozen version 5, taken straight from its commit
 mkdir -p "$OUT/v5"; git -C "$REPO" archive "$V5" leviathan/client leviathan/shared leviathan/data | tar -x -C "$OUT/v5" --strip-components=1
 page "$OUT/v5/client/index.html" "$OUT/v5" "The Leviathan v5"; rm "$OUT/v5/client/index.html"
@@ -42,7 +51,7 @@ cat > "$OUT/index.html" <<'HTML'
 <h1>THE LEVIATHAN</h1>
 <p>A generated 50 × 50 km world you can fly or walk through in the browser. Each world downloads about 14 MB.</p>
 <a href="world/"><b>The main world</b><span>Coast Range, Central Valley, the Spine, the Crown, mesa and dune sea</span></a>
-<a href="world-s/"><b>Seeded world (newest)</b><span>Generated from a random seed alone: a great range, forested windward slopes, a dry lee with badlands, plains, and a central sea with islands</span></a>
+<a href="world-s/"><b>Seeded worlds (newest)</b><span>A menu of worlds generated from random seeds alone by the erosion simulation: a central sea, one great massif, badlands, plains, islands</span></a>
 <a href="world-b/"><b>Version 1B</b><span>A central ocean, one great massif, prairie, sand sea, cold north</span></a>
 <a href="world-b2/"><b>Version 1B, second seed</b><span>Same design with a different seed and a south-westerly rain wind, so the climate belts no longer run north to south</span></a>
 <a href="v5/"><b>Version 5 (frozen)</b><span>An earlier snapshot, kept for comparison</span></a>
