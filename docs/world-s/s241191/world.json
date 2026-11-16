@@ -18,9 +18,9 @@
  "hOffset": 300,
  "hScale": 0.125,
  "seaLevel": 0,
- "maxElevation": 6409,
- "landKm2": 2216,
- "riverKm": 825,
+ "maxElevation": 6408,
+ "landKm2": 2230,
+ "riverKm": 772,
  "mapChannels": [
   "rock",
   "strat",
@@ -47,13 +47,13 @@
    "name": "The Crown",
    "x": 11737,
    "z": 17261,
-   "h": 6409,
+   "h": 6408,
    "note": "the highest summit of the great range"
   },
   {
    "name": "The Badlands",
-   "x": 49270,
-   "z": 23947,
+   "x": 47789,
+   "z": 31572,
    "h": 0,
    "note": "the dry tableland that kept its sedimentary cover"
   },
