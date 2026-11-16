@@ -111,7 +111,7 @@ export function seededDesign(xk, yk, seed) {
 
   // ---- uplift ----------------------------------------------------------------------------------
   let U = 0.006 * f.up + 0.012 + 0.034 * smoothstep(0.1, 0.65, fbm(xk / 7.5, yk / 7.5, 3, seed + 31)) * (1 - plateau);
-  U += gHl + 2.0 * gA + 2.5 * gC + 0.05 * plateau;
+  U += gHl + 2.0 * gA + 1.9 * gC + 0.05 * plateau;
   U += 0.012 * (0.5 + 0.5 * noise2(xk / 1.1, yk / 1.1, seed + 35)) * (1 - plateau);
   U += 0.06 * ridged(xk / 3.2, yk / 3.2, 3, seed + 32) * (0.3 + gA + gHl * 3);
   U *= 1 - 0.86 * gG;
@@ -121,7 +121,7 @@ export function seededDesign(xk, yk, seed) {
   let h0;
   if (land < 0) h0 = -Math.min(260, 3 + 55 * Math.pow(-land, 1.3));
   else {
-    h0 = 6 + 24 * sat(land / 3) + 130 * f.up * sat(land / 2.5) + 600 * gHl + 1800 * gA + 2600 * gC + 12 * fbm(xk / 2, yk / 2, 3, seed + 33);
+    h0 = 6 + 24 * sat(land / 3) + 130 * f.up * sat(land / 2.5) + 600 * gHl + 1800 * gA + 1950 * gC + 12 * fbm(xk / 2, yk / 2, 3, seed + 33);
     h0 += plateau * (1100 + 10 * dGM + 45 * fbm(xk / 5, yk / 5, 3, seed + 34));
     const notch = 105 + 40 * Math.max(0, dGM - 1);
     h0 = Math.max(1.5, h0 + (Math.min(h0, notch) - h0) * Math.sqrt(gG));
