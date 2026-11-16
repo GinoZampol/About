@@ -38,20 +38,27 @@ function fields(L, xk, yk) {
   const cW = Math.max(-1.2, Math.min(1.2, convergence(L, sx, sy, 5.5) * L.norm));   // broad belts where the crust converges (+) or parts (-)
   // the two guided places: the great mountain with its back to one corner, the arid canyon country in another
   const [dCr] = segDist(sx, sy, L.massifSeg[0], L.massifSeg[1], L.massifSeg[2], L.massifSeg[3]);
-  const gC = gauss(dCr, 3.3) * (0.88 + 0.2 * noise2(xk / 3.1, yk / 3.1, seed + 28) + 0.1 * noise2(xk / 1.6, yk / 1.6, seed + 29));
+  let gC = gauss(dCr, 3.3) * (0.88 + 0.2 * noise2(xk / 3.1, yk / 3.1, seed + 28) + 0.1 * noise2(xk / 1.6, yk / 1.6, seed + 29));
+  // in some worlds a second, clearly lesser mountain stands elsewhere
+  let d2 = 1e9;
+  if (L.second) { d2 = Math.hypot(sx - L.second[0], sy - L.second[1]); gC = Math.max(gC, L.second[3] * gauss(d2, L.second[2]) * (0.9 + 0.2 * noise2(xk / 2.3, yk / 2.3, seed + 30))); }
   const dA = Math.hypot(sx - L.arid.x, sy - L.arid.y) + 2.6 * fbm(xk / 6.5, yk / 6.5, 3, seed + 65);
   // There are no lesser ranges: the great mountain is the only high ground. Where the crust converges the land
   // rises into hill country instead, in patches rather than continuous belts.
   const gA = 0;
   const table = smoothstep(L.arid.rad, L.arid.rad - 1.6, dA) * (1 - smoothstep(0.08, 0.4, gC));
-  const gHl = 0.13 * gauss(dCr, 7) * (1 - sat(gC * 1.5)) + (1 - table) * 0.24 * smoothstep(0.2, 0.9, cW) * smoothstep(-0.25, 0.3, fbm(xk / 7, yk / 7, 3, seed + 23));
+  const gHl = (0.13 * gauss(dCr, 7) + 0.1 * gauss(d2, 5.5)) * (1 - sat(gC * 1.5)) + (1 - table) * 0.24 * smoothstep(0.1, 0.75, cW) * smoothstep(-0.35, 0.2, fbm(xk / 7, yk / 7, 3, seed + 23));
   const rift = Math.max(0, -cW);
-  return { sx, sy, rr: Math.hypot(sx - L.hot[0], sy - L.hot[1]), gC, gA, gHl: gHl + 0.035 * smoothstep(0.05, 0.5, fbm(xk / 5.5, yk / 5.5, 3, seed + 24)) * (1 - table), rift, table, dA, dCr, belt: Math.max(0, cW),
+  return { sx, sy, rr: Math.hypot(sx - L.hot[0], sy - L.hot[1]), gC, gA, gHl: gHl + 0.05 * smoothstep(0.05, 0.5, fbm(xk / 5.5, yk / 5.5, 3, seed + 24)) * (1 - table), rift, table, dA, dCr, d2, belt: Math.max(0, cW),
     up: smoothstep(0.12, 0.24, fbm(xk / 12, yk / 12, 3, seed + 71) + 0.06 * fbm(xk / 2.2, yk / 2.2, 3, seed + 72)) * (1 - table) };   // gentle uplands with a real edge
 }
 // elevation tendency: rifts and the spreading centre sink, ranges and their belts rise, broad swells do the rest
-function tendency(L, xk, yk, f) {
+function tendency(L, xk, yk, f, bare = false) {
   const seed = L.seed;
+  // scattered rises of the sea floor: where they stand in water they are islands and skerries, on land they change nothing much
+  // (left out when the sea level is being chosen, so adding islands does not move the coasts)
+  const isl = bare ? 0 : 0.6 * smoothstep(0.37, 0.53, noise2(f.sx / 3.7 + 7.7, f.sy / 3.7 + 3.1, seed + 91)) + 0.45 * smoothstep(0.43, 0.56, noise2(f.sx / 1.5 + 1.3, f.sy / 1.5 + 9.4, seed + 92));
+  const mts = 1.3 * (f.gC + f.gA) + 0.9 * gauss(f.dCr, 10) + 0.7 * gauss(f.d2, 7);      // mountains stand well inland
   if (L.sea === 'sounds') {
     // A web of sounds instead of one open basin: the sea follows the zero lines of broad, warped noise fields, which
     // wind across the whole map, branch, and enclose islands. Relief closes them, so they keep to the lowlands.
@@ -59,10 +66,10 @@ function tendency(L, xk, yk, f) {
     // reaches widen into bays and pinch into narrows along their length
     const ch = Math.min(Math.abs(n1), Math.abs(n2) + 0.07) / (0.45 + 1.1 * sat(0.5 + 1.1 * fbm(xk / 8.5, yk / 8.5, 2, seed + 83)));
     return 0.9 * sat(ch / 0.3) + 0.5 * (smoothstep(1, 15, f.rr) - 0.5) + 0.13 * fbm(xk / 5.5, yk / 5.5, 3, seed + 62) + 0.05 * fbm(xk / 1.7, yk / 1.7, 3, seed + 63)
-      + 1.3 * (f.gC + f.gA) + 2.2 * f.gHl + 0.9 * f.table + 0.12 * f.up + 0.9 * gauss(f.dCr, 10) + 0.55 * smoothstep(0.08, 0.55, f.belt);   // the sounds keep clear of the ranges and their foothill belts
+      + isl + mts + 2.2 * f.gHl + 0.9 * f.table + 0.12 * f.up + 0.55 * smoothstep(0.08, 0.55, f.belt);   // the sounds keep clear of the ranges and their foothill belts
   }
   return 0.6 * (smoothstep(2, 21, f.rr) - 0.5) - 0.8 * f.rift + 0.72 * fbm(xk / 15, yk / 15, 4, seed + 61) + 0.32 * fbm(xk / 5.5, yk / 5.5, 3, seed + 62)
-    + 0.1 * fbm(xk / 1.7, yk / 1.7, 3, seed + 63) + 1.3 * (f.gC + f.gA) + 1.6 * f.gHl + 0.9 * f.table + 0.22 * f.up + 0.9 * gauss(f.dCr, 10);   // the great mountain stands well inland
+    + 0.1 * fbm(xk / 1.7, yk / 1.7, 3, seed + 63) + isl + mts + 1.6 * f.gHl + 0.9 * f.table + 0.22 * f.up;
 }
 
 // 'basin' = one open central sea; 'sounds' = a tighter, branching sea that threads the lowlands
@@ -74,7 +81,7 @@ export function getLayout(seed) {
   const r = mulberry32((Math.imul(seed | 0, 2654435761) ^ 0x9e3779b9) >>> 0);
   // a spreading centre lies somewhere under the middle of the world: plates drift away from it, each with
   // its own extra motion, so the middle is pulled apart (sea) and the plates collide further out (ranges)
-  const L = { seed, sea: SEA, plates: [], massifSeg: [0, 0, 1, 1], arid: { x: -99, y: -99, rad: 1 }, hot: [25 + (r() - 0.5) * 8, 25 + (r() - 0.5) * 8], norm: 1, _a: [0, 0], _b: [0, 0] };
+  const L = { seed, sea: SEA, second: null, plates: [], massifSeg: [0, 0, 1, 1], arid: { x: -99, y: -99, rad: 1 }, hot: [25 + (r() - 0.5) * 8, 25 + (r() - 0.5) * 8], norm: 1, _a: [0, 0], _b: [0, 0] };
   for (let k = 0, n = 7 + Math.floor(r() * 3); k < n; k++) {
     const x = -4 + r() * 58, y = -4 + r() * 58, dl = Math.hypot(x - L.hot[0], y - L.hot[1]) || 1, a = r() * Math.PI * 2, v = 0.55 + 0.5 * r();
     L.plates.push([x, y, 0.45 * (x - L.hot[0]) / dl + Math.cos(a) * v, 0.45 * (y - L.hot[1]) / dl + Math.sin(a) * v]);
@@ -92,6 +99,7 @@ export function getLayout(seed) {
     L.gorge = [[P[0] - ax * 2, P[1] - ay * 2], [P[0] + ax * rad * 0.25 - ay * (r() - 0.5) * 3, P[1] + ay * rad * 0.25 + ax * (r() - 0.5) * 3], [ca[0] + ax * (rad + 3), ca[1] + ay * (rad + 3)]];
     L.sand = [P[0] - ax * 1.5 - ay * sgn * 3.6, P[1] - ay * 1.5 + ax * sgn * 3.6, 2.6 + r() * 0.8, 3.2 + r() * 0.9];
     L.badlands = [P[0] + ay * sgn * 4.2, P[1] - ax * sgn * 4.2, 2.6 + r() * 0.8, 3.0 + r() * 0.8];
+    L.corners = [km, ka];
   }
   const G = 96, at = (i) => (i + 0.5) / G * 50;
   // the hardest collision in this world sets the scale: it becomes the great range
@@ -100,9 +108,14 @@ export function getLayout(seed) {
   cs.sort((p, q) => p - q); L.norm = 1 / Math.max(1e-6, cs[Math.floor(cs.length * 0.98)]);
   // sea level: the quantile of the tendency field that leaves the chosen share of the world under water
   const seaShare = (SEA === 'sounds' ? 0.19 : 0.25) + r() * 0.05, E = new Float32Array(G * G);
+  if (r() < 0.35) {                         // the second mountain, in one of the two corners still free
+    const C = [[0, 0], [50, 0], [50, 50], [0, 50]], free = [0, 1, 2, 3].filter((k) => !L.corners.includes(k)), cs2 = C[free[Math.floor(r() * free.length)]];
+    const ux = Math.sign(25 - cs2[0]) * Math.SQRT1_2, uy = Math.sign(25 - cs2[1]) * Math.SQRT1_2, d = 15 + r() * 6, j = (r() - 0.5) * 9;
+    L.second = [cs2[0] + ux * d - uy * j, cs2[1] + uy * d + ux * j, 2.4 + r() * 0.4, 0.56 + r() * 0.12];
+  }
   let bestA = [25, 25, 0];
   for (let j = 0; j < G; j++) for (let i = 0; i < G; i++) {
-    const xk = at(i), yk = at(j), f = fields(L, xk, yk); E[j * G + i] = tendency(L, xk, yk, f);
+    const xk = at(i), yk = at(j), f = fields(L, xk, yk); E[j * G + i] = tendency(L, xk, yk, f, true);
     if (f.gA > bestA[2]) bestA = [xk, yk, f.gA];
   }
   L.T = Float32Array.from(E).sort()[Math.floor(seaShare * G * G)];
@@ -123,7 +136,7 @@ export function seededDesign(xk, yk, seed) {
 
   // ---- uplift ----------------------------------------------------------------------------------
   let U = 0.006 * f.up + 0.012 + 0.034 * smoothstep(0.1, 0.65, fbm(xk / 7.5, yk / 7.5, 3, seed + 31)) * (1 - plateau);
-  U += gHl + 2.0 * gA + 1.6 * gC + 0.05 * plateau;
+  U += gHl + 2.0 * gA + 1.45 * gC + 0.05 * plateau;
   U += 0.012 * (0.5 + 0.5 * noise2(xk / 1.1, yk / 1.1, seed + 35)) * (1 - plateau);
   U += 0.06 * ridged(xk / 3.2, yk / 3.2, 3, seed + 32) * (0.3 + gA + gHl * 3);
   U *= 1 - 0.86 * gG;
@@ -133,7 +146,7 @@ export function seededDesign(xk, yk, seed) {
   let h0;
   if (land < 0) h0 = -Math.min(260, 3 + 55 * Math.pow(-land, 1.3));
   else {
-    h0 = 6 + 24 * sat(land / 3) + 130 * f.up * sat(land / 2.5) + 600 * gHl + 1800 * gA + 1700 * gC + 12 * fbm(xk / 2, yk / 2, 3, seed + 33);
+    h0 = 6 + 24 * sat(land / 3) + 130 * f.up * sat(land / 2.5) + 600 * gHl + 1800 * gA + 1550 * gC + 12 * fbm(xk / 2, yk / 2, 3, seed + 33);
     h0 += plateau * (1100 + 10 * dGM + 45 * fbm(xk / 5, yk / 5, 3, seed + 34));
     const notch = 105 + 40 * Math.max(0, dGM - 1);
     h0 = Math.max(1.5, h0 + (Math.min(h0, notch) - h0) * Math.sqrt(gG));
