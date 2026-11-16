@@ -59,7 +59,8 @@ export class World {
     this.LN = data.meta.lakeRes; this.lakes = data.lakes;
     this.seed = data.meta.seed;
     this.coldCfg = data.meta.cold || null;
-    this.play = data.meta.play || { x0: 0, size: this.S };       // the playable square inside the generated world
+    // the playable rectangle inside the generated world: x from x0 over size, z from z0 over sizeZ (square unless given)
+    { const p = data.meta.play || { x0: 0, size: this.S }; this.play = { x0: p.x0, size: p.size, z0: p.z0 ?? p.x0, sizeZ: p.sizeZ ?? p.size }; }
     this.outer = data.outer || null; this.outerMeta = data.meta.outer || null;
     this.edits = new Map();           // 1 m column edits (mining / earthworks), metres of height change
     this._initRivers(data.rivers);
