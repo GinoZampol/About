@@ -201,7 +201,7 @@ export function buildDesign(R, seed, domain = { x0: 0, size: WORLD_KM }) {
   if (shelf) {
     // Relief grows with distance from the sea: rolling ground and ranges start from a coastal lowland instead of
     // standing straight out of the water. Tablelands are exempt, so where one meets the sea it ends in a cliff.
-    oneSea(d, R, domain.size / R, seed);
+    if (!process.env.LEV_RAW_SEA) oneSea(d, R, domain.size / R, seed, domain);
     const dist = new Float32Array(n).fill(1e9), cell = domain.size / R, D = 1.41421356;
     for (let c = 0; c < n; c++) if (d.land[c] < 0) dist[c] = 0;
     for (let j = 0; j < R; j++) for (let i = 0; i < R; i++) { const c = j * R + i; let v = dist[c];
@@ -218,20 +218,23 @@ export function buildDesign(R, seed, domain = { x0: 0, size: WORLD_KM }) {
   return d;
 }
 
-// One sea, no lakes. A water body cut off from the main sea by only a short neck of low ground is joined to it
-// by a narrows across that neck (never through hills, mountains or tableland). Long canals are not dug: water
-// that cannot be joined that way is filled in as low ground, unless it touches the edge of the world, where it
-// reads as sea continuing beyond the border.
-function oneSea(d, R, cellKm, seed) {
+// One sea, no lakes. Another arm of the outer sea (water that reaches the edge of the world) is joined to the main
+// sea by a winding channel over the lowest ground between them, never through hills, mountains or tableland.
+// Inland water is joined only across a short neck; otherwise it is filled in as low ground. Specks of land too
+// small to be islands are drowned.
+function oneSea(d, R, cellKm, seed, domain) {
+  // only the playable world counts: two waters that meet beyond the border are still separate for anyone inside it
+  const lo = Math.max(0, Math.ceil((0 - domain.x0) / cellKm - 0.5)), hi = Math.min(R - 1, Math.floor((WORLD_KM - domain.x0) / cellKm - 0.5));
+  const inPlay = (x, y) => x >= lo && y >= lo && x <= hi && y <= hi;
   const n = R * R, comp = new Int32Array(n), stack = new Int32Array(n), cost = new Float32Array(n), prev = new Int32Array(n);
   const label = () => {
     comp.fill(-1); const sizes = [], edge = []; let nc = 0;
     for (let s0 = 0; s0 < n; s0++) {
-      if (d.land[s0] >= 0 || comp[s0] >= 0) continue;
+      if (d.land[s0] >= 0 || comp[s0] >= 0 || !inPlay(s0 % R, (s0 / R) | 0)) continue;
       let sp = 0, cnt = 0, e = false; stack[sp++] = s0; comp[s0] = nc;
       while (sp) {
-        const c = stack[--sp], i = c % R, j = (c / R) | 0; cnt++; if (i === 0 || j === 0 || i === R - 1 || j === R - 1) e = true;
-        for (let dj = -1; dj <= 1; dj++) for (let di = -1; di <= 1; di++) { const x = i + di, y = j + dj; if (x < 0 || y < 0 || x >= R || y >= R) continue; const q = y * R + x; if (d.land[q] < 0 && comp[q] < 0) { comp[q] = nc; stack[sp++] = q; } }
+        const c = stack[--sp], i = c % R, j = (c / R) | 0; cnt++; if (i === lo || j === lo || i === hi || j === hi) e = true;
+        for (let dj = -1; dj <= 1; dj++) for (let di = -1; di <= 1; di++) { const x = i + di, y = j + dj; if (!inPlay(x, y)) continue; const q = y * R + x; if (d.land[q] < 0 && comp[q] < 0) { comp[q] = nc; stack[sp++] = q; } }
       }
       sizes.push(cnt); edge.push(e); nc++;
     }
@@ -239,7 +242,10 @@ function oneSea(d, R, cellKm, seed) {
     return { sizes, edge, nc, big };
   };
   // what it costs to cut a strait through one cell
-  const weight = (q) => (d.land[q] < 0 ? 0.12 : d.mesa[q] > 0.25 || d.U[q] > 0.45e-3 ? Infinity : 1 + 0.5 * d.land[q] + 2.2e4 * Math.max(0, d.U[q] - 0.03e-3));
+  // (a coherent random factor makes the cheapest route wander like a natural channel instead of running straight)
+  const weight = (q) => (d.land[q] < 0 ? 0.12 : d.mesa[q] > 0.25 || d.U[q] > 0.45e-3 ? Infinity
+    : (1 + 0.5 * d.land[q] + 2.2e4 * Math.max(0, d.U[q] - 0.03e-3)) * (0.45 + 1.5 * sat(0.5 + 1.3 * noise2((q % R) * cellKm / 2.6, ((q / R) | 0) * cellKm / 2.6, seed + 96)))
+      * (1 + 7 * sat(1 - Math.min(q % R - lo, hi - q % R, ((q / R) | 0) - lo, hi - ((q / R) | 0)) * cellKm / 3)));       // and it keeps off the border
   const hk = new Float32Array(n * 2), hv = new Int32Array(n * 2);
   for (let round = 0; round < 5; round++) {
     const L = label(); if (L.nc <= 1) return;
@@ -249,10 +255,10 @@ function oneSea(d, R, cellKm, seed) {
     const pop = () => { const v = hv[0], k = hk[--hn], w = hv[hn]; let i = 0; for (;;) { let c = 2 * i + 1; if (c >= hn) break; if (c + 1 < hn && hk[c + 1] < hk[c]) c++; if (hk[c] >= k) break; hk[i] = hk[c]; hv[i] = hv[c]; i = c; } hk[i] = k; hv[i] = w; return v; };
     for (let c = 0; c < n; c++) if (comp[c] === L.big) { cost[c] = 0; prev[c] = -1; const i = c % R, j = (c / R) | 0; if (i && j && i < R - 1 && j < R - 1 && (d.land[c - 1] >= 0 || d.land[c + 1] >= 0 || d.land[c - R] >= 0 || d.land[c + R] >= 0)) push(0, c); }
     while (hn) {
-      const k0 = hk[0], c = pop(); if (k0 > cost[c] || k0 > 6) continue;
+      const k0 = hk[0], c = pop(); if (k0 > cost[c]) continue;
       const i = c % R, j = (c / R) | 0;
       for (let dj = -1; dj <= 1; dj++) for (let di = -1; di <= 1; di++) {
-        if (!di && !dj) continue; const x = i + di, y = j + dj; if (x < 0 || y < 0 || x >= R || y >= R) continue;
+        if (!di && !dj) continue; const x = i + di, y = j + dj; if (!inPlay(x, y)) continue;
         const q = y * R + x; if (comp[q] === L.big) continue;
         const w = weight(q); if (w === Infinity) continue;
         const nk = k0 + w * cellKm * (di && dj ? 1.4142 : 1); if (nk < cost[q]) { cost[q] = nk; prev[q] = c; if (hn < hk.length - 1) push(nk, q); }
@@ -263,11 +269,13 @@ function oneSea(d, R, cellKm, seed) {
     for (let c = 0; c < n; c++) { const k = comp[c]; if (k >= 0 && k !== L.big && cost[c] < Infinity && (best[k] < 0 || cost[c] < cost[best[k]])) best[k] = c; }
     let carved = 0;
     for (let k = 0; k < L.nc; k++) {
+      if (process.env.LEV_DEBUG_SEA && k !== L.big && best[k] < 0 && L.sizes[k] * cellKm * cellKm > 0.5) console.log(`round ${round} body ${k}: ${(L.sizes[k] * cellKm * cellKm).toFixed(1)} km2 edge=${L.edge[k]} UNREACHED`);
       if (k === L.big || best[k] < 0) continue;
-      const areaKm2 = L.sizes[k] * cellKm * cellKm; if (areaKm2 < 1.5 || cost[best[k]] > 4.5) continue;
+      if (process.env.LEV_DEBUG_SEA && L.sizes[k] * cellKm * cellKm > 0.5) console.log(`round ${round} body ${k}: ${(L.sizes[k] * cellKm * cellKm).toFixed(1)} km2 edge=${L.edge[k]} cost=${cost[best[k]].toFixed(1)} at ${(best[k] % R * cellKm + domain.x0).toFixed(1)},${(((best[k] / R) | 0) * cellKm + domain.x0).toFixed(1)}`);
+      const areaKm2 = L.sizes[k] * cellKm * cellKm; if (areaKm2 < 2 || cost[best[k]] > (L.edge[k] && areaKm2 >= 3 ? Infinity : 4.5)) continue;   // an arm of the outer sea is always joined; an inland pond only across a short neck
       for (let c = best[k]; c >= 0 && comp[c] !== L.big; c = prev[c]) {
         if (d.land[c] < 0) continue;
-        const i = c % R, j = (c / R) | 0, wKm = 1.5 + 0.9 * noise2(i * cellKm / 1.7, j * cellKm / 1.7, seed + 97), rc = Math.max(1, wKm / 2 / cellKm), ri = Math.ceil(rc);
+        const i = c % R, j = (c / R) | 0, wKm = 1.25 + 0.9 * noise2(i * cellKm / 1.9, j * cellKm / 1.9, seed + 97), rc = Math.max(1, wKm / 2 / cellKm), ri = Math.ceil(rc);
         for (let dj = -ri; dj <= ri; dj++) for (let di = -ri; di <= ri; di++) {
           const x = i + di, y = j + dj; if (x < 0 || y < 0 || x >= R || y >= R) continue;
           const t = Math.hypot(di, dj) / rc; if (t >= 1) continue;
@@ -279,5 +287,20 @@ function oneSea(d, R, cellKm, seed) {
     if (!carved) break;
   }
   const L = label();
-  for (let c = 0; c < n; c++) { const k = comp[c]; if (k >= 0 && k !== L.big && !L.edge[k]) { d.land[c] = 0.35; d.h0[c] = 4 + 3 * Math.min(1, -Math.min(0, d.h0[c]) / 40); } }
+  for (let c = 0; c < n; c++) { const k = comp[c]; if (k >= 0 && k !== L.big && !(L.edge[k] && L.sizes[k] * cellKm * cellKm >= 3)) { d.land[c] = 0.35; d.h0[c] = 4 + 3 * Math.min(1, -Math.min(0, d.h0[c]) / 40); } }
+  // drown specks of land: an island has to be at least about a square kilometre
+  comp.fill(-1);
+  for (let s0 = 0; s0 < n; s0++) {
+    if (d.land[s0] < 0 || comp[s0] >= 0) continue;
+    let sp = 0, cnt = 0; stack[sp++] = s0; comp[s0] = 1; const first = cnt;
+    const cells = [];
+    while (sp) {
+      const c = stack[--sp], i = c % R, j = (c / R) | 0; cnt++; if (cells.length < 4000) cells.push(c);
+      if (i > 0 && d.land[c - 1] >= 0 && comp[c - 1] < 0) { comp[c - 1] = 1; stack[sp++] = c - 1; }
+      if (i < R - 1 && d.land[c + 1] >= 0 && comp[c + 1] < 0) { comp[c + 1] = 1; stack[sp++] = c + 1; }
+      if (j > 0 && d.land[c - R] >= 0 && comp[c - R] < 0) { comp[c - R] = 1; stack[sp++] = c - R; }
+      if (j < R - 1 && d.land[c + R] >= 0 && comp[c + R] < 0) { comp[c + R] = 1; stack[sp++] = c + R; }
+    }
+    if (cnt * cellKm * cellKm < 0.9 && cnt <= cells.length) for (const c of cells) d.land[c] = -0.25;
+  }
 }

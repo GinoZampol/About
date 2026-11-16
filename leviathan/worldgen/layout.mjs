@@ -79,9 +79,9 @@ function tendency(L, xk, yk, f, bare = false) {
     + 0.1 * fbm(xk / 1.7, yk / 1.7, 3, seed + 63) + mts + 1.6 * f.gHl + 0.9 * f.table + 0.22 * f.up);
 }
 
-// whether the seed may add its occasional second mountain ('auto'), or the great mountain stands alone ('none')
-let SECOND = 'auto';
-export function setSecond(s) { SECOND = s === 'none' ? 'none' : 'auto'; cache = null; }
+// the great mountain stands alone ('none', the default), or the seed may add an occasional second, lesser one ('auto')
+let SECOND = 'none';
+export function setSecond(s) { SECOND = s === 'auto' ? 'auto' : 'none'; cache = null; }
 // 'basin' = one open central sea; 'sounds' = a tighter, branching sea that threads the lowlands
 let SEA = 'basin';
 export function setSeaStyle(s) { SEA = s === 'sounds' ? 'sounds' : 'basin'; cache = null; }
@@ -136,7 +136,7 @@ export function getLayout(seed) {
     L.islands = [];
     for (let k = 0, want = 1 + Math.floor(r() * 3), tries = 0; k < want && cand.length && tries < 300; tries++) {
       const c = cand[Math.floor(r() * cand.length)]; if (L.islands.some((q) => Math.hypot(q[0] - c[0], q[1] - c[1]) < 8)) continue;
-      const f = fields(L, c[0], c[1]); L.islands.push([f.sx, f.sy, 1.3 + r() * 1.3, r() * Math.PI, 1.15 + r() * 0.45]); k++;
+      const f = fields(L, c[0], c[1]); L.islands.push([f.sx, f.sy, 1.7 + r() * 1.3, r() * Math.PI, 1.15 + r() * 0.45]); k++;
     }
   }
   L.c = [cx / cn, cy / cn]; L.massif = [(L.massifSeg[0] + L.massifSeg[2]) / 2, (L.massifSeg[1] + L.massifSeg[3]) / 2]; L.alpsCentre = bestA;
