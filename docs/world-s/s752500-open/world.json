@@ -1,0 +1,100 @@
+{
+ "name": "The Leviathan",
+ "version": 2,
+ "variant": "B",
+ "layout": "S",
+ "wind": 0,
+ "cold": null,
+ "play": {
+  "x0": 3000,
+  "size": 50000
+ },
+ "seed": 752500,
+ "sizeM": 56000,
+ "heightRes": 4096,
+ "mapRes": 1024,
+ "lakeRes": 2048,
+ "riverMaskRes": 2048,
+ "hOffset": 300,
+ "hScale": 0.125,
+ "seaLevel": 0,
+ "maxElevation": 6683,
+ "landKm2": 2241,
+ "riverKm": 956,
+ "mapChannels": [
+  "rock",
+  "strat",
+  "precip",
+  "forest",
+  "dark",
+  "wet",
+  "sand",
+  "ao",
+  "mesa",
+  "flow",
+  "ice"
+ ],
+ "lakes": [],
+ "landmarks": [
+  {
+   "name": "Central Valley (ocean shore)",
+   "x": 39737,
+   "z": 19544,
+   "h": 7,
+   "note": "low ground on the shore of the central ocean"
+  },
+  {
+   "name": "The Crown",
+   "x": 15251,
+   "z": 7731,
+   "h": 4638,
+   "note": "the highest summit of the great range"
+  },
+  {
+   "name": "The Badlands",
+   "x": 48565,
+   "z": 9190,
+   "h": 0,
+   "note": "the dry tableland that kept its sedimentary cover"
+  },
+  {
+   "name": "Central ocean",
+   "x": 30828,
+   "z": 25440,
+   "h": 0,
+   "note": "the sinking basin at the heart of the world"
+  }
+ ],
+ "config": {
+  "K0": 0.0000052,
+  "levels": [
+   [
+    256,
+    110,
+    20000
+   ],
+   [
+    512,
+    60,
+    10000
+   ],
+   [
+    1024,
+    40,
+    6000
+   ],
+   [
+    2048,
+    30,
+    8000
+   ],
+   [
+    4096,
+    18,
+    7000
+   ]
+  ],
+  "ELA": 1700,
+  "Q_RIVER": 1200000
+ }
+}
