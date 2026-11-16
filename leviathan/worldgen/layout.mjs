@@ -35,16 +35,16 @@ function fields(L, xk, yk) {
   const seed = L.seed;
   const sx = xk + 3.2 * fbm(xk / 19, yk / 19, 3, seed + 11) + 1.1 * fbm(xk / 6, yk / 6, 3, seed + 12) + 0.3 * fbm(xk / 1.9, yk / 1.9, 2, seed + 15);
   const sy = yk + 3.2 * fbm(xk / 19, yk / 19, 3, seed + 13) + 1.1 * fbm(xk / 6, yk / 6, 3, seed + 14) + 0.3 * fbm(xk / 1.9, yk / 1.9, 2, seed + 16);
-  const cN = Math.min(1.35, convergence(L, sx, sy, 3.0) * L.norm), cW = Math.max(-1.2, Math.min(1.2, convergence(L, sx, sy, 5.5) * L.norm));   // range core, and the broad belt around it
-  // along-strike variety: summits and passes
-  const m = Math.max(0, cN) * (0.62 + 0.5 * fbm(xk / 8, yk / 8, 2, seed + 21) + 0.16 * noise2(xk / 2.4, yk / 2.4, seed + 22));
+  const cW = Math.max(-1.2, Math.min(1.2, convergence(L, sx, sy, 5.5) * L.norm));   // broad belts where the crust converges (+) or parts (-)
   // the two guided places: the great mountain with its back to one corner, the arid canyon country in another
   const [dCr] = segDist(sx, sy, L.massifSeg[0], L.massifSeg[1], L.massifSeg[2], L.massifSeg[3]);
-  const gC = gauss(dCr, 3.7) * (0.88 + 0.2 * noise2(xk / 3.1, yk / 3.1, seed + 28) + 0.1 * noise2(xk / 1.6, yk / 1.6, seed + 29));
+  const gC = gauss(dCr, 3.3) * (0.88 + 0.2 * noise2(xk / 3.1, yk / 3.1, seed + 28) + 0.1 * noise2(xk / 1.6, yk / 1.6, seed + 29));
   const dA = Math.hypot(sx - L.arid.x, sy - L.arid.y) + 2.6 * fbm(xk / 6.5, yk / 6.5, 3, seed + 65);
-  const gA = Math.min(m, 0.45) * smoothstep(0.12, 0.3, m) * (1 - smoothstep(L.arid.rad + 3, L.arid.rad - 2, dA));
-  const table = smoothstep(L.arid.rad, L.arid.rad - 1.6, dA) * (1 - smoothstep(0.08, 0.4, gC)) * (1 - smoothstep(0.06, 0.3, gA));
-  const gHl = 0.13 * gauss(dCr, 7.5) * (1 - sat(gC * 1.5)) + (1 - table) * 0.2 * smoothstep(0.25, 0.9, cW) * (1 - sat(m * 1.6)) * smoothstep(-0.25, 0.3, fbm(xk / 7, yk / 7, 3, seed + 23));
+  // There are no lesser ranges: the great mountain is the only high ground. Where the crust converges the land
+  // rises into hill country instead, in patches rather than continuous belts.
+  const gA = 0;
+  const table = smoothstep(L.arid.rad, L.arid.rad - 1.6, dA) * (1 - smoothstep(0.08, 0.4, gC));
+  const gHl = 0.13 * gauss(dCr, 7) * (1 - sat(gC * 1.5)) + (1 - table) * 0.24 * smoothstep(0.2, 0.9, cW) * smoothstep(-0.25, 0.3, fbm(xk / 7, yk / 7, 3, seed + 23));
   const rift = Math.max(0, -cW);
   return { sx, sy, rr: Math.hypot(sx - L.hot[0], sy - L.hot[1]), gC, gA, gHl: gHl + 0.035 * smoothstep(0.05, 0.5, fbm(xk / 5.5, yk / 5.5, 3, seed + 24)) * (1 - table), rift, table, dA, dCr, belt: Math.max(0, cW),
     up: smoothstep(0.12, 0.24, fbm(xk / 12, yk / 12, 3, seed + 71) + 0.06 * fbm(xk / 2.2, yk / 2.2, 3, seed + 72)) * (1 - table) };   // gentle uplands with a real edge
@@ -84,7 +84,7 @@ export function getLayout(seed) {
     const C = [[0, 0], [50, 0], [50, 50], [0, 50]], km = Math.floor(r() * 4), ka = (km + 1 + Math.floor(r() * 3)) % 4;
     const cm = C[km], ux = Math.sign(25 - cm[0]) * Math.SQRT1_2, uy = Math.sign(25 - cm[1]) * Math.SQRT1_2, d = 18.5 + r() * 2.5, t = (r() - 0.5) * 0.9;
     const mx = cm[0] + ux * d, my = cm[1] + uy * d, px = -uy * Math.cos(t) - ux * Math.sin(t), py = ux * Math.cos(t) - uy * Math.sin(t);
-    L.massifSeg = [mx - px * 1.8, my - py * 1.8, mx + px * 1.8, my + py * 1.8];
+    L.massifSeg = [mx - px * 1.6, my - py * 1.6, mx + px * 1.6, my + py * 1.6];
     const ca = C[ka], ax = Math.sign(25 - ca[0]) * Math.SQRT1_2, ay = Math.sign(25 - ca[1]) * Math.SQRT1_2, rad = 16 + r() * 2, sgn = r() < 0.5 ? 1 : -1;
     L.arid = { x: ca[0] - ax * 2, y: ca[1] - ay * 2, rad };
     const P = [ca[0] + ax * rad * 0.45, ca[1] + ay * rad * 0.45];
@@ -123,7 +123,7 @@ export function seededDesign(xk, yk, seed) {
 
   // ---- uplift ----------------------------------------------------------------------------------
   let U = 0.006 * f.up + 0.012 + 0.034 * smoothstep(0.1, 0.65, fbm(xk / 7.5, yk / 7.5, 3, seed + 31)) * (1 - plateau);
-  U += gHl + 2.0 * gA + 1.9 * gC + 0.05 * plateau;
+  U += gHl + 2.0 * gA + 1.6 * gC + 0.05 * plateau;
   U += 0.012 * (0.5 + 0.5 * noise2(xk / 1.1, yk / 1.1, seed + 35)) * (1 - plateau);
   U += 0.06 * ridged(xk / 3.2, yk / 3.2, 3, seed + 32) * (0.3 + gA + gHl * 3);
   U *= 1 - 0.86 * gG;
@@ -133,7 +133,7 @@ export function seededDesign(xk, yk, seed) {
   let h0;
   if (land < 0) h0 = -Math.min(260, 3 + 55 * Math.pow(-land, 1.3));
   else {
-    h0 = 6 + 24 * sat(land / 3) + 130 * f.up * sat(land / 2.5) + 600 * gHl + 1800 * gA + 1950 * gC + 12 * fbm(xk / 2, yk / 2, 3, seed + 33);
+    h0 = 6 + 24 * sat(land / 3) + 130 * f.up * sat(land / 2.5) + 600 * gHl + 1800 * gA + 1700 * gC + 12 * fbm(xk / 2, yk / 2, 3, seed + 33);
     h0 += plateau * (1100 + 10 * dGM + 45 * fbm(xk / 5, yk / 5, 3, seed + 34));
     const notch = 105 + 40 * Math.max(0, dGM - 1);
     h0 = Math.max(1.5, h0 + (Math.min(h0, notch) - h0) * Math.sqrt(gG));

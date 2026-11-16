@@ -120,7 +120,7 @@ function stats(h, N, g) {
 if (import.meta.url === `file://${process.argv[1]}`) {
   const stage = arg('stage', 'all');
   setVariant(CFG.variant); setSeaStyle(CFG.sea);
-  const cacheFile = path.join(CACHE, `eroded_${CFG.res}_${CFG.seed}${CFG.variant === 'A' ? '' : '_' + CFG.variant}${CFG.wind ? '_w' + CFG.wind : ''}.f32`);
+  const cacheFile = path.join(CACHE, `eroded_${CFG.res}_${CFG.seed}${CFG.variant === 'A' ? '' : '_' + CFG.variant}${CFG.wind ? '_w' + CFG.wind : ''}${CFG.sea !== 'basin' ? '_' + CFG.sea : ''}.f32`);
   let world;
   if (stage === 'finish' && fs.existsSync(cacheFile)) {
     const buf = fs.readFileSync(cacheFile);

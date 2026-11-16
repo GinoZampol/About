@@ -514,7 +514,7 @@ export async function finishWorld(world, cfg, ROOT, log) {
     }
     if (sb >= 0) { const [x, y] = cellXY(sb); landmarks.push(lm('Central Valley (ocean shore)', { x, z: S - y, h: h[sb] }, 'low ground on the shore of the central ocean')); }
     landmarks.push(lm('The Crown', peak(L.massif[0] - 7, L.massif[0] + 7, L.massif[1] - 7, L.massif[1] + 7), 'the great massif'));
-    landmarks.push(lm('The Horns', peak(L.alpsCentre[0] - 6, L.alpsCentre[0] + 6, L.alpsCentre[1] - 6, L.alpsCentre[1] + 6), 'the alpine peaks'));
+    if (L.alpsCentre[2] > 0.05) landmarks.push(lm('The Horns', peak(L.alpsCentre[0] - 6, L.alpsCentre[0] + 6, L.alpsCentre[1] - 6, L.alpsCentre[1] + 6), 'the alpine peaks'));
     landmarks.push(lm('Mesa country', km(L.mouth[0], L.mouth[1]), 'where the plateau river reaches the lowland'));
     landmarks.push(lm('The Sand Sea', km(L.sand[0], L.sand[1]), 'dune sea on the plateau'));
     landmarks.push(lm('Central ocean', km(L.c[0], L.c[1]), 'the middle of the world'));
