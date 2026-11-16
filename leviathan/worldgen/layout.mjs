@@ -40,11 +40,11 @@ function fields(L, xk, yk) {
   const m = Math.max(0, cN) * (0.62 + 0.5 * fbm(xk / 8, yk / 8, 2, seed + 21) + 0.16 * noise2(xk / 2.4, yk / 2.4, seed + 22));
   // the two guided places: the great mountain with its back to one corner, the arid canyon country in another
   const [dCr] = segDist(sx, sy, L.massifSeg[0], L.massifSeg[1], L.massifSeg[2], L.massifSeg[3]);
-  const gC = gauss(dCr, 5.3) * (0.88 + 0.2 * noise2(xk / 3.1, yk / 3.1, seed + 28) + 0.1 * noise2(xk / 1.6, yk / 1.6, seed + 29));
+  const gC = gauss(dCr, 3.7) * (0.88 + 0.2 * noise2(xk / 3.1, yk / 3.1, seed + 28) + 0.1 * noise2(xk / 1.6, yk / 1.6, seed + 29));
   const dA = Math.hypot(sx - L.arid.x, sy - L.arid.y) + 2.6 * fbm(xk / 6.5, yk / 6.5, 3, seed + 65);
   const gA = Math.min(m, 0.45) * smoothstep(0.12, 0.3, m) * (1 - smoothstep(L.arid.rad + 3, L.arid.rad - 2, dA));
   const table = smoothstep(L.arid.rad, L.arid.rad - 1.6, dA) * (1 - smoothstep(0.08, 0.4, gC)) * (1 - smoothstep(0.06, 0.3, gA));
-  const gHl = 0.13 * gauss(dCr, 10) * (1 - sat(gC * 1.5)) + (1 - table) * 0.2 * smoothstep(0.25, 0.9, cW) * (1 - sat(m * 1.6)) * smoothstep(-0.25, 0.3, fbm(xk / 7, yk / 7, 3, seed + 23));
+  const gHl = 0.13 * gauss(dCr, 7.5) * (1 - sat(gC * 1.5)) + (1 - table) * 0.2 * smoothstep(0.25, 0.9, cW) * (1 - sat(m * 1.6)) * smoothstep(-0.25, 0.3, fbm(xk / 7, yk / 7, 3, seed + 23));
   const rift = Math.max(0, -cW);
   return { sx, sy, rr: Math.hypot(sx - L.hot[0], sy - L.hot[1]), gC, gA, gHl: gHl + 0.035 * smoothstep(0.05, 0.5, fbm(xk / 5.5, yk / 5.5, 3, seed + 24)) * (1 - table), rift, table, dA, dCr,
     up: smoothstep(0.12, 0.24, fbm(xk / 12, yk / 12, 3, seed + 71) + 0.06 * fbm(xk / 2.2, yk / 2.2, 3, seed + 72)) * (1 - table) };   // gentle uplands with a real edge
@@ -53,7 +53,7 @@ function fields(L, xk, yk) {
 function tendency(L, xk, yk, f) {
   const seed = L.seed;
   return 0.6 * (smoothstep(2, 21, f.rr) - 0.5) - 0.8 * f.rift + 0.72 * fbm(xk / 15, yk / 15, 4, seed + 61) + 0.32 * fbm(xk / 5.5, yk / 5.5, 3, seed + 62)
-    + 0.1 * fbm(xk / 1.7, yk / 1.7, 3, seed + 63) + 1.3 * (f.gC + f.gA) + 1.6 * f.gHl + 0.9 * f.table + 0.22 * f.up + 0.9 * gauss(f.dCr, 12);   // the great mountain stands well inland
+    + 0.1 * fbm(xk / 1.7, yk / 1.7, 3, seed + 63) + 1.3 * (f.gC + f.gA) + 1.6 * f.gHl + 0.9 * f.table + 0.22 * f.up + 0.9 * gauss(f.dCr, 10);   // the great mountain stands well inland
 }
 
 let cache = null;
@@ -72,8 +72,8 @@ export function getLayout(seed) {
     const C = [[0, 0], [50, 0], [50, 50], [0, 50]], km = Math.floor(r() * 4), ka = (km + 1 + Math.floor(r() * 3)) % 4;
     const cm = C[km], ux = Math.sign(25 - cm[0]) * Math.SQRT1_2, uy = Math.sign(25 - cm[1]) * Math.SQRT1_2, d = 18.5 + r() * 2.5, t = (r() - 0.5) * 0.9;
     const mx = cm[0] + ux * d, my = cm[1] + uy * d, px = -uy * Math.cos(t) - ux * Math.sin(t), py = ux * Math.cos(t) - uy * Math.sin(t);
-    L.massifSeg = [mx - px * 2.6, my - py * 2.6, mx + px * 2.6, my + py * 2.6];
-    const ca = C[ka], ax = Math.sign(25 - ca[0]) * Math.SQRT1_2, ay = Math.sign(25 - ca[1]) * Math.SQRT1_2, rad = 20.5 + r() * 2.5, sgn = r() < 0.5 ? 1 : -1;
+    L.massifSeg = [mx - px * 1.8, my - py * 1.8, mx + px * 1.8, my + py * 1.8];
+    const ca = C[ka], ax = Math.sign(25 - ca[0]) * Math.SQRT1_2, ay = Math.sign(25 - ca[1]) * Math.SQRT1_2, rad = 16 + r() * 2, sgn = r() < 0.5 ? 1 : -1;
     L.arid = { x: ca[0] - ax * 2, y: ca[1] - ay * 2, rad };
     const P = [ca[0] + ax * rad * 0.45, ca[1] + ay * rad * 0.45];
     L.mouth = [ca[0] + ax * (rad - 1), ca[1] + ay * (rad - 1)];
@@ -87,7 +87,7 @@ export function getLayout(seed) {
   const cs = []; for (let j = 0; j < G; j++) for (let i = 0; i < G; i++) cs.push(convergence(L, at(i), at(j), 3.0));
   cs.sort((p, q) => p - q); L.norm = 1 / Math.max(1e-6, cs[Math.floor(cs.length * 0.98)]);
   // sea level: the quantile of the tendency field that leaves the chosen share of the world under water
-  const seaShare = 0.21 + r() * 0.05, E = new Float32Array(G * G);
+  const seaShare = 0.25 + r() * 0.05, E = new Float32Array(G * G);
   let bestA = [25, 25, 0];
   for (let j = 0; j < G; j++) for (let i = 0; i < G; i++) {
     const xk = at(i), yk = at(j), f = fields(L, xk, yk); E[j * G + i] = tendency(L, xk, yk, f);
