@@ -55,7 +55,7 @@ URL options: `?quality=low|medium|high`, `?data=/data_b4/`, `?pos=x,heightAboveG
 | `data/` | `world/` | **Variant A**, the original: a west-to-east convergent-margin transect (ocean, Coast Range, Central Valley, the Spine, the Crown, the High Desert plateau). Hand-designed tectonic template, seed 7. |
 | `data_b/` | `world-b/` | **Variant 1B**: central sea with a strait to the west, one 5,361 m massif, a short alpine range, prairie, the mesa plateau with a sand sea, a cold north. Hand-designed template, seed 7. |
 | `data_b2/` | `world-b2/` | Variant 1B with seed 21 and a south-westerly rain wind. |
-| `data_s<seed>/` | `world-s/` | **Seeded worlds (variant S)**: no template. The seed sets only physical causes and the erosion simulation makes the land (section 3.2). `world-s/` is a menu with one card per baked seed; they share one client (`world-s/play/?data=../s<seed>/`). Seeds: 241191, 397119, 452182, 712933, 752500, 988063. |
+| `data_s<seed>/` | `world-s/` | **Seeded worlds (variant S)**: no template. The seed sets only physical causes and the erosion simulation makes the land (section 3.2). `world-s/` is a menu with one card per baked seed; they share one client (`world-s/play/?data=../s<seed>/`). Currently seed 752500. |
 | commit `eda0fff` | `v5/` | Frozen version 5, kept for comparison (`git checkout eda0fff` restores code and data exactly). |
 
 All worlds share every line of code after the large-scale forcing.
@@ -111,10 +111,17 @@ simulation:
 - **Sedimentary cover (the badlands).** Flat-lying sandstone and shale survive only where three things hold, as
   in nature: the crust there was never thickened (where it was, the basement has been pushed up and the cover
   stripped, so canyon country never mixes with alpine mountains); the country is far from the sea; and it is
-  dry. Those conditions are scored on a coarse grid, and the cover grows outward as one compact country from the
-  centre of the best region until it covers 7.5–10.5% of the land. Its outline is then roughened by noise. The
-  covered block is lifted 820–1,200 m, higher toward its interior, made of layered hard and soft rock, and given a
-  quarter of the rain during erosion, so it erodes into canyons, mesas and badlands.
+  dry. Those conditions are scored on a coarse grid. The badlands are one roughly round country: a warped circle
+  centred on the best spot that leaves it room inside the world, widened until it covers 7.5–10.5% of the land,
+  keeping only ground that can carry the cover and is connected to its centre. The covered block is lifted
+  820–1,200 m, higher toward its interior, made of layered hard and soft rock, and given a fraction of the rain
+  during erosion, so it erodes into canyons, mesas and badlands. Its dryness follows its outline within a few
+  hundred metres, so green pockets inside it stay green, and nowhere else in the world is that dry.
+- **Plains stay plains.** Away from the hill country and the mountains the crust barely moves (0.006–0.026 mm/yr),
+  so most of the land is low, open grassland with trees along the watercourses; hills and mountains are wooded.
+- **The great massif** has its footprint set by area (the thickest 2% of the world reaches mountain strength) and
+  its uplift calibrated with a quick probe run of the first erosion level, so its summit lands at about 4.5–5.5 km
+  in every world.
 - **Sea level** is not drawn either: see section 4.
 
 The only numbers chosen by taste are the rates and the share of the world under water (30–36%).
@@ -157,17 +164,16 @@ is wet. `computePrecipDir` turns the grids so the wind can come from any side. I
 shadow ends at the far shore of a sea, because air that has crossed open water has taken up moisture again.
 
 **The sea in the seeded world is dynamic.** At every step it is simply the cells below sea level. The sea floor
-keeps moving with the crust (the basin keeps sinking). A two-cell ring at the edge of the 56 km domain stands for
+only sinks (shallow sea is kept shallow by waves and sediment, so the sea keeps the extent the basin gives it). A two-cell ring at the edge of the 56 km domain stands for
 the land continuing beyond it: it acts as an outlet at its own height, so rivers on the outer flanks leave the
 world instead of ponding against its edge. After the simulation:
 
-- **The sea rises** to its present level, as it did after the last ice age, by whatever brings it to its share
-  of the world (20–150 m). That drowns the lower ends of the valleys the rivers cut while it stood lower, which is
-  what gives the coast its bays, inlets and headlands (rias).
+- **The sea rises** a little to its present level (at most 3 m), drowning the mouths of the valleys into small
+  bays. (A rise of 40–70 m was tried: it turned every coast into branching fjords.)
 - **A sediment shelf** forms off every shore: the floor deepens gradually away from land instead of dropping off
   the old shoreline.
-- Ponds below sea level that are cut off from the sea and smaller than 3 km² silt up; specks of land under
-  0.6 km² go under.
+- No lakes: water cut off from the main sea is filled in (it would have silted up), unless it is a large arm of
+  the sea reaching the edge of the world. Specks of land under 0.6 km² go under.
 
 ## 5. Rock and strata
 

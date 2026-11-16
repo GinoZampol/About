@@ -54,7 +54,7 @@ function tect(L, xk, yk) {
   const dB = Math.hypot(ex / L.e[2], ey * L.e[2]) / (L.RB * (1 + 0.32 * fbm(xk / 10 + L.o[4], yk / 10, 3, s + 61)));
   // regional vertical motion (mm/yr): the basin sinks, the flanks rise unevenly, more on average further out
   const flank = smoothstep(0.85, 2.3, dB) * (0.25 + 1.25 * sat(0.5 + 1.1 * fbm(xk / 15 + L.o[5], yk / 15, 3, s + 62)));
-  const reg = -0.5 * (1 - smoothstep(0.45, 1.05, dB)) + 0.035 * flank;
+  const reg = -0.5 * (1 - smoothstep(0.45, 1.05, dB)) + 0.02 * flank;
   const th = thick(L, xk, yk, wx, wy, dB), t = L.thMax ? (th - L.th50) / (L.thMax - L.th50) : 0;
   const mt = Math.pow(smoothstep(0.42, 0.85, t), 1.6) * (0.9 + 0.2 * noise2(xk / 2.4, yk / 2.4, s + 23));      // mountain uplift (0..1)
   const foot = smoothstep(0.22, 0.5, t) * (1 - smoothstep(0.55, 0.8, t));                                       // the rising ground around it
@@ -182,7 +182,7 @@ function forcing(L, xk, yk, f, plateau) {
   }
   // uplift rate (mm/yr)
   // away from hills and mountains the crust barely moves, so most of the land stays low plains
-  let U = reg + 0.012 + 0.034 * smoothstep(0.1, 0.65, fbm(xk / 7.5, yk / 7.5, 3, s + 31));
+  let U = reg + 0.006 + 0.02 * smoothstep(0.1, 0.65, fbm(xk / 7.5, yk / 7.5, 3, s + 31));
   U += 3.5 * mt + 0.3 * hill * (1 - plateau) + 1.15 * isl + 0.62 * chalk;
   U += 0.012 * (0.5 + 0.5 * noise2(xk / 1.1, yk / 1.1, s + 35)) * (1 - plateau);
   U = U * (1 - plateau) + plateau * Math.max(U, 0.05);

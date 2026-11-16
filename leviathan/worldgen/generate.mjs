@@ -68,13 +68,13 @@ function settleSea(h, N, dx, log, share) {
       const i0 = s0 % N, j0 = (s0 / N) | 0; if ((h[s0] < 0) !== water || comp[s0] >= 0 || isEdge(i0, j0, N)) continue;
       let sp = 0, cnt = 0, edge = false; stack[sp++] = s0; comp[s0] = 1; const cells = [];
       while (sp) {
-        const c = stack[--sp], i = c % N, j = (c / N) | 0; cnt++; if (cells.length < 200000) cells.push(c);
+        const c = stack[--sp], i = c % N, j = (c / N) | 0; cnt++; if (cells.length < 2000000) cells.push(c);
         for (const [x, y] of [[i - 1, j], [i + 1, j], [i, j - 1], [i, j + 1]]) {
           if (x < 0 || y < 0 || x >= N || y >= N) continue; if (isEdge(x, y, N)) { edge = true; continue; }
           const q = y * N + x; if ((h[q] < 0) === water && comp[q] < 0) { comp[q] = 1; stack[sp++] = q; }
         }
       }
-      if (water && !edge && cnt * a < 3 && cnt <= cells.length) { for (const c of cells) h[c] = 1.5; filled += cnt; }
+      if (water && !edge && !(cnt * a > 150) && cnt <= cells.length) { for (const c of cells) h[c] = 1.5; filled += cnt; }   // no lakes: only the main sea (and arms of the sea beyond the edge) stays water
       if (!water && !edge && cnt * a < 0.6 && cnt <= cells.length) { for (const c of cells) h[c] = -2; drowned += cnt; }
     }
   }
@@ -164,7 +164,8 @@ export function erodeWorld(cfg) {
       if (it % 15 === 0) { P = cfg.variant === 'S' ? computePrecipDir(h, g.sea, N, dx, getLayout(cfg.seed).dir, getLayout(cfg.seed).windSlope, true) : computePrecip(h, g.sea, N, dx, cfg.wind || 0); if (arid) for (let c = 0; c < N * N; c++) P[c] *= 1 - 0.75 * Math.min(1, arid[c] * 1.4); }
       erodeStep(ctx, h, g.sea, g, P, dx, dt, cfg.K0, cfg.seed + res);
       // the sea floor (and the edge ring, which keeps pace with the land beyond it) moves with the crust
-      if (VSF) for (let c = 0; c < N * N; c++) if (g.sea[c]) h[c] = Math.max(-380, h[c] + g.U[c] * dt);
+      // (only sinking: shallow sea is kept shallow by waves and sediment, so the sea keeps the extent the basin gives it)
+      if (VSF) for (let c = 0; c < N * N; c++) if (g.sea[c]) h[c] = Math.max(-380, h[c] + Math.min(0, g.U[c]) * dt);
     }
     let mx = 0; for (let c = 0; c < N * N; c++) if (h[c] > mx) mx = h[c];
     log(`level ${res}: ${iters} it, max elevation ${mx.toFixed(0)} m`);

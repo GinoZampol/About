@@ -41,7 +41,8 @@ export async function finishWorld(world, cfg, ROOT, log) {
   const dryEast = (P) => { if (!VB) return P; if (VS) { let m = 0, k = 0; for (let c = 0; c < n; c++) if (!sea[c]) { m += P[c]; k++; } m /= Math.max(1, k);   // gentler rain shadows: lee slopes stay green, only the mesa country is truly dry
       for (let c = 0; c < n; c++) { // the arid country is truly dry; what green it has follows its watercourses (see the riparian pass below)
         const aw = smoothstep(0.08, 0.6, mesaWide[c]);
-        P[c] = (0.58 * m + 0.48 * P[c]) * (1 - 0.82 * aw) * (1 - 0.12 * smoothstep(0.05, 0.4, mesaHalo[c]) * (1 - aw)); } return P; }   /* (0.58 m: the central sea keeps every other shore moist, so only the badlands are truly dry) */ for (let j = 0; j < N; j++) for (let i = 0; i < N; i++) P[j * N + i] *= 1 - 0.74 * smoothstep(VC ? 14 : 31, VC ? 25 : 40.5, VC ? 0.906 * (KM0 + (i + 0.5) / N * KMS) - 0.423 * (KM0 + (j + 0.5) / N * KMS) + 2.2 * noise2(i / N * 6, j / N * 6, seed + 83) : KM0 + (i + 0.5) / N * KMS + (W ? (KM0 + (j + 0.5) / N * KMS - 25) * W * 0.6 + 2.2 * noise2(i / N * 6, j / N * 6, seed + 83) : 0)); return P; };
+        // only the badlands are dry: everywhere else the central sea keeps the ground green (windward slopes wetter still)
+        P[c] = Math.max(0.85, 0.7 * m + 0.45 * P[c]) * (1 - 0.82 * aw); } return P; }   /* (0.58 m: the central sea keeps every other shore moist, so only the badlands are truly dry) */ for (let j = 0; j < N; j++) for (let i = 0; i < N; i++) P[j * N + i] *= 1 - 0.74 * smoothstep(VC ? 14 : 31, VC ? 25 : 40.5, VC ? 0.906 * (KM0 + (i + 0.5) / N * KMS) - 0.423 * (KM0 + (j + 0.5) / N * KMS) + 2.2 * noise2(i / N * 6, j / N * 6, seed + 83) : KM0 + (i + 0.5) / N * KMS + (W ? (KM0 + (j + 0.5) / N * KMS - 25) * W * 0.6 + 2.2 * noise2(i / N * 6, j / N * 6, seed + 83) : 0)); return P; };
   let P = dryEast(cfg.variant === 'S' ? computePrecipDir(h, sea, N, dx, getLayout(seed).dir, getLayout(seed).windSlope, true) : computePrecip(h, sea, N, dx, W));
 
   // ---- A. ice flux from a mass-balance accumulation --------------------------------------------
@@ -429,6 +430,8 @@ export async function finishWorld(world, cfg, ROOT, log) {
     F *= 0.75 + 0.25 * smoothstep(-0.25, 0.15, fbm(xk / 0.9, yk / 0.9, 3, seed + 72));   // glades and meadows
     F *= 1 - 0.85 * smoothstep(0.75, 1, wet);
     // variant B: the lowland south of the central sea is open prairie; trees keep to the watercourses
+    // seeded worlds: flat lowland is open grassland, with trees along the watercourses; hills and mountains are wooded
+    if (VS) { const pr = smoothstep(0.17, 0.07, sl) * smoothstep(420, 160, z); F *= 1 - pr * (0.9 - 0.75 * smoothstep(4, 1, wdist[m])); }
     if (VB && !VS) { const pr = smoothstep(1.05, 0.72, pe) * smoothstep(0.24, 0.1, sl) * smoothstep(360, 200, z) * (1 - smoothstep(0.2, 0.4, coldAt(yk))); F *= 1 - pr * (0.85 - 0.85 * smoothstep(5, 1, wdist[m])); }
     F *= 1 - (mMesa[m] / 255) * smoothstep(0.22, 0.45, sl);                               // no woods on mesa walls and ledges                                           // open marsh
     if (z < 3) F *= smoothstep(1.0, 3, z);
@@ -557,7 +560,7 @@ export async function finishWorld(world, cfg, ROOT, log) {
     color: (c, z) => {
       if (z <= 0 && sea[c]) return [40, 78, 120];
       const m = mi(c), F = mForest[m] / 255, D = mDark[m] / 255, p = mP[m], sn = smoothstep(2350, 2650, z);
-      let r = 150 + 60 * sat(1 - p * 1.6), gg = 150 + 10 * sat(p), b = 92;           // grass -> dry steppe
+      let r = 122 + 88 * sat(1 - p * 1.6), gg = 152 + 8 * sat(p), b = 80;            // grass -> dry steppe
       if (p < 0.4) { const t = smoothstep(0.4, 0.2, p); r += (196 - r) * t; gg += (160 - gg) * t; b += (118 - b) * t; }
       const rk = z > 1950 ? smoothstep(1950, 2200, z) : 0; r += (140 - r) * rk; gg += (138 - gg) * rk; b += (136 - b) * rk;
       r += (58 - r) * F; gg += (98 - gg) * F; b += (52 - b) * F;
