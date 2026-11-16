@@ -19,9 +19,20 @@ for d in sorted(glob.glob(os.path.join(L, 'data_s*'))):
     names = [l['name'] for l in meta.get('landmarks', [])]
     cards.append((seed, meta.get('maxElevation', 0), meta.get('landKm2', 0), names))
 
-items = '\n'.join(
-    f'<a class="card" href="play/?data=../s{s}/"><img src="s{s}/map.jpg" alt="Map of world {s}" width="420" height="420" loading="lazy">'
-    f'<b>World {s.replace("-open", " (open edges)")}</b><span>Highest summit {h:,} m</span></a>' for s, h, land, names in cards)
+# folder suffixes: -open = open edges; -v1, -v2 = earlier bakes kept for comparison
+def label(s):
+    seed, *tags = s.split('-')
+    extra = {'open': 'open edges', 'v1': 'first bake', 'v2': 'second bake'}
+    return f'World {seed}' + ''.join(f' ({extra.get(t, t)})' for t in tags)
+def card(s, h):
+    return (f'<a class="card" href="play/?data=../s{s}/"><img src="s{s}/map.jpg" alt="Map of {label(s)}" width="420" height="420" loading="lazy">'
+            f'<b>{label(s)}</b><span>Highest summit {h:,} m</span></a>')
+older = lambda s: '-v' in s
+current = [c for c in cards if not older(c[0])]
+earlier = sorted([c for c in cards if older(c[0])], key=lambda c: (c[0].split('-')[-1], c[0]), reverse=True)
+items = '\n'.join(card(s, h) for s, h, land, names in current)
+if earlier:
+    items += '\n</div>\n<h2>Earlier bakes</h2>\n<p>Kept for comparison: the same seeds baked with earlier versions of the generator.</p>\n<div class="grid">\n' + '\n'.join(card(s, h) for s, h, land, names in earlier)
 page = f'''<!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Seeded worlds</title>
@@ -36,6 +47,7 @@ page = f'''<!doctype html>
   .card:hover, .card:focus-visible {{ border-color: #c8b68a; outline: none; }}
   .card img {{ display: block; width: 100%; height: auto; margin-bottom: .5rem; }}
   .card b {{ display: block; font-weight: 600; }} .card span {{ color: #b9b5aa; font-size: .9rem; }}
+  h2 {{ font-size: 1.2rem; letter-spacing: .12em; margin: 2.4rem 0 .3rem; }}
   .back {{ display: inline-block; color: #b9b5aa; margin-bottom: 1.2rem; text-decoration: none; }}
 </style></head><body><main>
 <a class="back" href="../">&larr; All worlds</a>
