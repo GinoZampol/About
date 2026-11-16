@@ -7,7 +7,9 @@
  "cold": null,
  "play": {
   "x0": 3000,
-  "size": 50000
+  "size": 50000,
+  "z0": 3000,
+  "sizeZ": 50000
  },
  "seed": 241191,
  "sizeM": 56000,
@@ -18,9 +20,9 @@
  "hOffset": 300,
  "hScale": 0.125,
  "seaLevel": 0,
- "maxElevation": 6387,
- "landKm2": 2234,
- "riverKm": 621,
+ "maxElevation": 6495,
+ "landKm2": 2543,
+ "riverKm": 907,
  "mapChannels": [
   "rock",
   "strat",
@@ -39,21 +41,21 @@
   {
    "name": "Central Valley (ocean shore)",
    "x": 12913,
-   "z": 31192,
-   "h": 17,
+   "z": 30782,
+   "h": 16,
    "note": "low ground on the shore of the central ocean"
   },
   {
    "name": "The Crown",
-   "x": 11765,
-   "z": 17521,
-   "h": 6387,
+   "x": 11696,
+   "z": 17507,
+   "h": 6495,
    "note": "the highest summit of the great range"
   },
   {
    "name": "The Badlands",
-   "x": 47181,
-   "z": 32906,
+   "x": 47152,
+   "z": 32092,
    "h": 0,
    "note": "the dry tableland that kept its sedimentary cover"
   },
