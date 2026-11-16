@@ -161,6 +161,10 @@ export function getLayout(seed) {
       if (comp.filter((c) => inPlay(gridAt(c % G), gridAt((c / G) | 0))).length >= target) break;
     }
     for (const c of comp) { L.table[c] = 1; tx += gridAt(c % G); ty += gridAt((c / G) | 0); tn++; }
+    // Beyond the border the world goes on: where the badlands reach the border they carry straight on through the
+    // hidden margin to the edge of the simulation, so they neither end nor slope down just past the wall.
+    { const k = (v) => Math.min(G - 1, Math.max(0, Math.floor((Math.min(PLAY - 0.05, Math.max(0.05, v)) - X0) / SIZE * G)));
+      for (let j = 0; j < G; j++) for (let i = 0; i < G; i++) { const x = gridAt(i), y = gridAt(j); if (inPlay(x, y)) continue; L.table[j * G + i] = L.table[k(y) * G + k(x)]; } }
     // distance in from the edge of the cover (km): the tableland stands higher toward its interior
     const D = L.tdist, cell = SIZE / G; for (let c = 0; c < n; c++) D[c] = L.table[c] ? 1e9 : 0;
     for (let pass = 0; pass < 2; pass++) for (let k = 0; k < n; k++) {
