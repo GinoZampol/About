@@ -39,7 +39,7 @@ export async function finishWorld(world, cfg, ROOT, log) {
   const dryEast = (P) => { if (!VB) return P; if (VS) { let m = 0, k = 0; for (let c = 0; c < n; c++) if (!sea[c]) { m += P[c]; k++; } m /= Math.max(1, k);   // gentler rain shadows: lee slopes stay green, only the mesa country is truly dry
       for (let c = 0; c < n; c++) { // the arid country is truly dry; what green it has follows its watercourses (see the riparian pass below)
         const aw = smoothstep(0.08, 0.6, mesaWide[c]);
-        P[c] = (0.7 * m + 0.42 * P[c]) * (1 - 0.93 * aw) * (1 - 0.52 * smoothstep(0.02, 0.3, mesaHalo[c]) * (1 - aw)); } return P; } for (let j = 0; j < N; j++) for (let i = 0; i < N; i++) P[j * N + i] *= 1 - 0.74 * smoothstep(VC ? 14 : 31, VC ? 25 : 40.5, VC ? 0.906 * (KM0 + (i + 0.5) / N * KMS) - 0.423 * (KM0 + (j + 0.5) / N * KMS) + 2.2 * noise2(i / N * 6, j / N * 6, seed + 83) : KM0 + (i + 0.5) / N * KMS + (W ? (KM0 + (j + 0.5) / N * KMS - 25) * W * 0.6 + 2.2 * noise2(i / N * 6, j / N * 6, seed + 83) : 0)); return P; };
+        P[c] = (0.22 * m + 0.82 * P[c]) * (1 - 0.86 * aw) * (1 - 0.4 * smoothstep(0.02, 0.3, mesaHalo[c]) * (1 - aw)); } return P; } for (let j = 0; j < N; j++) for (let i = 0; i < N; i++) P[j * N + i] *= 1 - 0.74 * smoothstep(VC ? 14 : 31, VC ? 25 : 40.5, VC ? 0.906 * (KM0 + (i + 0.5) / N * KMS) - 0.423 * (KM0 + (j + 0.5) / N * KMS) + 2.2 * noise2(i / N * 6, j / N * 6, seed + 83) : KM0 + (i + 0.5) / N * KMS + (W ? (KM0 + (j + 0.5) / N * KMS - 25) * W * 0.6 + 2.2 * noise2(i / N * 6, j / N * 6, seed + 83) : 0)); return P; };
   let P = dryEast(computePrecip(h, sea, N, dx, W));
 
   // ---- A. ice flux from a mass-balance accumulation --------------------------------------------
@@ -416,7 +416,7 @@ export async function finishWorld(world, cfg, ROOT, log) {
     let wet = flat * smoothstep(8, 120, qk) * 0.8 + flat * smoothstep(5, 0, wdist[m]) * smoothstep(6, 1.5, z - (hBlur[m] - 3)) * 0.5;
     wet = sat(wet * smoothstep(0.25, 0.6, p) + (z < 2.2 ? 0.5 * flat : 0));
     // variant B: broad tidal marshes and fens on the low shores of the central sea and the deltas
-    if (VB) wet = Math.max(wet, smoothstep(0.05, 0.012, sl) * smoothstep(20, 5, wdist[m]) * smoothstep(9, 2.5, z));
+    if (VB && !VS) wet = Math.max(wet, smoothstep(0.05, 0.012, sl) * smoothstep(20, 5, wdist[m]) * smoothstep(9, 2.5, z));
     mWet[m] = Math.round(255 * wet);
     // forest canopy cover: moisture, temperature (treeline), slope, with patchiness
     // trees climb higher in sheltered hollows and stop lower on exposed spurs; the limit is a wide, ragged zone
@@ -427,7 +427,7 @@ export async function finishWorld(world, cfg, ROOT, log) {
     F *= 0.75 + 0.25 * smoothstep(-0.25, 0.15, fbm(xk / 0.9, yk / 0.9, 3, seed + 72));   // glades and meadows
     F *= 1 - 0.85 * smoothstep(0.75, 1, wet);
     // variant B: the lowland south of the central sea is open prairie; trees keep to the watercourses
-    if (VB) { const pr = smoothstep(1.05, 0.72, pe) * smoothstep(0.24, 0.1, sl) * smoothstep(360, 200, z) * (1 - smoothstep(0.2, 0.4, coldAt(yk))); F *= 1 - pr * (0.85 - 0.85 * smoothstep(5, 1, wdist[m])); }
+    if (VB && !VS) { const pr = smoothstep(1.05, 0.72, pe) * smoothstep(0.24, 0.1, sl) * smoothstep(360, 200, z) * (1 - smoothstep(0.2, 0.4, coldAt(yk))); F *= 1 - pr * (0.85 - 0.85 * smoothstep(5, 1, wdist[m])); }
     F *= 1 - (mMesa[m] / 255) * smoothstep(0.22, 0.45, sl);                               // no woods on mesa walls and ledges                                           // open marsh
     if (z < 3) F *= smoothstep(1.0, 3, z);
     mForest[m] = Math.round(255 * sat(F));
@@ -528,9 +528,9 @@ export async function finishWorld(world, cfg, ROOT, log) {
       if (d < sd) { sd = d; sb = c; }
     }
     if (sb >= 0) { const [x, y] = cellXY(sb); landmarks.push(lm('Central Valley (ocean shore)', { x, z: S - y, h: h[sb] }, 'low ground on the shore of the central ocean')); }
-    landmarks.push(lm('The Crown', peak(L.massif[0] - 7, L.massif[0] + 7, L.massif[1] - 7, L.massif[1] + 7), 'the great massif'));
+    landmarks.push(lm('The Crown', peak(1, 49, 1, 49), 'the highest summit of the great range'));
     if (L.alpsCentre[2] > 0.05) landmarks.push(lm('The Horns', peak(L.alpsCentre[0] - 6, L.alpsCentre[0] + 6, L.alpsCentre[1] - 6, L.alpsCentre[1] + 6), 'the alpine peaks'));
-    landmarks.push(lm('The Badlands', km(L.mouth[0], L.mouth[1]), 'where the canyon river leaves the arid country'));
+    landmarks.push(lm('The Badlands', km(L.tableC[0], L.tableC[1]), 'the dry tableland in the lee of the great range'));
     landmarks.push(lm('Central ocean', km(L.c[0], L.c[1]), 'the middle of the world'));
     lakes.slice(0, 3).forEach((l, k) => landmarks.push(lm(`Lake ${k + 1}`, { x: l.x, z: S - l.y, h: l.level }, `${l.areaKm2.toFixed(1)} km2`)));
   }
