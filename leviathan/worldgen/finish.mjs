@@ -40,7 +40,7 @@ export async function finishWorld(world, cfg, ROOT, log) {
         const i = c % N, j = (c / N) | 0, aw = smoothstep(0.08, 0.6, mesaWide[c]); let oasis = 0;
         if (aw > 0 && i > 2 && j > 2 && i < N - 3 && j < N - 3) {
           const sl = Math.hypot(h[c + 3] - h[c - 3], h[c + 3 * N] - h[c - 3 * N]) / (6 * dx);
-          oasis = smoothstep(0.38, 0.5, fbm(i * dx / 2400, j * dx / 2400, 2, seed + 931)) * smoothstep(0.12, 0.04, sl);
+          oasis = smoothstep(0.16, 0.28, fbm(i * dx / 2400, j * dx / 2400, 2, seed + 931)) * smoothstep(0.22, 0.1, sl);
         }
         P[c] = (0.7 * m + 0.42 * P[c]) * (1 - 0.93 * aw * (1 - oasis)) + 0.9 * m * oasis * aw; } return P; } for (let j = 0; j < N; j++) for (let i = 0; i < N; i++) P[j * N + i] *= 1 - 0.74 * smoothstep(VC ? 14 : 31, VC ? 25 : 40.5, VC ? 0.906 * (KM0 + (i + 0.5) / N * KMS) - 0.423 * (KM0 + (j + 0.5) / N * KMS) + 2.2 * noise2(i / N * 6, j / N * 6, seed + 83) : KM0 + (i + 0.5) / N * KMS + (W ? (KM0 + (j + 0.5) / N * KMS - 25) * W * 0.6 + 2.2 * noise2(i / N * 6, j / N * 6, seed + 83) : 0)); return P; };
   let P = dryEast(computePrecip(h, sea, N, dx, W));

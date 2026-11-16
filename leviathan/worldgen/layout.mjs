@@ -46,7 +46,7 @@ function fields(L, xk, yk) {
   const table = smoothstep(L.arid.rad, L.arid.rad - 3.2, dA) * (1 - smoothstep(0.08, 0.4, gC)) * (1 - smoothstep(0.06, 0.3, gA));
   const gHl = 0.22 * gauss(dCr, 11) * (1 - sat(gC * 1.5)) + (1 - table) * 0.3 * Math.max(0, cW) * (1 - sat(m * 1.6)) * (0.6 + 0.6 * smoothstep(-0.3, 0.4, fbm(xk / 7, yk / 7, 3, seed + 23)));
   const rift = Math.max(0, -cW);
-  return { sx, sy, rr: Math.hypot(sx - L.hot[0], sy - L.hot[1]), gC, gA, gHl: gHl + 0.1 * smoothstep(0, 0.5, fbm(xk / 5.5, yk / 5.5, 3, seed + 24)) * (1 - table), rift, table, dA, dCr,
+  return { sx, sy, rr: Math.hypot(sx - L.hot[0], sy - L.hot[1]), gC, gA, gHl: gHl + 0.035 * smoothstep(0.05, 0.5, fbm(xk / 5.5, yk / 5.5, 3, seed + 24)) * (1 - table), rift, table, dA, dCr,
     up: smoothstep(0.12, 0.24, fbm(xk / 12, yk / 12, 3, seed + 71) + 0.06 * fbm(xk / 2.2, yk / 2.2, 3, seed + 72)) * (1 - table) };   // gentle uplands with a real edge
 }
 // elevation tendency: rifts and the spreading centre sink, ranges and their belts rise, broad swells do the rest
@@ -110,7 +110,7 @@ export function seededDesign(xk, yk, seed) {
   const gG = gauss(dG, 1.05) * smoothstep(0, 0.3, plateau + gauss(Math.hypot(sx - L.mouth[0], sy - L.mouth[1]), 3)), dGM = Math.hypot(sx - L.mouth[0], sy - L.mouth[1]);
 
   // ---- uplift ----------------------------------------------------------------------------------
-  let U = 0.02 * f.up + 0.012 + 0.034 * smoothstep(0.1, 0.65, fbm(xk / 7.5, yk / 7.5, 3, seed + 31)) * (1 - plateau);
+  let U = 0.006 * f.up + 0.012 + 0.034 * smoothstep(0.1, 0.65, fbm(xk / 7.5, yk / 7.5, 3, seed + 31)) * (1 - plateau);
   U += gHl + 2.0 * gA + 2.5 * gC + 0.05 * plateau;
   U += 0.012 * (0.5 + 0.5 * noise2(xk / 1.1, yk / 1.1, seed + 35)) * (1 - plateau);
   U += 0.06 * ridged(xk / 3.2, yk / 3.2, 3, seed + 32) * (0.3 + gA + gHl * 3);
