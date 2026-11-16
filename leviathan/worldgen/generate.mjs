@@ -100,6 +100,20 @@ function fieldsFor(design, N) {
     else if (g.h0[c] < 1.5) g.h0[c] = 1.5;
   }
   g.sea = sea;
+  // Seeded worlds: the sea floor starts at the shoreline itself and deepens with distance from land (a sediment
+  // shelf). It used to start 3 m down at the first sea cell while the first land cell stood 1.5 m up, so the coast
+  // was a 5 m step that followed the cell grid: a pixelated, sawtoothed shoreline. Now the ground passes through sea
+  // level between cells, and the waterline is where the smooth terrain surface meets the water.
+  if (CFG.variant === 'S') {
+    const n = N * N, dx = CFG.sizeM / N, d = new Float32Array(n), D = Math.SQRT2 * dx;
+    for (let c = 0; c < n; c++) d[c] = sea[c] && g.land[c] < 0 ? 1e9 : 0;
+    for (let pass = 0; pass < 2; pass++) for (let k = 0; k < n; k++) {
+      const c = pass ? n - 1 - k : k, i = c % N, j = (c / N) | 0; if (!d[c]) continue;
+      const nb = pass ? [[i + 1, j, dx], [i, j + 1, dx], [i + 1, j + 1, D], [i - 1, j + 1, D]] : [[i - 1, j, dx], [i, j - 1, dx], [i - 1, j - 1, D], [i + 1, j - 1, D]];
+      for (const [x, y, w] of nb) if (x >= 0 && y >= 0 && x < N && y < N) d[c] = Math.min(d[c], d[y * N + x] + w);
+    }
+    for (let c = 0; c < n; c++) if (sea[c] && g.land[c] < 0) g.h0[c] = Math.max(g.h0[c], -(0.3 + 0.045 * (d[c] - dx / 2)));
+  }
   // rock-mass strength varies from place to place: without this every mountain face settles at
   // exactly the same critical angle and the range looks faceted
   const tm = new Float32Array(N * N), cs = CFG.sizeM / N;
