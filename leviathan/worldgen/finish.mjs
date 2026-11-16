@@ -36,13 +36,8 @@ export async function finishWorld(world, cfg, ROOT, log) {
   let mesaWide = null;
   if (VS) { const r = Math.max(2, Math.round(3200 / dx)); mesaWide = boxBlur(boxBlur(g.mesa, N, r), N, r); }
   const dryEast = (P) => { if (!VB) return P; if (VS) { let m = 0, k = 0; for (let c = 0; c < n; c++) if (!sea[c]) { m += P[c]; k++; } m /= Math.max(1, k);   // gentler rain shadows: lee slopes stay green, only the mesa country is truly dry
-      for (let c = 0; c < n; c++) { // the arid country is truly dry, except for a few lush pockets on its flat ground
-        const i = c % N, j = (c / N) | 0, aw = smoothstep(0.08, 0.6, mesaWide[c]); let oasis = 0;
-        if (aw > 0 && i > 2 && j > 2 && i < N - 3 && j < N - 3) {
-          const sl = Math.hypot(h[c + 3] - h[c - 3], h[c + 3 * N] - h[c - 3 * N]) / (6 * dx);
-          oasis = smoothstep(0.16, 0.28, fbm(i * dx / 2400, j * dx / 2400, 2, seed + 931)) * smoothstep(0.22, 0.1, sl);
-        }
-        P[c] = (0.7 * m + 0.42 * P[c]) * (1 - 0.93 * aw * (1 - oasis)) + 0.9 * m * oasis * aw; } return P; } for (let j = 0; j < N; j++) for (let i = 0; i < N; i++) P[j * N + i] *= 1 - 0.74 * smoothstep(VC ? 14 : 31, VC ? 25 : 40.5, VC ? 0.906 * (KM0 + (i + 0.5) / N * KMS) - 0.423 * (KM0 + (j + 0.5) / N * KMS) + 2.2 * noise2(i / N * 6, j / N * 6, seed + 83) : KM0 + (i + 0.5) / N * KMS + (W ? (KM0 + (j + 0.5) / N * KMS - 25) * W * 0.6 + 2.2 * noise2(i / N * 6, j / N * 6, seed + 83) : 0)); return P; };
+      for (let c = 0; c < n; c++) { // the arid country is truly dry; what green it has follows its watercourses (see the riparian pass below)
+        P[c] = (0.7 * m + 0.42 * P[c]) * (1 - 0.93 * smoothstep(0.08, 0.6, mesaWide[c])); } return P; } for (let j = 0; j < N; j++) for (let i = 0; i < N; i++) P[j * N + i] *= 1 - 0.74 * smoothstep(VC ? 14 : 31, VC ? 25 : 40.5, VC ? 0.906 * (KM0 + (i + 0.5) / N * KMS) - 0.423 * (KM0 + (j + 0.5) / N * KMS) + 2.2 * noise2(i / N * 6, j / N * 6, seed + 83) : KM0 + (i + 0.5) / N * KMS + (W ? (KM0 + (j + 0.5) / N * KMS - 25) * W * 0.6 + 2.2 * noise2(i / N * 6, j / N * 6, seed + 83) : 0)); return P; };
   let P = dryEast(computePrecip(h, sea, N, dx, W));
 
   // ---- A. ice flux from a mass-balance accumulation --------------------------------------------
@@ -389,10 +384,26 @@ export async function finishWorld(world, cfg, ROOT, log) {
   // rainfall grades across a rain shadow over kilometres, not at a line
   { const r = Math.max(2, Math.round(450 / mdx)); const pb = boxBlur(boxBlur(mP, M, r), M, r); mP.set(pb); }
   const mPrec = new Uint8Array(mn), mForest = new Uint8Array(mn), mDark = new Uint8Array(mn), mWet = new Uint8Array(mn), mSand = new Uint8Array(mn), mStratB = new Uint8Array(mn);
+  // Riparian green in dry country: where a canyon or valley gathers enough drainage, its floor holds water near the
+  // surface. The strip follows the thalweg, spreads only over the flat floor (a few metres above the stream) and
+  // widens downstream. In well-watered country this changes nothing.
+  const mRip = new Float32Array(mn);
+  if (VS) for (let j = 0; j < M; j++) for (let i = 0; i < M; i++) {
+    const m = j * M + i; if (mWater[m] || mP[m] > 0.6) continue;
+    const area = mQ[m] / 1e6 / Math.max(0.08, mP[m]);                 // drainage gathered here, undoing the local dryness
+    const src = smoothstep(14, 70, area) * smoothstep(0.3, 0.1, mSlope[m]); if (src <= 0.02) continue;
+    const rad = (70 + 260 * smoothstep(20, 400, area)) / mdx, rc = Math.ceil(rad), z0 = mh[m];
+    for (let b = -rc; b <= rc; b++) for (let a = -rc; a <= rc; a++) {
+      const x = i + a, y = j + b; if (x < 0 || y < 0 || x >= M || y >= M) continue;
+      const t = Math.hypot(a, b) / rad; if (t >= 1) continue;
+      const q = y * M + x, v = src * (1 - t * t) * smoothstep(7, 2.5, mh[q] - z0) * smoothstep(0.3, 0.12, mSlope[q]);
+      if (v > mRip[q]) mRip[q] = v;
+    }
+  }
   const reliefR = Math.round(700 / mdx);
   const hBlur = boxBlur(mh, M, reliefR);
   for (let j = 0; j < M; j++) for (let i = 0; i < M; i++) {
-    const m = j * M + i, z = mh[m], p = mP[m], sl = mSlope[m];
+    const m = j * M + i, z = mh[m], p = mP[m] + mRip[m] * Math.max(0, 1.0 - mP[m]), sl = mSlope[m];
     const xk = KM0 + (i + 0.5) / M * KMS, yk = KM0 + (j + 0.5) / M * KMS;
     mPrec[m] = Math.round(255 * sat(p / 3));
     mStratB[m] = Math.round(sat((mStrat[m] + 100) / 510) * 255);
@@ -423,7 +434,7 @@ export async function finishWorld(world, cfg, ROOT, log) {
     mDark[m] = Math.round(255 * sat(D));
     // sand: beaches, and dune fields on dry, flat, low-lying plateau ground
     let sand = smoothstep(2.6, 0.8, z) * smoothstep(0.08, 0.03, sl);
-    if (p < 0.34 && mRock[m] !== ROCK.ALLUVIUM && mMesa[m] > 140) sand = Math.max(sand, smoothstep(0.34, 0.26, p) * smoothstep(0.05, 0.02, sl) * smoothstep(-0.1, 0.2, fbm(xk / 4.5, yk / 4.5, 2, seed + 73)) * smoothstep(40, 8, qk));
+    if (!VS && p < 0.34 && mRock[m] !== ROCK.ALLUVIUM && mMesa[m] > 140) sand = Math.max(sand, smoothstep(0.34, 0.26, p) * smoothstep(0.05, 0.02, sl) * smoothstep(-0.1, 0.2, fbm(xk / 4.5, yk / 4.5, 2, seed + 73)) * smoothstep(40, 8, qk));
     {
       // dunes only on gentle ground, and never on or beside rock walls: use the steepest slope nearby
       let smax = sl;

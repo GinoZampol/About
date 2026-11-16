@@ -218,10 +218,10 @@ export function buildDesign(R, seed, domain = { x0: 0, size: WORLD_KM }) {
   return d;
 }
 
-// One sea, no lakes. Water bodies cut off from the main sea are joined to it by a strait along the cheapest
-// route (short, over the lowest ground, never through hills, mountains or tableland), as long as the body
-// is big enough to be worth the strait. Whatever still cannot be reached is filled in as low ground,
-// unless it touches the edge of the world, where it reads as sea continuing beyond the border.
+// One sea, no lakes. A water body cut off from the main sea by only a short neck of low ground is joined to it
+// by a narrows across that neck (never through hills, mountains or tableland). Long canals are not dug: water
+// that cannot be joined that way is filled in as low ground, unless it touches the edge of the world, where it
+// reads as sea continuing beyond the border.
 function oneSea(d, R, cellKm, seed) {
   const n = R * R, comp = new Int32Array(n), stack = new Int32Array(n), cost = new Float32Array(n), prev = new Int32Array(n);
   const label = () => {
@@ -249,7 +249,7 @@ function oneSea(d, R, cellKm, seed) {
     const pop = () => { const v = hv[0], k = hk[--hn], w = hv[hn]; let i = 0; for (;;) { let c = 2 * i + 1; if (c >= hn) break; if (c + 1 < hn && hk[c + 1] < hk[c]) c++; if (hk[c] >= k) break; hk[i] = hk[c]; hv[i] = hv[c]; i = c; } hk[i] = k; hv[i] = w; return v; };
     for (let c = 0; c < n; c++) if (comp[c] === L.big) { cost[c] = 0; prev[c] = -1; const i = c % R, j = (c / R) | 0; if (i && j && i < R - 1 && j < R - 1 && (d.land[c - 1] >= 0 || d.land[c + 1] >= 0 || d.land[c - R] >= 0 || d.land[c + R] >= 0)) push(0, c); }
     while (hn) {
-      const k0 = hk[0], c = pop(); if (k0 > cost[c] || k0 > 30) continue;
+      const k0 = hk[0], c = pop(); if (k0 > cost[c] || k0 > 6) continue;
       const i = c % R, j = (c / R) | 0;
       for (let dj = -1; dj <= 1; dj++) for (let di = -1; di <= 1; di++) {
         if (!di && !dj) continue; const x = i + di, y = j + dj; if (x < 0 || y < 0 || x >= R || y >= R) continue;
@@ -264,10 +264,10 @@ function oneSea(d, R, cellKm, seed) {
     let carved = 0;
     for (let k = 0; k < L.nc; k++) {
       if (k === L.big || best[k] < 0) continue;
-      const areaKm2 = L.sizes[k] * cellKm * cellKm; if (cost[best[k]] > Math.min(26, 5 + 2.6 * Math.sqrt(areaKm2))) continue;
+      const areaKm2 = L.sizes[k] * cellKm * cellKm; if (areaKm2 < 1.5 || cost[best[k]] > 4.5) continue;
       for (let c = best[k]; c >= 0 && comp[c] !== L.big; c = prev[c]) {
         if (d.land[c] < 0) continue;
-        const i = c % R, j = (c / R) | 0, wKm = 0.75 + 0.55 * noise2(i * cellKm / 2.3, j * cellKm / 2.3, seed + 97), rc = Math.max(1, wKm / 2 / cellKm), ri = Math.ceil(rc);
+        const i = c % R, j = (c / R) | 0, wKm = 1.5 + 0.9 * noise2(i * cellKm / 1.7, j * cellKm / 1.7, seed + 97), rc = Math.max(1, wKm / 2 / cellKm), ri = Math.ceil(rc);
         for (let dj = -ri; dj <= ri; dj++) for (let di = -ri; di <= ri; di++) {
           const x = i + di, y = j + dj; if (x < 0 || y < 0 || x >= R || y >= R) continue;
           const t = Math.hypot(di, dj) / rc; if (t >= 1) continue;

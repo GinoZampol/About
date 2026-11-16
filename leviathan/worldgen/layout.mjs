@@ -47,7 +47,7 @@ function fields(L, xk, yk) {
   // rises into hill country instead, in patches rather than continuous belts.
   const gA = 0;
   const table = smoothstep(L.arid.rad, L.arid.rad - 1.6, dA) * (1 - smoothstep(0.08, 0.4, gC));
-  const gHl = (0.13 * gauss(dCr, 7) + 0.1 * gauss(d2, 5.5)) * (1 - sat(gC * 1.5)) + (1 - table) * 0.24 * smoothstep(0.1, 0.75, cW) * smoothstep(-0.35, 0.2, fbm(xk / 7, yk / 7, 3, seed + 23));
+  const gHl = (0.13 * gauss(dCr, 7) + 0.1 * gauss(d2, 5.5)) * (1 - sat(gC * 1.5)) + (1 - table) * 0.24 * smoothstep(0.2, 0.85, cW) * smoothstep(-0.25, 0.3, fbm(xk / 7, yk / 7, 3, seed + 23));
   const rift = Math.max(0, -cW);
   return { sx, sy, rr: Math.hypot(sx - L.hot[0], sy - L.hot[1]), gC, gA, gHl: gHl + 0.05 * smoothstep(0.05, 0.5, fbm(xk / 5.5, yk / 5.5, 3, seed + 24)) * (1 - table), rift, table, dA, dCr, d2, belt: Math.max(0, cW),
     up: smoothstep(0.12, 0.24, fbm(xk / 12, yk / 12, 3, seed + 71) + 0.06 * fbm(xk / 2.2, yk / 2.2, 3, seed + 72)) * (1 - table) };   // gentle uplands with a real edge
@@ -57,7 +57,7 @@ function tendency(L, xk, yk, f, bare = false) {
   const seed = L.seed;
   // scattered rises of the sea floor: where they stand in water they are islands and skerries, on land they change nothing much
   // (left out when the sea level is being chosen, so adding islands does not move the coasts)
-  const isl = bare ? 0 : 0.6 * smoothstep(0.37, 0.53, noise2(f.sx / 3.7 + 7.7, f.sy / 3.7 + 3.1, seed + 91)) + 0.45 * smoothstep(0.43, 0.56, noise2(f.sx / 1.5 + 1.3, f.sy / 1.5 + 9.4, seed + 92));
+  const isl = bare ? 0 : 0.7 * smoothstep(0.46, 0.58, noise2(f.sx / 4.4 + 7.7, f.sy / 4.4 + 3.1, seed + 91)) + 0.5 * smoothstep(0.54, 0.62, noise2(f.sx / 1.9 + 1.3, f.sy / 1.9 + 9.4, seed + 92));
   const mts = 1.3 * (f.gC + f.gA) + 0.9 * gauss(f.dCr, 10) + 0.7 * gauss(f.d2, 7);      // mountains stand well inland
   // islands rise only in open water, well clear of the shores, so they never plug a strait
   const open = (e) => e + (bare ? 0 : isl * smoothstep(L.T - 0.05, L.T - 0.2, e));
