@@ -46,23 +46,35 @@ function fields(L, xk, yk) {
   const table = smoothstep(L.arid.rad, L.arid.rad - 1.6, dA) * (1 - smoothstep(0.08, 0.4, gC)) * (1 - smoothstep(0.06, 0.3, gA));
   const gHl = 0.13 * gauss(dCr, 7.5) * (1 - sat(gC * 1.5)) + (1 - table) * 0.2 * smoothstep(0.25, 0.9, cW) * (1 - sat(m * 1.6)) * smoothstep(-0.25, 0.3, fbm(xk / 7, yk / 7, 3, seed + 23));
   const rift = Math.max(0, -cW);
-  return { sx, sy, rr: Math.hypot(sx - L.hot[0], sy - L.hot[1]), gC, gA, gHl: gHl + 0.035 * smoothstep(0.05, 0.5, fbm(xk / 5.5, yk / 5.5, 3, seed + 24)) * (1 - table), rift, table, dA, dCr,
+  return { sx, sy, rr: Math.hypot(sx - L.hot[0], sy - L.hot[1]), gC, gA, gHl: gHl + 0.035 * smoothstep(0.05, 0.5, fbm(xk / 5.5, yk / 5.5, 3, seed + 24)) * (1 - table), rift, table, dA, dCr, belt: Math.max(0, cW),
     up: smoothstep(0.12, 0.24, fbm(xk / 12, yk / 12, 3, seed + 71) + 0.06 * fbm(xk / 2.2, yk / 2.2, 3, seed + 72)) * (1 - table) };   // gentle uplands with a real edge
 }
 // elevation tendency: rifts and the spreading centre sink, ranges and their belts rise, broad swells do the rest
 function tendency(L, xk, yk, f) {
   const seed = L.seed;
+  if (L.sea === 'sounds') {
+    // A web of sounds instead of one open basin: the sea follows the zero lines of broad, warped noise fields, which
+    // wind across the whole map, branch, and enclose islands. Relief closes them, so they keep to the lowlands.
+    const n1 = noise2(f.sx / 20, f.sy / 20, seed + 81), n2 = noise2(f.sx / 26 + 31.7, f.sy / 26 - 12.3, seed + 82);
+    // reaches widen into bays and pinch into narrows along their length
+    const ch = Math.min(Math.abs(n1), Math.abs(n2) + 0.07) / (0.45 + 1.1 * sat(0.5 + 1.1 * fbm(xk / 8.5, yk / 8.5, 2, seed + 83)));
+    return 0.9 * sat(ch / 0.3) + 0.5 * (smoothstep(1, 15, f.rr) - 0.5) + 0.13 * fbm(xk / 5.5, yk / 5.5, 3, seed + 62) + 0.05 * fbm(xk / 1.7, yk / 1.7, 3, seed + 63)
+      + 1.3 * (f.gC + f.gA) + 2.2 * f.gHl + 0.9 * f.table + 0.12 * f.up + 0.9 * gauss(f.dCr, 10) + 0.55 * smoothstep(0.08, 0.55, f.belt);   // the sounds keep clear of the ranges and their foothill belts
+  }
   return 0.6 * (smoothstep(2, 21, f.rr) - 0.5) - 0.8 * f.rift + 0.72 * fbm(xk / 15, yk / 15, 4, seed + 61) + 0.32 * fbm(xk / 5.5, yk / 5.5, 3, seed + 62)
     + 0.1 * fbm(xk / 1.7, yk / 1.7, 3, seed + 63) + 1.3 * (f.gC + f.gA) + 1.6 * f.gHl + 0.9 * f.table + 0.22 * f.up + 0.9 * gauss(f.dCr, 10);   // the great mountain stands well inland
 }
 
+// 'basin' = one open central sea; 'sounds' = a tighter, branching sea that threads the lowlands
+let SEA = 'basin';
+export function setSeaStyle(s) { SEA = s === 'sounds' ? 'sounds' : 'basin'; cache = null; }
 let cache = null;
 export function getLayout(seed) {
   if (cache && cache.seed === seed) return cache;
   const r = mulberry32((Math.imul(seed | 0, 2654435761) ^ 0x9e3779b9) >>> 0);
   // a spreading centre lies somewhere under the middle of the world: plates drift away from it, each with
   // its own extra motion, so the middle is pulled apart (sea) and the plates collide further out (ranges)
-  const L = { seed, plates: [], massifSeg: [0, 0, 1, 1], arid: { x: -99, y: -99, rad: 1 }, hot: [25 + (r() - 0.5) * 8, 25 + (r() - 0.5) * 8], norm: 1, _a: [0, 0], _b: [0, 0] };
+  const L = { seed, sea: SEA, plates: [], massifSeg: [0, 0, 1, 1], arid: { x: -99, y: -99, rad: 1 }, hot: [25 + (r() - 0.5) * 8, 25 + (r() - 0.5) * 8], norm: 1, _a: [0, 0], _b: [0, 0] };
   for (let k = 0, n = 7 + Math.floor(r() * 3); k < n; k++) {
     const x = -4 + r() * 58, y = -4 + r() * 58, dl = Math.hypot(x - L.hot[0], y - L.hot[1]) || 1, a = r() * Math.PI * 2, v = 0.55 + 0.5 * r();
     L.plates.push([x, y, 0.45 * (x - L.hot[0]) / dl + Math.cos(a) * v, 0.45 * (y - L.hot[1]) / dl + Math.sin(a) * v]);
@@ -87,7 +99,7 @@ export function getLayout(seed) {
   const cs = []; for (let j = 0; j < G; j++) for (let i = 0; i < G; i++) cs.push(convergence(L, at(i), at(j), 3.0));
   cs.sort((p, q) => p - q); L.norm = 1 / Math.max(1e-6, cs[Math.floor(cs.length * 0.98)]);
   // sea level: the quantile of the tendency field that leaves the chosen share of the world under water
-  const seaShare = 0.25 + r() * 0.05, E = new Float32Array(G * G);
+  const seaShare = (SEA === 'sounds' ? 0.19 : 0.25) + r() * 0.05, E = new Float32Array(G * G);
   let bestA = [25, 25, 0];
   for (let j = 0; j < G; j++) for (let i = 0; i < G; i++) {
     const xk = at(i), yk = at(j), f = fields(L, xk, yk); E[j * G + i] = tendency(L, xk, yk, f);

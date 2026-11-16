@@ -5,6 +5,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { hash2, noise2 } from '../shared/noise.mjs';
 import { buildDesign, volcanoHeight, WORLD_KM, setVariant } from './design.mjs';
+import { setSeaStyle } from './layout.mjs';
 import { makeCtx, erodeStep, upsample2, resample, computePrecip, flood, route, accumulate } from './erosion.mjs';
 import { renderMap } from './preview.mjs';
 import { ROCK } from '../shared/geology.mjs';
@@ -17,6 +18,7 @@ export const CFG = {
   // --seed random picks a fresh seed and prints it; the number is stored in world.json so the world can be rebuilt
   seed: arg('seed', 7) === 'random' ? Math.floor(Math.random() * 1e6) : +arg('seed', 7),
   variant: arg('variant', 'A'),
+  sea: arg('sea', 'basin'),              // seeded layout only: 'basin' = one open sea, 'sounds' = a branching sea threading the lowlands
   wind: +arg('wind', 0),                 // rain-bearing wind: 0 = from the west, 0.5 = from the south-west
   outDir: arg('out', arg('variant', 'A') === 'B' ? 'data_b' : 'data'),          // 'A' = original; 'B' = central sea, cold north, coastal marshes
   res: +arg('res', 4096),
@@ -117,7 +119,7 @@ function stats(h, N, g) {
 
 if (import.meta.url === `file://${process.argv[1]}`) {
   const stage = arg('stage', 'all');
-  setVariant(CFG.variant);
+  setVariant(CFG.variant); setSeaStyle(CFG.sea);
   const cacheFile = path.join(CACHE, `eroded_${CFG.res}_${CFG.seed}${CFG.variant === 'A' ? '' : '_' + CFG.variant}${CFG.wind ? '_w' + CFG.wind : ''}.f32`);
   let world;
   if (stage === 'finish' && fs.existsSync(cacheFile)) {
