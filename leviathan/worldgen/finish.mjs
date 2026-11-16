@@ -393,12 +393,12 @@ export async function finishWorld(world, cfg, ROOT, log) {
   if (VS) for (let j = 0; j < M; j++) for (let i = 0; i < M; i++) {
     const m = j * M + i; if (mWater[m] || mP[m] > 0.6) continue;
     const area = mQ[m] / 1e6 / Math.max(0.08, mP[m]);                 // drainage gathered here, undoing the local dryness
-    const src = smoothstep(14, 70, area) * smoothstep(0.3, 0.1, mSlope[m]); if (src <= 0.02) continue;
-    const rad = (70 + 260 * smoothstep(20, 400, area)) / mdx, rc = Math.ceil(rad), z0 = mh[m];
+    const src = smoothstep(7, 36, area) * smoothstep(0.3, 0.1, mSlope[m]); if (src <= 0.02) continue;
+    const rad = (110 + 640 * smoothstep(12, 260, area)) / mdx, rc = Math.ceil(rad), z0 = mh[m];
     for (let b = -rc; b <= rc; b++) for (let a = -rc; a <= rc; a++) {
       const x = i + a, y = j + b; if (x < 0 || y < 0 || x >= M || y >= M) continue;
       const t = Math.hypot(a, b) / rad; if (t >= 1) continue;
-      const q = y * M + x, v = src * (1 - t * t) * smoothstep(7, 2.5, mh[q] - z0) * smoothstep(0.3, 0.12, mSlope[q]);
+      const q = y * M + x, v = src * (1 - t * t) * smoothstep(10, 3, mh[q] - z0) * smoothstep(0.3, 0.12, mSlope[q]);
       if (v > mRip[q]) mRip[q] = v;
     }
   }
