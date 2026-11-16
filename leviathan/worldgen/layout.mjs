@@ -33,6 +33,10 @@ function sample(grid, xk, yk) {
   return (grid[c] * (1 - u) + grid[c + 1] * u) * (1 - v) + (grid[c + G] * (1 - u) + grid[c + G + 1] * u) * v;
 }
 let cache = null;
+// 1 = thickening fades within 9 km of the border (the great massif stands inside the world); 0 = open edges, where
+// mountains run up to the border and past it like everything else (`--edges open`)
+let EDGE_FADE = 1;
+export function setEdgeFade(v) { if (v !== EDGE_FADE) { EDGE_FADE = v; cache = null; } }
 
 function warp(L, xk, yk) {
   const s = L.seed;
@@ -44,7 +48,7 @@ function warp(L, xk, yk) {
 function thick(L, xk, yk, wx, wy, dB) {
   const s = L.seed;
   return fbm(wx / 33 + L.o[2], wy / 33 + L.o[3], 2, s + 21) + 0.3 * fbm(wx / 12, wy / 12 + L.o[4], 2, s + 22)
-    - 0.4 * smoothstep(9, 0, Math.min(xk, yk, PLAY - xk, PLAY - yk)) - 0.5 * (1 - smoothstep(0.95, 1.6, dB));
+    - 0.4 * EDGE_FADE * smoothstep(9, 0, Math.min(xk, yk, PLAY - xk, PLAY - yk)) - 0.5 * (1 - smoothstep(0.95, 1.6, dB));
 }
 // The tectonic fields at a point.
 function tect(L, xk, yk) {

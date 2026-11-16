@@ -21,7 +21,7 @@ for d in sorted(glob.glob(os.path.join(L, 'data_s*'))):
 
 items = '\n'.join(
     f'<a class="card" href="play/?data=../s{s}/"><img src="s{s}/map.jpg" alt="Map of world {s}" width="420" height="420" loading="lazy">'
-    f'<b>World {s}</b><span>Highest summit {h:,} m</span></a>' for s, h, land, names in cards)
+    f'<b>World {s.replace("-open", " (open edges)")}</b><span>Highest summit {h:,} m</span></a>' for s, h, land, names in cards)
 page = f'''<!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Seeded worlds</title>
