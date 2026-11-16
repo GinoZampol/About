@@ -192,10 +192,27 @@ export function buildDesign(R, seed, domain = { x0: 0, size: WORLD_KM }) {
     R, land: new Float32Array(n), U: new Float32Array(n), h0: new Float32Array(n), rock: new Uint8Array(n),
     kmod: new Float32Array(n), strat: new Float32Array(n), gorge: new Float32Array(n), mesa: new Float32Array(n), erg: new Float32Array(n),
   };
+  const shelf = VARIANT === 'S' ? new Float32Array(n) : null;
   for (let j = 0; j < R; j++) for (let i = 0; i < R; i++) {
     const p = designAt(domain.x0 + (i + 0.5) / R * domain.size, domain.x0 + (j + 0.5) / R * domain.size, seed);
-    const c = j * R + i;
+    const c = j * R + i; if (shelf) shelf[c] = p.shelf || 0;
     d.land[c] = p.land; d.U[c] = p.U; d.h0[c] = p.h0; d.rock[c] = p.rock; d.kmod[c] = p.kmod; d.strat[c] = p.strat; d.gorge[c] = p.gG; d.mesa[c] = p.plateau; d.erg[c] = p.erg;
+  }
+  if (shelf) {
+    // Relief grows with distance from the sea: rolling ground and ranges start from a coastal lowland instead of
+    // standing straight out of the water. Tablelands are exempt, so where one meets the sea it ends in a cliff.
+    const dist = new Float32Array(n).fill(1e9), cell = domain.size / R, D = 1.41421356;
+    for (let c = 0; c < n; c++) if (d.land[c] < 0) dist[c] = 0;
+    for (let j = 0; j < R; j++) for (let i = 0; i < R; i++) { const c = j * R + i; let v = dist[c];
+      if (i > 0) v = Math.min(v, dist[c - 1] + 1); if (j > 0) { v = Math.min(v, dist[c - R] + 1); if (i > 0) v = Math.min(v, dist[c - R - 1] + D); if (i < R - 1) v = Math.min(v, dist[c - R + 1] + D); } dist[c] = v; }
+    for (let j = R - 1; j >= 0; j--) for (let i = R - 1; i >= 0; i--) { const c = j * R + i; let v = dist[c];
+      if (i < R - 1) v = Math.min(v, dist[c + 1] + 1); if (j < R - 1) { v = Math.min(v, dist[c + R] + 1); if (i < R - 1) v = Math.min(v, dist[c + R + 1] + D); if (i > 0) v = Math.min(v, dist[c + R - 1] + D); } dist[c] = v; }
+    for (let c = 0; c < n; c++) {
+      if (d.land[c] < 0) continue;
+      const km = dist[c] * cell, t = Math.min(1, Math.max(0, (km - 0.3) / 4.5)), k0 = t * t * (3 - 2 * t), k = k0 + (1 - k0) * shelf[c];
+      const low = Math.min(d.h0[c], 5 + 9 * km);
+      d.h0[c] = low + (d.h0[c] - low) * k; d.U[c] = 0.012e-3 + Math.max(0, d.U[c] - 0.012e-3) * k;
+    }
   }
   return d;
 }

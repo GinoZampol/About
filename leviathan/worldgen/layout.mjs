@@ -144,5 +144,5 @@ export function seededDesign(xk, yk, seed) {
   if (badl) kmod = 0.7;
   const strat = 6 * dGM + 70 * fbm(xk / 8, yk / 8, 2, seed + 44) + 14 * noise2(xk / 1.2, yk / 1.2, seed + 45);
   const sd = L.sand, erg = 0 * plateau * smoothstep(1.2, 0.3, Math.hypot((wx - sd[0]) / sd[2], (wy - sd[1]) / sd[3]) + 0.28 * fbm(xk / 1.6, yk / 1.6, 2, seed + 48));
-  return { land, U: U * 1e-3, h0, rock, kmod, strat, gG, plateau, erg };
+  return { land, U: U * 1e-3, h0, rock, kmod, strat, gG, plateau, erg, shelf: Math.max(plateau, f.up) };
 }
