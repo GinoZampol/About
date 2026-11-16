@@ -359,6 +359,7 @@ an Unreal project.
 | `tools/layout_preview.mjs` | top-down previews of the seeded forcing for many seeds |
 | `tools/screenshot.mjs` | in-engine screenshots of named views (`--data=/data_b4/`) |
 | `tools/build_pages.sh` | builds the public site into the repository's top-level `docs/` |
+| `tools/bake_seeded.sh <seed>` | bakes a seeded world into `data_s<seed>/`; an existing bake is first kept as `data_s<seed>-v<n>/`, so no published world is ever removed |
 | `tools/seeded_menu.py` | the menu page of the seeded worlds, with a small map of each (called by `build_pages.sh`) |
 | `tools/build_web.mjs` | single-file web bundle (data wrapped losslessly in PNG) |
 | `tools/perf.mjs`, `tools/scout.mjs` | performance measurement, scouting views |

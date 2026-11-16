@@ -22,14 +22,15 @@ for d in sorted(glob.glob(os.path.join(L, 'data_s*'))):
 # folder suffixes: -open = open edges; -v1, -v2 = earlier bakes kept for comparison
 def label(s):
     seed, *tags = s.split('-')
-    extra = {'open': 'open edges', 'v1': 'first bake', 'v2': 'second bake'}
-    return f'World {seed}' + ''.join(f' ({extra.get(t, t)})' for t in tags)
+    names = ['first', 'second', 'third', 'fourth', 'fifth', 'sixth', 'seventh', 'eighth', 'ninth', 'tenth']
+    lab = lambda t: 'open edges' if t == 'open' else (f'{names[int(t[1:]) - 1]} bake' if t[0] == 'v' and t[1:].isdigit() and int(t[1:]) <= 10 else f'bake {t[1:]}' if t[0] == 'v' else t)
+    return f'World {seed}' + ''.join(f' ({lab(t)})' for t in tags)
 def card(s, h):
     return (f'<a class="card" href="play/?data=../s{s}/"><img src="s{s}/map.jpg" alt="Map of {label(s)}" width="420" height="420" loading="lazy">'
             f'<b>{label(s)}</b><span>Highest summit {h:,} m</span></a>')
 older = lambda s: '-v' in s
 current = [c for c in cards if not older(c[0])]
-earlier = sorted([c for c in cards if older(c[0])], key=lambda c: (c[0].split('-')[-1], c[0]), reverse=True)
+earlier = sorted([c for c in cards if older(c[0])], key=lambda c: (int(c[0].split('-v')[-1]) if c[0].split('-v')[-1].isdigit() else 0, c[0]), reverse=True)
 items = '\n'.join(card(s, h) for s, h, land, names in current)
 if earlier:
     items += '\n</div>\n<h2>Earlier bakes</h2>\n<p>Kept for comparison: the same seeds baked with earlier versions of the generator.</p>\n<div class="grid">\n' + '\n'.join(card(s, h) for s, h, land, names in earlier)
