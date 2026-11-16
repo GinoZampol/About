@@ -23,7 +23,11 @@ import { noise2, fbm, smoothstep, sat, mulberry32 } from '../shared/noise.mjs';
 import { ROCK } from '../shared/geology.mjs';
 import { computePrecipDir } from './erosion.mjs';
 
-const PLAY = 50, X0 = -3, SIZE = 56, G = 192;             // the layout grid covers the generated domain (playable world + hidden margin)
+// The playable world is PW x PH km (50 x 50 by default; setPlay gives wide worlds). The layout grid is square and
+// covers the generated domain: the playable world plus a 3 km hidden margin, around its longer side.
+let PW = 50, PH = 50, X0 = -3, SIZE = 56, G = 192;
+export function setPlay(w, h) { PW = w; PH = h; SIZE = Math.max(w, h) + 6; G = Math.round(192 * SIZE / 56); cache = null; }
+export const playSize = () => [PW, PH, SIZE];
 const T0 = 0.9e6;                                         // years of uplift already expressed in the starting surface
 const gridAt = (i) => X0 + (i + 0.5) / G * SIZE;
 const gauss = (d, s) => Math.exp(-(d * d) / (2 * s * s));
@@ -48,7 +52,7 @@ function warp(L, xk, yk) {
 function thick(L, xk, yk, wx, wy, dB) {
   const s = L.seed;
   return fbm(wx / 33 + L.o[2], wy / 33 + L.o[3], 2, s + 21) + 0.3 * fbm(wx / 12, wy / 12 + L.o[4], 2, s + 22)
-    - 0.4 * EDGE_FADE * smoothstep(9, 0, Math.min(xk, yk, PLAY - xk, PLAY - yk)) - 0.5 * (1 - smoothstep(0.95, 1.6, dB));
+    - 0.4 * EDGE_FADE * smoothstep(9, 0, Math.min(xk, yk, PW - xk, PH - yk)) - 0.5 * (1 - smoothstep(0.95, 1.6, dB));
 }
 // The tectonic fields at a point.
 function tect(L, xk, yk) {
@@ -75,11 +79,12 @@ export function getLayout(seed) {
   if (cache && cache.seed === seed) return cache;
   const r = mulberry32((Math.imul(seed | 0, 2654435761) ^ 0x9e3779b9) >>> 0);
   const L = { seed, o: Array.from({ length: 6 }, () => r() * 97), islands: [], alpsCentre: [0, 0, 0], thMax: 0, th50: 0 };
-  L.B = [25 + (r() - 0.5) * 16, 25 + (r() - 0.5) * 16];
-  { const a = r() * Math.PI; L.e = [Math.cos(a), Math.sin(a), Math.sqrt(1.1 + r() * 0.5)]; }
-  L.RB = 11 + r() * 3;
+  L.B = [PW / 2 + (r() - 0.5) * 16 * PW / 50, PH / 2 + (r() - 0.5) * 16 * PH / 50];
+  { let a = r() * Math.PI; const el = Math.sqrt(1.1 + r() * 0.5); if (PW !== PH) a = (PW > PH ? 0 : Math.PI / 2) + (a - Math.PI / 2) * 0.25;
+    L.e = [Math.cos(a), Math.sin(a), PW !== PH ? Math.sqrt(Math.max(PW, PH) / Math.min(PW, PH)) * el : el]; }
+  L.RB = (11 + r() * 3) * (PW !== PH ? Math.sqrt(PW * PH / 2500) : 1);
   L.dir = Math.floor(r() * 4); L.windSlope = (r() - 0.5) * 0.8;                 // the rain wind: which side it comes from, and how far it veers
-  const n = G * G, inPlay = (x, y) => x >= 0 && y >= 0 && x <= PLAY && y <= PLAY;
+  const n = G * G, inPlay = (x, y) => x >= 0 && y >= 0 && x <= PW && y <= PH;
 
   // 1. scale the thickening to this world: its strongest point becomes the great massif
   const raw = [], raw0 = [];
@@ -96,7 +101,7 @@ export function getLayout(seed) {
     pv.sort((a, b) => a - b); const q = pv[Math.floor(pv.length * 0.98)]; L.thMax = L.th50 + Math.max(0.05, (q - L.th50) / 0.75); }
   { // the thickest point inside the world (kept 9 km in from the border) carries the great massif
     let best = -1e9, bx = 25, by = 25;
-    for (let j = 0; j < G; j++) for (let i = 0; i < G; i++) { const x = gridAt(i), y = gridAt(j); if (Math.min(x, y, PLAY - x, PLAY - y) < 9) continue; const v = raw0[j * G + i]; if (v > best) { best = v; bx = x; by = y; } }
+    for (let j = 0; j < G; j++) for (let i = 0; i < G; i++) { const x = gridAt(i), y = gridAt(j); if (Math.min(x, y, PW - x, PH - y) < 9) continue; const v = raw0[j * G + i]; if (v > best) { best = v; bx = x; by = y; } }
     const f = tect(L, bx, by), a = r() * Math.PI; L.mseg = [f.wx - Math.cos(a) * 2, f.wy - Math.sin(a) * 2, f.wx + Math.cos(a) * 2, f.wy + Math.sin(a) * 2]; L.massif = [bx, by]; }
 
   // 2. volcanic centres in the deep basin, and one limestone block
@@ -135,7 +140,7 @@ export function getLayout(seed) {
   const score = new Float32Array(n).fill(-9), land = [];
   for (let c = 0; c < n; c++) {
     const x = gridAt(c % G), y = gridAt((c / G) | 0);
-    if (sea[c] || seaD[c] < 1.2 || T[c].dB < 0.9 || T[c].t > 0.5 || T[c].gC > 0.08 || Math.min(x, y, PLAY - x, PLAY - y) < -2.5) continue;
+    if (sea[c] || seaD[c] < 1.2 || T[c].dB < 0.9 || T[c].t > 0.5 || T[c].gC > 0.08 || Math.min(x, y, PW - x, PH - y) < -2.5) continue;
     score[c] = -P[c] + 0.06 * Math.min(seaD[c], 9) - 0.6 * T[c].hill + 0.12 * fbm(x / 13 + L.o[5], y / 13, 2, seed + 31); if (inPlay(x, y)) land.push(c);
   }
   L.table = new Float32Array(n); L.tdist = new Float32Array(n);
@@ -152,7 +157,7 @@ export function getLayout(seed) {
       for (let j = 0; j < G; j++) for (let i = 0; i < G; i++) { let a = 0; for (let d = -w; d <= w; d++) a += v(j * G + Math.min(G - 1, Math.max(0, i + d))); tmp[j * G + i] = a; }
       for (let j = 0; j < G; j++) for (let i = 0; i < G; i++) { let a = 0; for (let d = -w; d <= w; d++) a += tmp[Math.min(G - 1, Math.max(0, j + d)) * G + i]; avg[j * G + i] = a; } }
     let start = -1;
-    for (const c of land) { const x = gridAt(c % G), y = gridAt((c / G) | 0); if (Math.min(x, y, PLAY - x, PLAY - y) < 0.5) continue; if (start < 0 || avg[c] > avg[start]) start = c; }
+    for (const c of land) { const x = gridAt(c % G), y = gridAt((c / G) | 0); if (Math.min(x, y, PW - x, PH - y) < 0.5) continue; if (start < 0 || avg[c] > avg[start]) start = c; }
     if (start < 0) { start = land[0]; for (const c of land) if (avg[c] > avg[start]) start = c; }
     // the circle widens until the connected ground inside it reaches the cover's share of the world
     const sx0 = gridAt(start % G), sy0 = gridAt((start / G) | 0), inside = new Uint8Array(n);
@@ -180,8 +185,8 @@ export function getLayout(seed) {
       for (let c = 0; c < n; c++) if (!L.table[c] && !out[c]) { L.table[c] = 1; tx += gridAt(c % G); ty += gridAt((c / G) | 0); tn++; } }
     // Beyond the border the world goes on: where the badlands reach the border they carry straight on through the
     // hidden margin to the edge of the simulation, so they neither end nor slope down just past the wall.
-    { const k = (v) => Math.min(G - 1, Math.max(0, Math.floor((Math.min(PLAY - 0.05, Math.max(0.05, v)) - X0) / SIZE * G)));
-      for (let j = 0; j < G; j++) for (let i = 0; i < G; i++) { const x = gridAt(i), y = gridAt(j); if (inPlay(x, y)) continue; L.table[j * G + i] = L.table[k(y) * G + k(x)]; } }
+    { const k = (v, lim) => Math.min(G - 1, Math.max(0, Math.floor((Math.min(lim - 0.05, Math.max(0.05, v)) - X0) / SIZE * G)));
+      for (let j = 0; j < G; j++) for (let i = 0; i < G; i++) { const x = gridAt(i), y = gridAt(j); if (inPlay(x, y)) continue; L.table[j * G + i] = L.table[k(y, PH) * G + k(x, PW)]; } }
     // distance in from the edge of the cover (km): the tableland stands higher toward its interior
     const D = L.tdist, cell = SIZE / G; for (let c = 0; c < n; c++) D[c] = L.table[c] ? 1e9 : 0;
     for (let pass = 0; pass < 2; pass++) for (let k = 0; k < n; k++) {
@@ -214,7 +219,7 @@ function forcing(L, xk, yk, f, plateau) {
   // away from hills and mountains the crust barely moves, so most of the land stays low plains
   let U = reg + 0.006 + 0.02 * smoothstep(0.1, 0.65, fbm(xk / 7.5, yk / 7.5, 3, s + 31));
   const nearT = L.tableNear ? sample(L.tableNear, xk, yk) : 0;
-  U += 1.55 * f.gC + 0.7 * mt * (1 - nearT) + 0.3 * hill * (1 - plateau) + 1.15 * isl + 0.62 * chalk;
+  U += 1.55 * f.gC + 0.0 * mt * (1 - nearT) + 0.3 * hill   /* (no secondary ranges: they read as a mid grey wall) */ * (1 - plateau) + 1.15 * isl + 0.62 * chalk;
   U += 0.012 * (0.5 + 0.5 * noise2(xk / 1.1, yk / 1.1, s + 35)) * (1 - plateau);
   // The block rises steadily from a low start (as the Colorado Plateau did): the rivers already flowing across it keep
   // cutting down as it rises, so canyons run right through its interior instead of only nibbling at its edges.

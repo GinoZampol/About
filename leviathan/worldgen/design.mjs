@@ -7,7 +7,7 @@
 // around it, and one antecedent river (the Great River) crossing the Spine through a gorge.
 import { noise2, fbm, ridged, smoothstep, sat, clamp, hash2 } from '../shared/noise.mjs';
 import { ROCK } from '../shared/geology.mjs';
-import { seededDesign } from './layout.mjs';
+import { seededDesign, playSize } from './layout.mjs';
 
 export const WORLD_KM = 50;
 
@@ -225,8 +225,9 @@ export function buildDesign(R, seed, domain = { x0: 0, size: WORLD_KM }) {
 // (water reaching the edge of the world) is left as it is. Specks of land too small to be islands are drowned.
 function oneSea(d, R, cellKm, seed, domain) {
   // only the playable world counts: two waters that meet beyond the border are still separate for anyone inside it
-  const lo = Math.max(0, Math.ceil((0 - domain.x0) / cellKm - 0.5)), hi = Math.min(R - 1, Math.floor((WORLD_KM - domain.x0) / cellKm - 0.5));
-  const inPlay = (x, y) => x >= lo && y >= lo && x <= hi && y <= hi;
+  const [PWk, PHk] = VARIANT === 'S' ? playSize() : [WORLD_KM, WORLD_KM];
+  const lo = Math.max(0, Math.ceil((0 - domain.x0) / cellKm - 0.5)), hi = Math.min(R - 1, Math.floor((PWk - domain.x0) / cellKm - 0.5)), hiY = Math.min(R - 1, Math.floor((PHk - domain.x0) / cellKm - 0.5));
+  const inPlay = (x, y) => x >= lo && y >= lo && x <= hi && y <= hiY;
   const n = R * R, comp = new Int32Array(n), stack = new Int32Array(n), cost = new Float32Array(n), prev = new Int32Array(n);
   const label = () => {
     comp.fill(-1); const sizes = [], edge = []; let nc = 0;
@@ -234,7 +235,7 @@ function oneSea(d, R, cellKm, seed, domain) {
       if (d.land[s0] >= 0 || comp[s0] >= 0 || !inPlay(s0 % R, (s0 / R) | 0)) continue;
       let sp = 0, cnt = 0, e = false; stack[sp++] = s0; comp[s0] = nc;
       while (sp) {
-        const c = stack[--sp], i = c % R, j = (c / R) | 0; cnt++; if (i === lo || j === lo || i === hi || j === hi) e = true;
+        const c = stack[--sp], i = c % R, j = (c / R) | 0; cnt++; if (i === lo || j === lo || i === hi || j === hiY) e = true;
         for (let dj = -1; dj <= 1; dj++) for (let di = -1; di <= 1; di++) { const x = i + di, y = j + dj; if (!inPlay(x, y)) continue; const q = y * R + x; if (d.land[q] < 0 && comp[q] < 0) { comp[q] = nc; stack[sp++] = q; } }
       }
       sizes.push(cnt); edge.push(e); nc++;
