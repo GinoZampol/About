@@ -46,13 +46,14 @@ function fields(L, xk, yk) {
   const table = smoothstep(L.arid.rad, L.arid.rad - 3.2, dA) * (1 - smoothstep(0.08, 0.4, gC)) * (1 - smoothstep(0.06, 0.3, gA));
   const gHl = 0.22 * gauss(dCr, 11) * (1 - sat(gC * 1.5)) + (1 - table) * 0.3 * Math.max(0, cW) * (1 - sat(m * 1.6)) * (0.6 + 0.6 * smoothstep(-0.3, 0.4, fbm(xk / 7, yk / 7, 3, seed + 23)));
   const rift = Math.max(0, -cW);
-  return { sx, sy, rr: Math.hypot(sx - L.hot[0], sy - L.hot[1]), gC, gA, gHl, rift, table, dA };
+  return { sx, sy, rr: Math.hypot(sx - L.hot[0], sy - L.hot[1]), gC, gA, gHl: gHl + 0.1 * smoothstep(0, 0.5, fbm(xk / 5.5, yk / 5.5, 3, seed + 24)) * (1 - table), rift, table, dA, dCr,
+    up: smoothstep(0.12, 0.24, fbm(xk / 12, yk / 12, 3, seed + 71) + 0.06 * fbm(xk / 2.2, yk / 2.2, 3, seed + 72)) * (1 - table) };   // gentle uplands with a real edge
 }
 // elevation tendency: rifts and the spreading centre sink, ranges and their belts rise, broad swells do the rest
 function tendency(L, xk, yk, f) {
   const seed = L.seed;
   return 0.6 * (smoothstep(2, 21, f.rr) - 0.5) - 0.8 * f.rift + 0.72 * fbm(xk / 15, yk / 15, 4, seed + 61) + 0.32 * fbm(xk / 5.5, yk / 5.5, 3, seed + 62)
-    + 0.1 * fbm(xk / 1.7, yk / 1.7, 3, seed + 63) + 1.3 * (f.gC + f.gA) + 1.6 * f.gHl + 0.9 * f.table;
+    + 0.1 * fbm(xk / 1.7, yk / 1.7, 3, seed + 63) + 1.3 * (f.gC + f.gA) + 1.6 * f.gHl + 0.9 * f.table + 0.22 * f.up + 0.9 * gauss(f.dCr, 12);   // the great mountain stands well inland
 }
 
 let cache = null;
@@ -69,10 +70,10 @@ export function getLayout(seed) {
   L._d = new Float64Array(L.plates.length);
   { // which corner gets the mountain and which the arid country is the seed's choice
     const C = [[0, 0], [50, 0], [50, 50], [0, 50]], km = Math.floor(r() * 4), ka = (km + 1 + Math.floor(r() * 3)) % 4;
-    const cm = C[km], ux = Math.sign(25 - cm[0]) * Math.SQRT1_2, uy = Math.sign(25 - cm[1]) * Math.SQRT1_2, d = 14.5 + r() * 2.5, t = (r() - 0.5) * 0.9;
+    const cm = C[km], ux = Math.sign(25 - cm[0]) * Math.SQRT1_2, uy = Math.sign(25 - cm[1]) * Math.SQRT1_2, d = 18.5 + r() * 2.5, t = (r() - 0.5) * 0.9;
     const mx = cm[0] + ux * d, my = cm[1] + uy * d, px = -uy * Math.cos(t) - ux * Math.sin(t), py = ux * Math.cos(t) - uy * Math.sin(t);
     L.massifSeg = [mx - px * 2.6, my - py * 2.6, mx + px * 2.6, my + py * 2.6];
-    const ca = C[ka], ax = Math.sign(25 - ca[0]) * Math.SQRT1_2, ay = Math.sign(25 - ca[1]) * Math.SQRT1_2, rad = 17 + r() * 3, sgn = r() < 0.5 ? 1 : -1;
+    const ca = C[ka], ax = Math.sign(25 - ca[0]) * Math.SQRT1_2, ay = Math.sign(25 - ca[1]) * Math.SQRT1_2, rad = 20.5 + r() * 2.5, sgn = r() < 0.5 ? 1 : -1;
     L.arid = { x: ca[0] - ax * 2, y: ca[1] - ay * 2, rad };
     const P = [ca[0] + ax * rad * 0.45, ca[1] + ay * rad * 0.45];
     L.mouth = [ca[0] + ax * (rad - 1), ca[1] + ay * (rad - 1)];
@@ -86,7 +87,7 @@ export function getLayout(seed) {
   const cs = []; for (let j = 0; j < G; j++) for (let i = 0; i < G; i++) cs.push(convergence(L, at(i), at(j), 3.0));
   cs.sort((p, q) => p - q); L.norm = 1 / Math.max(1e-6, cs[Math.floor(cs.length * 0.98)]);
   // sea level: the quantile of the tendency field that leaves the chosen share of the world under water
-  const seaShare = 0.34 + r() * 0.08, E = new Float32Array(G * G);
+  const seaShare = 0.29 + r() * 0.06, E = new Float32Array(G * G);
   let bestA = [25, 25, 0];
   for (let j = 0; j < G; j++) for (let i = 0; i < G; i++) {
     const xk = at(i), yk = at(j), f = fields(L, xk, yk); E[j * G + i] = tendency(L, xk, yk, f);
@@ -109,7 +110,7 @@ export function seededDesign(xk, yk, seed) {
   const gG = gauss(dG, 1.05) * smoothstep(0, 0.3, plateau + gauss(Math.hypot(sx - L.mouth[0], sy - L.mouth[1]), 3)), dGM = Math.hypot(sx - L.mouth[0], sy - L.mouth[1]);
 
   // ---- uplift ----------------------------------------------------------------------------------
-  let U = 0.012 + 0.034 * smoothstep(0.1, 0.65, fbm(xk / 7.5, yk / 7.5, 3, seed + 31)) * (1 - plateau);
+  let U = 0.02 * f.up + 0.012 + 0.034 * smoothstep(0.1, 0.65, fbm(xk / 7.5, yk / 7.5, 3, seed + 31)) * (1 - plateau);
   U += gHl + 2.0 * gA + 2.5 * gC + 0.05 * plateau;
   U += 0.012 * (0.5 + 0.5 * noise2(xk / 1.1, yk / 1.1, seed + 35)) * (1 - plateau);
   U += 0.06 * ridged(xk / 3.2, yk / 3.2, 3, seed + 32) * (0.3 + gA + gHl * 3);
@@ -120,7 +121,7 @@ export function seededDesign(xk, yk, seed) {
   let h0;
   if (land < 0) h0 = -Math.min(260, 3 + 55 * Math.pow(-land, 1.3));
   else {
-    h0 = 6 + 24 * sat(land / 3) + 600 * gHl + 1800 * gA + 2600 * gC + 12 * fbm(xk / 2, yk / 2, 3, seed + 33);
+    h0 = 6 + 24 * sat(land / 3) + 130 * f.up * sat(land / 2.5) + 600 * gHl + 1800 * gA + 2600 * gC + 12 * fbm(xk / 2, yk / 2, 3, seed + 33);
     h0 += plateau * (1100 + 10 * dGM + 45 * fbm(xk / 5, yk / 5, 3, seed + 34));
     const notch = 105 + 40 * Math.max(0, dGM - 1);
     h0 = Math.max(1.5, h0 + (Math.min(h0, notch) - h0) * Math.sqrt(gG));
