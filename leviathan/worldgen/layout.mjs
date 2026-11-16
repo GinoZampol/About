@@ -43,7 +43,7 @@ function fields(L, xk, yk) {
   const gC = gauss(dCr, 5.3) * (0.88 + 0.2 * noise2(xk / 3.1, yk / 3.1, seed + 28) + 0.1 * noise2(xk / 1.6, yk / 1.6, seed + 29));
   const dA = Math.hypot(sx - L.arid.x, sy - L.arid.y) + 2.6 * fbm(xk / 6.5, yk / 6.5, 3, seed + 65);
   const gA = Math.min(m, 0.45) * smoothstep(0.12, 0.3, m) * (1 - smoothstep(L.arid.rad + 3, L.arid.rad - 2, dA));
-  const table = smoothstep(L.arid.rad, L.arid.rad - 3.2, dA) * (1 - smoothstep(0.08, 0.4, gC)) * (1 - smoothstep(0.06, 0.3, gA));
+  const table = smoothstep(L.arid.rad, L.arid.rad - 1.6, dA) * (1 - smoothstep(0.08, 0.4, gC)) * (1 - smoothstep(0.06, 0.3, gA));
   const gHl = 0.13 * gauss(dCr, 10) * (1 - sat(gC * 1.5)) + (1 - table) * 0.2 * smoothstep(0.25, 0.9, cW) * (1 - sat(m * 1.6)) * smoothstep(-0.25, 0.3, fbm(xk / 7, yk / 7, 3, seed + 23));
   const rift = Math.max(0, -cW);
   return { sx, sy, rr: Math.hypot(sx - L.hot[0], sy - L.hot[1]), gC, gA, gHl: gHl + 0.035 * smoothstep(0.05, 0.5, fbm(xk / 5.5, yk / 5.5, 3, seed + 24)) * (1 - table), rift, table, dA, dCr,
@@ -87,7 +87,7 @@ export function getLayout(seed) {
   const cs = []; for (let j = 0; j < G; j++) for (let i = 0; i < G; i++) cs.push(convergence(L, at(i), at(j), 3.0));
   cs.sort((p, q) => p - q); L.norm = 1 / Math.max(1e-6, cs[Math.floor(cs.length * 0.98)]);
   // sea level: the quantile of the tendency field that leaves the chosen share of the world under water
-  const seaShare = 0.29 + r() * 0.06, E = new Float32Array(G * G);
+  const seaShare = 0.21 + r() * 0.05, E = new Float32Array(G * G);
   let bestA = [25, 25, 0];
   for (let j = 0; j < G; j++) for (let i = 0; i < G; i++) {
     const xk = at(i), yk = at(j), f = fields(L, xk, yk); E[j * G + i] = tendency(L, xk, yk, f);
@@ -140,9 +140,9 @@ export function seededDesign(xk, yk, seed) {
   let kmod = 1;
   if (rock === ROCK.GREYWACKE) kmod = 0.8 + 0.6 * sat(0.5 + 0.9 * noise2(xk / 2.3, yk / 2.3, seed + 47));
   if (rock === ROCK.SCHIST) kmod = 0.85 + 0.4 * sat(0.5 + noise2(xk / 1.7, yk / 1.7, seed + 43));
-  if (rock === ROCK.SANDSTONE) kmod = 0.3;
+  if (rock === ROCK.SANDSTONE) kmod = 0.17;                  // a hard cap: canyons stay narrow and walled, the tableland survives between them
   if (badl) kmod = 0.7;
   const strat = 6 * dGM + 70 * fbm(xk / 8, yk / 8, 2, seed + 44) + 14 * noise2(xk / 1.2, yk / 1.2, seed + 45);
-  const sd = L.sand, erg = plateau * smoothstep(1.2, 0.3, Math.hypot((wx - sd[0]) / sd[2], (wy - sd[1]) / sd[3]) + 0.28 * fbm(xk / 1.6, yk / 1.6, 2, seed + 48));
+  const sd = L.sand, erg = 0 * plateau * smoothstep(1.2, 0.3, Math.hypot((wx - sd[0]) / sd[2], (wy - sd[1]) / sd[3]) + 0.28 * fbm(xk / 1.6, yk / 1.6, 2, seed + 48));
   return { land, U: U * 1e-3, h0, rock, kmod, strat, gG, plateau, erg };
 }
