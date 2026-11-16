@@ -54,9 +54,9 @@ function tect(L, xk, yk) {
   const dB = Math.hypot(ex / L.e[2], ey * L.e[2]) / (L.RB * (1 + 0.32 * fbm(xk / 10 + L.o[4], yk / 10, 3, s + 61)));
   // regional vertical motion (mm/yr): the basin sinks, the flanks rise unevenly, more on average further out
   const flank = smoothstep(0.85, 2.3, dB) * (0.25 + 1.25 * sat(0.5 + 1.1 * fbm(xk / 15 + L.o[5], yk / 15, 3, s + 62)));
-  const reg = -0.5 * (1 - smoothstep(0.45, 1.05, dB)) + 0.1 * flank;
+  const reg = -0.5 * (1 - smoothstep(0.45, 1.05, dB)) + 0.035 * flank;
   const th = thick(L, xk, yk, wx, wy, dB), t = L.thMax ? (th - L.th50) / (L.thMax - L.th50) : 0;
-  const mt = Math.pow(smoothstep(0.5, 1.0, t), 2.3) * (0.9 + 0.2 * noise2(xk / 2.4, yk / 2.4, s + 23));      // mountain uplift (0..1)
+  const mt = Math.pow(smoothstep(0.42, 0.85, t), 1.6) * (0.9 + 0.2 * noise2(xk / 2.4, yk / 2.4, s + 23));      // mountain uplift (0..1)
   const foot = smoothstep(0.22, 0.5, t) * (1 - smoothstep(0.55, 0.8, t));                                       // the rising ground around it
   const hill = sat(smoothstep(0.05, 0.42, fbm(wx / 9.5 + L.o[1], wy / 9.5, 3, s + 25)) * smoothstep(0.95, 1.45, dB) + 0.7 * foot) * (1 - sat(mt * 3));
   return { wx, wy, dB, reg, t, mt, hill };
@@ -73,13 +73,18 @@ export function getLayout(seed) {
   const n = G * G, inPlay = (x, y) => x >= 0 && y >= 0 && x <= PLAY && y <= PLAY;
 
   // 1. scale the thickening to this world: its strongest point becomes the great massif
-  const raw = [];
+  const raw = [], raw0 = [];
   let thMax = -1e9;
   for (let j = 0; j < G; j++) for (let i = 0; i < G; i++) {
     const x = gridAt(i), y = gridAt(j), f = tect(L, x, y), v = thick(L, x, y, f.wx, f.wy, f.dB);
-    raw.push(v); if (inPlay(x, y) && v > thMax) thMax = v;
+    raw.push(v); raw0.push(v); if (inPlay(x, y) && v > thMax) thMax = v;
   }
-  raw.sort((a, b) => a - b); L.th50 = raw[Math.floor(raw.length * 0.5)]; L.thMax = Math.max(thMax, L.th50 + 0.05);
+  raw.sort((a, b) => a - b); L.th50 = raw[Math.floor(raw.length * 0.5)];
+  // The scale is set by area, not by the single highest point: the thickest 2% of the world reaches t = 0.75. So
+  // every world's great massif has a broad enough base to stand high with slopes rock can hold, instead of a
+  // needle in one world and a sprawling plateau in another.
+  { const pv = []; for (let j = 0; j < G; j++) for (let i = 0; i < G; i++) if (inPlay(gridAt(i), gridAt(j))) pv.push(raw0[j * G + i]);
+    pv.sort((a, b) => a - b); const q = pv[Math.floor(pv.length * 0.98)]; L.thMax = L.th50 + Math.max(0.05, (q - L.th50) / 0.75); }
 
   // 2. volcanic centres in the deep basin, and one limestone block
   const T = new Array(n);
@@ -166,7 +171,8 @@ function forcing(L, xk, yk, f, plateau) {
     if (q[3]) chalk = Math.max(chalk, smoothstep(1.0, 0.72, d)); else isl = Math.max(isl, gauss(d, 0.5));
   }
   // uplift rate (mm/yr)
-  let U = reg + 0.025 + 0.03 * sat(0.5 + fbm(xk / 7.5, yk / 7.5, 3, s + 31));
+  // away from hills and mountains the crust barely moves, so most of the land stays low plains
+  let U = reg + 0.012 + 0.034 * smoothstep(0.1, 0.65, fbm(xk / 7.5, yk / 7.5, 3, s + 31));
   U += 3.5 * mt + 0.3 * hill * (1 - plateau) + 1.15 * isl + 0.62 * chalk;
   U += 0.012 * (0.5 + 0.5 * noise2(xk / 1.1, yk / 1.1, s + 35)) * (1 - plateau);
   U = U * (1 - plateau) + plateau * Math.max(U, 0.05);

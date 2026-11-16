@@ -39,9 +39,8 @@ function seaFrom(h, N, sea = new Uint8Array(N * N)) {
   for (let j = 0; j < N; j++) for (let i = 0; i < N; i++) { const c = j * N + i; sea[c] = h[c] < 0 || isEdge(i, j, N) ? 1 : 0; }
   return sea;
 }
-// After the simulation: the sea rises to its present level (as it did after the last ice age), drowning the
-// lower ends of the valleys the rivers cut while it stood lower; that is what gives the coast its bays, inlets and
-// headlands. The rise is whatever brings the sea to its share of the world (at least 20 m, at most 150 m). Water
+// After the simulation: the sea rises a little to its present level (at most 3 m), drowning the mouths of the
+// valleys into small bays without turning every coast into fjords. Water
 // below sea level then cut off from the open sea is a lagoon or pond: small ones are filled in (they would have
 // silted up), and specks of land too small to be islands go under.
 function settleSea(h, N, dx, log, share) {
@@ -50,7 +49,7 @@ function settleSea(h, N, dx, log, share) {
   { const m = Math.round(MARGIN_KM / (WORLD_KM + 2 * MARGIN_KM) * N), z = [];
     for (let j = m; j < N - m; j += 2) for (let i = m; i < N - m; i += 2) z.push(h[j * N + i]);
     z.sort((p, q) => p - q);
-    const rise = Math.max(20, Math.min(150, z[Math.floor(z.length * share)]));
+    const rise = Math.max(0, Math.min(3, z[Math.floor(z.length * share)]));
     for (let c = 0; c < n; c++) h[c] -= rise;
     log(`sea rose ${rise.toFixed(0)} m to its present level`); }
   // sediment builds a shelf off every shore: the sea floor deepens gradually away from land instead of dropping
@@ -110,6 +109,16 @@ function fieldsFor(design, N) {
 }
 
 export function erodeWorld(cfg) {
+  // Seeded world: the great massif's uplift rate is calibrated with a quick probe run of the first level, so every
+  // world's highest summit lands near its target (4.5-5.5 km, from the seed) rather than anywhere from 3 to 10 km
+  // depending on the shape of the thickened zone. (The finer levels add about 27% to the probe's height.)
+  if (cfg.variant === 'S' && cfg.uScale === undefined) {
+    const probe = erodeWorld({ ...cfg, levels: [cfg.levels[0]], uScale: 1, probe: true });
+    let mx = 0; for (const v of probe.h) if (v > mx) mx = v;
+    const target = 4500 + 1000 * hash2(7, 7, cfg.seed);
+    cfg.uScale = Math.max(0.35, Math.min(1.8, Math.pow(target / 1.27 / Math.max(1, mx), 1.1)));
+    log(`great massif calibrated: mountain uplift x${cfg.uScale.toFixed(2)} for a summit near ${target.toFixed(0)} m`);
+  }
   const design = buildDesign(Math.min(1024, cfg.res), cfg.seed, cfg.domain);
   log('design built');
   let h = null, N = 0, g = null, P = null;
@@ -117,6 +126,10 @@ export function erodeWorld(cfg) {
     if (res > cfg.res) break;
     const dx = cfg.sizeM / res;
     g = fieldsFor(design, res);
+    if (cfg.uScale && cfg.uScale !== 1) for (let c = 0; c < res * res; c++) {
+      if (g.U[c] > 0.35e-3) g.U[c] = 0.35e-3 + (g.U[c] - 0.35e-3) * cfg.uScale;
+      if (g.h0[c] > 400) g.h0[c] = 400 + (g.h0[c] - 400) * cfg.uScale;
+    }
     if (!h) h = Float32Array.from(g.h0);
     else {
       h = upsample2(h, N);
@@ -156,7 +169,7 @@ export function erodeWorld(cfg) {
     let mx = 0; for (let c = 0; c < N * N; c++) if (h[c] > mx) mx = h[c];
     log(`level ${res}: ${iters} it, max elevation ${mx.toFixed(0)} m`);
   }
-  if (cfg.variant === 'S') { settleSea(h, N, cfg.sizeM / N, log, getLayout(cfg.seed).seaShare); seaFrom(h, N, g.sea); }
+  if (cfg.variant === 'S' && !cfg.probe) { settleSea(h, N, cfg.sizeM / N, log, getLayout(cfg.seed).seaShare); seaFrom(h, N, g.sea); }
   return { h, N, g, P };
 }
 
