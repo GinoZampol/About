@@ -431,7 +431,10 @@ export async function finishWorld(world, cfg, ROOT, log) {
     const hollow = Math.max(-1, Math.min(1, (hBlur[m] - z) / 60));
     const pe = VS ? p * (1 + 0.45 * smoothstep(14, 0, wdist[m])) + 0.3 * smoothstep(5, 120, qk) + 0.28 * hollow
       : (p + 0.16 * fbm(xk / 5.5, yk / 5.5, 3, seed + 76)) * (1 + 0.5 * smoothstep(14, 0, wdist[m])) + 0.25 * smoothstep(10, 150, qk) + 0.12 * fbm(xk / 2.4, yk / 2.4, 3, seed + 71);
-    let F = smoothstep(0.42, 0.95, pe) * (1 - smoothstep(treeline - 450, treeline + 60, z)) * (1 - smoothstep(0.8, 1.7, sl + 0.3 * fbm(xk / 0.45, yk / 0.45, 2, seed + 75)));
+    // Seeded worlds: tree cover is a continuous spectrum, not forest or no forest. Cover rises steadily with the water
+    // plants can get, over a wide range, so the land runs through open grassland, savanna with scattered trees, open
+    // woodland and closed forest, each wherever the water puts it.
+    let F = (VS ? sat((pe - 0.45) / 1.75) : smoothstep(0.42, 0.95, pe)) * (1 - smoothstep(treeline - 450, treeline + 60, z)) * (1 - smoothstep(0.8, 1.7, sl + 0.3 * fbm(xk / 0.45, yk / 0.45, 2, seed + 75)));
     if (!VS) F *= 0.75 + 0.25 * smoothstep(-0.25, 0.15, fbm(xk / 0.9, yk / 0.9, 3, seed + 72));   // glades and meadows
     F *= 1 - 0.85 * smoothstep(0.75, 1, wet);
     // variant B: the lowland south of the central sea is open prairie; trees keep to the watercourses
@@ -442,8 +445,8 @@ export async function finishWorld(world, cfg, ROOT, log) {
     // the valley floors and the river banks, where water gathers and soil is sheltered.
     if (VS) { const drained = smoothstep(0.18, -0.25, hollow) * smoothstep(40, 6, qk);
       // (broad ramps, so prairie passes through parkland with scattered groves into forest instead of a mown edge)
-      const pr = smoothstep(0.34, 0.06, sl) * smoothstep(1100, 300, z) * smoothstep(2.1, 0.9, pe) * (0.4 + 0.6 * drained);
-      F *= 1 - pr * (0.92 - 0.75 * smoothstep(3, 0.8, wdist[m])); }
+      // (open, well-drained lowland holds somewhat fewer trees: a gentle pull toward grassland, not a cut-off)
+      F *= 1 - 0.45 * smoothstep(0.3, 0.06, sl) * smoothstep(1100, 300, z) * drained * (1 - smoothstep(3, 0.8, wdist[m])); }
     if (VB && !VS) { const pr = smoothstep(1.05, 0.72, pe) * smoothstep(0.24, 0.1, sl) * smoothstep(360, 200, z) * (1 - smoothstep(0.2, 0.4, coldAt(yk))); F *= 1 - pr * (0.85 - 0.85 * smoothstep(5, 1, wdist[m])); }
     F *= 1 - (mMesa[m] / 255) * smoothstep(0.22, 0.45, sl);                               // no woods on mesa walls and ledges                                           // open marsh
     if (z < 3) F *= smoothstep(1.0, 3, z);
