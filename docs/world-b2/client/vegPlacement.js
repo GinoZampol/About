@@ -45,7 +45,10 @@ function placeTrees(world, { key, x0, z0, size, lod }) {
     const r3 = hash2(i, j, seed + 403);
     // stand structure: closed forest, or groves and lone trees in open country
     const clump = noise2(px / 26, pz / 26, seed + 410), grove = noise2(px / 140, pz / 140, seed + 411);
-    let pTree = F > 0.34 ? Math.min(0.92, F * (0.85 + 0.45 * clump)) : F * (grove > 0.18 ? 2.0 + clump : 0.12);
+    // tree density follows cover continuously: lone trees, then scattered groves, then open woodland, then closed forest.
+    // Groves gather the trees in sparse country and fade out as the canopy closes; there is no threshold anywhere.
+    const g01 = smoothstep(-0.35, 0.45, grove), c01 = 0.5 + 0.5 * clump;
+    let pTree = Math.min(0.92, F * (F + (1 - F) * (0.25 + 1.6 * g01)) * (0.8 + 0.4 * c01));
     let isTree = r3 < pTree;
     if (lod === 2 && isTree && hash2(i, j, seed + 404) > 0.62) continue;
     if (lod === 3 && (!isTree || hash2(i, j, seed + 404) > 0.16)) continue;   // far ring: one tree in six, drawn larger
@@ -91,7 +94,7 @@ function placeTrees(world, { key, x0, z0, size, lod }) {
     }
     // age structure: many young trees, a few veterans
     let s = (0.5 + 0.75 * Math.pow(r5, 1.6)) * stunt;
-    if (F < 0.34) s *= 1.12;                 // open-grown trees are broader and bigger
+    s *= 1 + 0.15 * (1 - F);                 // open-grown trees are broader and bigger
     if (lod === 2) s *= 1.12;
     if (lod === 3) s *= 1.9;
     const lean = (hash2(i, j, seed + 412) - 0.5) * 0.08;

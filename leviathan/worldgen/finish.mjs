@@ -408,6 +408,14 @@ export async function finishWorld(world, cfg, ROOT, log) {
   }
   const reliefR = Math.round(700 / mdx);
   const hBlur = boxBlur(mh, M, reliefR);
+  // Seeded worlds: tree cover runs evenly through the whole spectrum. Cover still follows available water and nothing
+  // else (wetter ground always carries more trees), but it is set by where a place ranks among all the land, so the
+  // world holds every stage from open grassland through savanna and open woodland to closed forest in like measure.
+  const peRank = (() => { if (!VS) return null; const v = [];
+    for (let m = 0; m < mn; m += 7) { if (mWater[m] || mMesa[m] > 127) continue; const z = mh[m], hollow = Math.max(-1, Math.min(1, (hBlur[m] - z) / 60));
+      v.push(mP[m] * (1 + 0.45 * smoothstep(14, 0, wdist[m])) + 0.3 * smoothstep(5, 120, mQ[m] / 1e6) + 0.28 * hollow); }
+    v.sort((a, b) => a - b);
+    return (x) => { let lo = 0, hi = v.length; while (lo < hi) { const md = (lo + hi) >> 1; if (v[md] < x) lo = md + 1; else hi = md; } return lo / Math.max(1, v.length); }; })();
   for (let j = 0; j < M; j++) for (let i = 0; i < M; i++) {
     const m = j * M + i, z = mh[m], p = mP[m] + mRip[m] * Math.max(0, 1.0 - mP[m]), sl = mSlope[m];
     const xk = KM0 + (i + 0.5) / M * KMS, yk = KM0 + (j + 0.5) / M * KMS;
@@ -434,7 +442,7 @@ export async function finishWorld(world, cfg, ROOT, log) {
     // Seeded worlds: tree cover is a continuous spectrum, not forest or no forest. Cover rises steadily with the water
     // plants can get, over a wide range, so the land runs through open grassland, savanna with scattered trees, open
     // woodland and closed forest, each wherever the water puts it.
-    let F = (VS ? sat((pe - 0.45) / 1.75) : smoothstep(0.42, 0.95, pe)) * (1 - smoothstep(treeline - 450, treeline + 60, z)) * (1 - smoothstep(0.8, 1.7, sl + 0.3 * fbm(xk / 0.45, yk / 0.45, 2, seed + 75)));
+    let F = (VS ? sat((peRank(pe) - 0.06) / 0.86) : smoothstep(0.42, 0.95, pe)) * (1 - smoothstep(treeline - 450, treeline + 60, z)) * (1 - smoothstep(0.8, 1.7, sl + 0.3 * fbm(xk / 0.45, yk / 0.45, 2, seed + 75)));
     if (!VS) F *= 0.75 + 0.25 * smoothstep(-0.25, 0.15, fbm(xk / 0.9, yk / 0.9, 3, seed + 72));   // glades and meadows
     F *= 1 - 0.85 * smoothstep(0.75, 1, wet);
     // variant B: the lowland south of the central sea is open prairie; trees keep to the watercourses
