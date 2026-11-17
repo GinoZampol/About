@@ -411,9 +411,22 @@ export async function finishWorld(world, cfg, ROOT, log) {
   // Seeded worlds: tree cover runs evenly through the whole spectrum. Cover still follows available water and nothing
   // else (wetter ground always carries more trees), but it is set by where a place ranks among all the land, so the
   // world holds every stage from open grassland through savanna and open woodland to closed forest in like measure.
+  // Water available to plants, seeded worlds. Broad causes come first and the landform second, so tree cover is not
+  // simply forest in every gully and grass on every spur: rain; groundwater beside rivers and the sea; the soil the
+  // rock gives (deep alluvium holds water, limestone drains it away, thin soil on granite); the sun (south-facing slopes
+  // dry out, north-facing ones stay moist); and only then the large valleys and uplands (2 km scale), with the small
+  // hollows and spurs a light touch.
+  const hBig = VS ? boxBlur(boxBlur(mh, M, Math.round(1000 / mdx)), M, Math.round(1000 / mdx)) : null;
+  const SOIL = [0.16, 0.06, -0.12, -0.2, 0.0, -0.04, 0.0, 0.05];
+  const peVS = (m, p) => {
+    const z = mh[m], i = m % M, j = (m / M) | 0;
+    const hollow = Math.max(-1, Math.min(1, (hBlur[m] - z) / 60)), valley = Math.max(-1, Math.min(1, (hBig[m] - z) / 140));
+    const south = j > 0 && j < M - 1 ? (mh[m + M] - mh[m - M]) / (2 * mdx) : 0;        // + where the ground falls away to the south
+    return p * (1 + 0.45 * smoothstep(14, 0, wdist[m])) + 0.15 * smoothstep(5, 120, mQ[m] / 1e6) + 0.06 * hollow + 0.14 * valley
+      + SOIL[mRock[m]] - 0.3 * Math.max(-0.6, Math.min(0.6, south * 2.5));
+  };
   const peRank = (() => { if (!VS) return null; const v = [];
-    for (let m = 0; m < mn; m += 7) { if (mWater[m] || mMesa[m] > 127) continue; const z = mh[m], hollow = Math.max(-1, Math.min(1, (hBlur[m] - z) / 60));
-      v.push(mP[m] * (1 + 0.45 * smoothstep(14, 0, wdist[m])) + 0.3 * smoothstep(5, 120, mQ[m] / 1e6) + 0.28 * hollow); }
+    for (let m = 0; m < mn; m += 7) { if (mWater[m] || mMesa[m] > 127) continue; v.push(peVS(m, mP[m])); }
     v.sort((a, b) => a - b);
     return (x) => { let lo = 0, hi = v.length; while (lo < hi) { const md = (lo + hi) >> 1; if (v[md] < x) lo = md + 1; else hi = md; } return lo / Math.max(1, v.length); }; })();
   for (let j = 0; j < M; j++) for (let i = 0; i < M; i++) {
@@ -437,7 +450,7 @@ export async function finishWorld(world, cfg, ROOT, log) {
     // water available to plants. Seeded worlds use no noise here: rain, plus water gathered from upslope (hollows and
     // valley floors hold it, spurs and crests shed it), plus groundwater beside rivers and the sea
     const hollow = Math.max(-1, Math.min(1, (hBlur[m] - z) / 60));
-    const pe = VS ? p * (1 + 0.45 * smoothstep(14, 0, wdist[m])) + 0.3 * smoothstep(5, 120, qk) + 0.28 * hollow
+    const pe = VS ? peVS(m, p)
       : (p + 0.16 * fbm(xk / 5.5, yk / 5.5, 3, seed + 76)) * (1 + 0.5 * smoothstep(14, 0, wdist[m])) + 0.25 * smoothstep(10, 150, qk) + 0.12 * fbm(xk / 2.4, yk / 2.4, 3, seed + 71);
     // Seeded worlds: tree cover is a continuous spectrum, not forest or no forest. Cover rises steadily with the water
     // plants can get, over a wide range, so the land runs through open grassland, savanna with scattered trees, open
@@ -454,7 +467,7 @@ export async function finishWorld(world, cfg, ROOT, log) {
     if (VS) { const drained = smoothstep(0.18, -0.25, hollow) * smoothstep(40, 6, qk);
       // (broad ramps, so prairie passes through parkland with scattered groves into forest instead of a mown edge)
       // (open, well-drained lowland holds somewhat fewer trees: a gentle pull toward grassland, not a cut-off)
-      F *= 1 - 0.45 * smoothstep(0.3, 0.06, sl) * smoothstep(1100, 300, z) * drained * (1 - smoothstep(3, 0.8, wdist[m])); }
+      F *= 1 - 0.2 * smoothstep(0.3, 0.06, sl) * smoothstep(1100, 300, z) * drained * (1 - smoothstep(3, 0.8, wdist[m])); }
     if (VB && !VS) { const pr = smoothstep(1.05, 0.72, pe) * smoothstep(0.24, 0.1, sl) * smoothstep(360, 200, z) * (1 - smoothstep(0.2, 0.4, coldAt(yk))); F *= 1 - pr * (0.85 - 0.85 * smoothstep(5, 1, wdist[m])); }
     F *= 1 - (mMesa[m] / 255) * smoothstep(0.22, 0.45, sl);                               // no woods on mesa walls and ledges                                           // open marsh
     if (z < 3) F *= smoothstep(1.0, 3, z);
