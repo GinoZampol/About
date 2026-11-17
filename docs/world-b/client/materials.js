@@ -229,7 +229,10 @@ void main() {
 
   // ---- distant forest canopy -------------------------------------------------------------------
   // canopy thins into scattered trees towards its limits rather than ending on a line
-  float canopyF = smoothstep(uTreeDist * 0.6, uTreeDist, dist) * smoothstep(0.04, 0.62, forest + (n2.a - 0.5) * 0.3 + (n3.a - 0.5) * 0.25 + (n4.r - 0.5) * 0.4 * (1.0 - smoothstep(0.5, 0.8, forest))) * (1.0 - sn);
+  // beyond the drawn trees the ground carries the canopy in the same proportion as the trees would cover it: the
+  // chance a tree stands at a spot (same curve as the placement in vegPlacement.js), so savanna stays savanna at a distance
+  float fc = clamp(forest + (n2.a - 0.5) * 0.12 + (n3.a - 0.5) * 0.1, 0.0, 1.0);
+  float canopyF = smoothstep(uTreeDist * 0.6, uTreeDist, dist) * clamp(fc * (fc + (1.0 - fc) * 0.9) * 1.05, 0.0, 1.0) * (1.0 - sn);
   vec3 canopy = mix(S(vec3(0.13, 0.24, 0.07)), S(vec3(0.08, 0.17, 0.08)), smoothstep(450.0, 1100.0, h));
   canopy = mix(canopy, S(vec3(0.06, 0.12, 0.08)), dark);
   canopy *= (0.45 + 1.0 * n1.g) * (0.75 + 0.5 * n2.r) * (0.85 + 0.3 * n3.a);

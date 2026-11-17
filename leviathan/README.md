@@ -301,6 +301,11 @@ from the data set, the slope, the altitude and procedural noise.
   faceted or smooth rocks. Bark and leaf textures are generated procedurally. Trees are deliberately simple
   placeholders.
 - **Placement** runs in the terrain workers and is a pure function of position and seed, so every client (and a
+- **One spectrum of tree cover** (seeded worlds). Cover follows the water plants can get and is spread evenly across
+  the land by rank, so open grassland, savanna, open woodland and closed forest all occur in like measure. The chance
+  that a tree stands at a spot rises continuously with cover (`pTree` in `vegPlacement.js`): lone trees, then groves
+  that gather the trees in sparse country, then open woodland, then closed forest, with no threshold. Beyond the drawn
+  trees the terrain shader paints canopy in the same proportion, and the forest floor shows in proportion to cover.
   server) agrees on where each tree stands. Positions come from global jittered lattices (4.6 m for trees), so
   instances stay put when a tile changes detail. Stand structure: closed forest, or groves and lone trees in open
   country; many young trees and a few veterans; stunting toward the treeline. Loose boulders are switched off.
