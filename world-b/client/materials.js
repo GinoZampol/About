@@ -167,7 +167,7 @@ void main() {
   float bare = (1.0 - 0.7 * smoothstep(0.4, 0.6, m)) * mix(0.12, smoothstep(0.62, 0.8, n1.g * 0.45 + n2.b * 0.55 + tanS * 0.22 - curv * 0.12), detailF);  // slips, trails, thin soil on spurs
   vec3 ground = mix(soil, grass, veg * (1.0 - bare * 0.65));
   vec3 litter = mix(S(vec3(0.26, 0.20, 0.12)), S(vec3(0.19, 0.24, 0.10)), n2.b * (0.5 + 0.5 * dark)) * (0.8 + 0.4 * n1.a);
-  float ff = smoothstep(0.22, 0.74, forest + (n2.a - 0.5) * 0.35);
+  float ff = smoothstep(0.08, 0.92, forest + (n2.a - 0.5) * 0.12);   // forest floor shows in proportion to cover
   // brown leaf litter is only seen from among the trees; from any distance the forest floor reads green
   ground = mix(ground, mix(S(vec3(0.11, 0.21, 0.07)) * (0.8 + 0.4 * n1.a), litter, 1.0 - smoothstep(18.0, 70.0, dist)), ff * 0.9);
   // marsh: a mosaic of reed beds, sedge and dark peaty pools
