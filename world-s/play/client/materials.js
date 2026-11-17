@@ -139,7 +139,8 @@ void main() {
   float sunny = N.z * min(tanS, 1.0);                                    // + on south-facing slopes
 
   // ---- soil moisture: climate, then where water actually collects on the landform ------------
-  float m = precip * (1.0 + 0.2 * curv + 0.22 * flow - 0.14 * sunny + (n3.r - 0.5) * 0.3 + (n2.r - 0.5) * 0.16) + 0.35 * wet;
+  // (the grass greens with the same water spectrum that sets the tree cover, so its colour runs the whole range too)
+  float m = precip * (1.0 + 0.08 * curv + 0.15 * flow - 0.14 * sunny + (n3.r - 0.5) * 0.16 + (n2.r - 0.5) * 0.1) + 0.35 * wet + 0.75 * (forest - 0.4) * (1.0 - mesa);
   m -= 0.3 * mesa * (1.0 - 0.7 * smoothstep(0.25, 0.55, flow));            // the plateau is dry steppe; only its watercourses stay green
   float detailF = 1.0 - smoothstep(120.0, 700.0, dist);                   // fine speckle only where it can be resolved
 
