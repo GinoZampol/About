@@ -145,32 +145,34 @@ void main() {
   float detailF = 1.0 - smoothstep(120.0, 700.0, dist);                   // fine speckle only where it can be resolved
 
   // ---- herb layer -------------------------------------------------------------------------------
-  vec3 lush = S(vec3(0.17, 0.27, 0.09)), mid = S(vec3(0.27, 0.34, 0.13)), dry = S(vec3(0.44, 0.42, 0.21)), steppe = S(vec3(0.56, 0.49, 0.34));
+  // one colour ramp shared by grass and woodland, so going from open grassland to closed forest the ground darkens and
+  // greens steadily instead of jumping from yellow grass to near-black canopy
+  vec3 lush = S(vec3(0.21, 0.34, 0.10)), mid = S(vec3(0.30, 0.41, 0.15)), dry = S(vec3(0.41, 0.44, 0.20)), steppe = S(vec3(0.53, 0.50, 0.34));
   // open grassland is green; only truly dry country (the plateau side) cures to straw and steppe
   // broad, overlapping ramps: steppe, cured grass, green sward and lush growth grade into one another
   // (wide ramps driven by soil moisture: dry steppe, cured grass, green sward and lush growth all appear)
-  vec3 grass = mix(dry, mid, smoothstep(0.35, 0.95, m));
-  grass = mix(grass, lush, smoothstep(0.95, 1.6, m));
-  grass = mix(steppe, grass, smoothstep(0.25, 0.75, m));
+  vec3 grass = mix(dry, mid, smoothstep(0.2, 0.85, m));
+  grass = mix(grass, lush, smoothstep(0.85, 1.5, m));
+  grass = mix(steppe, grass, smoothstep(0.05, 0.5, m));
   grass = mix(grass, mix(steppe, dry, 0.5), mesa * 0.55);          // plateau herbage is always on the dry side
   grass = mix(grass, S(vec3(0.38, 0.36, 0.22)), smoothstep(1450.0, 2050.0, hc));
   // variant B prairie: tall green-gold grass with the wind running over it in slow waves
   float prairie = uVariantB * (1.0 - smoothstep(0.2, 0.6, forest)) * smoothstep(0.36, 0.52, precip) * (1.0 - smoothstep(0.85, 1.05, precip)) * (1.0 - mesa) * (1.0 - smoothstep(300.0, 700.0, hc)) * (1.0 - wet);
   float gust = texture2D(uNoise, vWPos.xz / 310.0 + uTime * vec2(0.014, 0.006)).r;
   grass = mix(grass, mix(S(vec3(0.33, 0.37, 0.16)), S(vec3(0.47, 0.44, 0.22)), n3.b) * (0.82 + 0.36 * gust), prairie * 0.75);
-  grass *= (0.88 + 0.24 * n2.g) * (0.9 + 0.2 * n1.r) * (0.94 + 0.12 * n3.a);
-  grass = mix(grass, grass * vec3(1.12, 1.05, 0.86), n3.b * 0.3);                     // cured, seeding patches
-  grass = mix(grass, grass * vec3(0.78, 0.94, 0.80), smoothstep(0.55, 0.8, n2.a) * 0.5); // rank, darker swards
+  grass *= (0.93 + 0.14 * n2.g) * (0.88 + 0.24 * n1.r * detailF + 0.12 * (1.0 - detailF)) * (0.96 + 0.08 * n3.a);
+  grass = mix(grass, grass * vec3(1.08, 1.04, 0.9), n3.b * 0.18);                    // cured, seeding patches
+  grass = mix(grass, grass * vec3(0.86, 0.96, 0.86), smoothstep(0.55, 0.8, n2.a) * 0.3); // rank, darker swards
   vec3 soil = mix(S(vec3(0.38, 0.32, 0.24)), S(vec3(0.52, 0.46, 0.36)), n3.g);
   soil = mix(soil, mix(S(vec3(0.55, 0.40, 0.29)), S(vec3(0.66, 0.56, 0.42)), n3.g), mesa);
   soil *= 0.9 + 0.2 * n1.g;
   float veg = smoothstep(0.1, 0.62, max(m, precip * 0.85 - 0.3 * mesa) + (n2.r - 0.5) * 0.12 * mix(0.4, 1.0, detailF) + (n1.b - 0.5) * 0.1 * detailF);
-  float bare = (1.0 - 0.7 * smoothstep(0.4, 0.6, m)) * mix(0.12, smoothstep(0.62, 0.8, n1.g * 0.45 + n2.b * 0.55 + tanS * 0.22 - curv * 0.12), detailF);  // slips, trails, thin soil on spurs
-  vec3 ground = mix(soil, grass, veg * (1.0 - bare * 0.65));
+  float bare = (1.0 - 0.85 * smoothstep(0.3, 0.6, m)) * mix(0.12, smoothstep(0.62, 0.8, n1.g * 0.45 + n2.b * 0.55 + tanS * 0.22 - curv * 0.12), detailF);  // slips, trails, thin soil on spurs
+  vec3 ground = mix(soil, grass, veg * (1.0 - bare * 0.3));
   vec3 litter = mix(S(vec3(0.26, 0.20, 0.12)), S(vec3(0.19, 0.24, 0.10)), n2.b * (0.5 + 0.5 * dark)) * (0.8 + 0.4 * n1.a);
   float ff = smoothstep(0.08, 0.92, forest + (n2.a - 0.5) * 0.12);   // forest floor shows in proportion to cover
   // brown leaf litter is only seen from among the trees; from any distance the forest floor reads green
-  ground = mix(ground, mix(S(vec3(0.11, 0.21, 0.07)) * (0.8 + 0.4 * n1.a), litter, 1.0 - smoothstep(18.0, 70.0, dist)), ff * 0.9);
+  ground = mix(ground, mix(S(vec3(0.15, 0.26, 0.09)) * (0.88 + 0.24 * n1.a), litter, 1.0 - smoothstep(18.0, 70.0, dist)), ff * 0.85);
   // marsh: a mosaic of reed beds, sedge and dark peaty pools
   vec3 marsh = mix(S(vec3(0.22, 0.27, 0.13)), S(vec3(0.40, 0.41, 0.20)), smoothstep(0.35, 0.65, n2.a)) * (0.8 + 0.4 * n1.r);
   marsh = mix(marsh, S(vec3(0.08, 0.10, 0.09)), smoothstep(0.56, 0.68, n2.b * 0.6 + n3.g * 0.4) * smoothstep(0.45, 0.8, wet));
@@ -207,12 +209,12 @@ void main() {
   // rock shows through gradually: thin soils on spurs and steep, high ground, in ragged patches
   float rockArg = tanS + (n2.b - 0.5) * 0.6 + (n3.a - 0.5) * 0.55 + (n4.g - 0.5) * 0.35 - curv * 0.3 + smoothstep(1300.0, 2700.0, hc) * 0.75
     - sand - forest * 1.15 - smoothstep(0.8, 1.6, precip) * 0.12 - 0.35 * (1.0 - smoothstep(1100.0, 2300.0, hc)) * smoothstep(0.45, 0.9, precip);
-  float rockW = smoothstep(0.85, 1.75, rockArg);
-  rockW = max(rockW, (1.0 - veg) * smoothstep(0.32, 0.65, tanS + (n2.b - 0.5) * 0.3) * (1.0 - smoothstep(0.2, 0.5, sand)));
+  float rockW = smoothstep(1.05, 1.9, rockArg);
+  rockW = max(rockW, (1.0 - veg) * smoothstep(0.6, 0.95, tanS + (n2.b - 0.5) * 0.3) * (1.0 - smoothstep(0.2, 0.5, sand)));   // (grassy hills are grass, not grey)
   vec3 col = mix(ground, rc, rockW);
   // scree and debris aprons gather in the hollows below rock; shingle on shores
   float scree = smoothstep(0.6, 1.15, tanS + (n4.b - 0.5) * 0.3 + (n1.r - 0.5) * 0.3 + curv * 0.18 + smoothstep(1700.0, 2300.0, hc) * 0.25) * (1.0 - rockW) * (1.0 - ff * 0.8);
-  col = mix(col, rc * 1.05 * (0.85 + 0.3 * n1.g), scree * 0.7);
+  col = mix(col, rc * 1.05 * (0.85 + 0.3 * n1.g), scree * 0.7 * (1.0 - 0.85 * veg * smoothstep(0.3, 0.7, m)));   // vegetated slopes are not scree
   float shore = smoothstep(1.6, 0.15, h + (n2.r - 0.5) * 0.8) * (1.0 - rockW);
   col = mix(col, mix(sandC, S(vec3(0.42, 0.40, 0.37)), n2.g) * 0.85, shore);
   col *= mix(1.0, 0.55, smoothstep(0.3, -2.5, h));
@@ -234,9 +236,9 @@ void main() {
   // chance a tree stands at a spot (same curve as the placement in vegPlacement.js), so savanna stays savanna at a distance
   float fc = clamp(forest + (n2.a - 0.5) * 0.12 + (n3.a - 0.5) * 0.1, 0.0, 1.0);
   float canopyF = smoothstep(uTreeDist * 0.6, uTreeDist, dist) * clamp(fc * (fc + (1.0 - fc) * 0.9) * 1.05, 0.0, 1.0) * (1.0 - sn);
-  vec3 canopy = mix(S(vec3(0.13, 0.24, 0.07)), S(vec3(0.08, 0.17, 0.08)), smoothstep(450.0, 1100.0, h));
-  canopy = mix(canopy, S(vec3(0.06, 0.12, 0.08)), dark);
-  canopy *= (0.45 + 1.0 * n1.g) * (0.75 + 0.5 * n2.r) * (0.85 + 0.3 * n3.a);
+  vec3 canopy = mix(S(vec3(0.17, 0.29, 0.09)), S(vec3(0.11, 0.21, 0.09)), smoothstep(450.0, 1100.0, h));
+  canopy = mix(canopy, S(vec3(0.08, 0.16, 0.09)), dark);
+  canopy *= (0.72 + 0.56 * n1.g) * (0.88 + 0.24 * n2.r) * (0.92 + 0.16 * n3.a);   // crowns and gaps, not dark blotches
   col = mix(col, canopy, canopyF);
   col = mix(col, S(vec3(0.16, 0.26, 0.30)), NT.b * smoothstep(300.0, 1200.0, dist) * 0.85);
 
