@@ -429,6 +429,14 @@ export async function finishWorld(world, cfg, ROOT, log) {
     for (let m = 0; m < mn; m += 7) { if (mWater[m] || mMesa[m] > 127) continue; v.push(peVS(m, mP[m])); }
     v.sort((a, b) => a - b);
     return (x) => { let lo = 0, hi = v.length; while (lo < hi) { const md = (lo + hi) >> 1; if (v[md] < x) lo = md + 1; else hi = md; } return lo / Math.max(1, v.length); }; })();
+  // Tree cover is a regional property first. Whole districts sit at one level of cover (a huge swath at 15%, another
+  // at 40%, another at 75%) and the level drifts slowly across the land; the local landform only nudges it. So the
+  // water index is averaged over about 1.5 km, and cover follows where that regional average ranks among all the land.
+  const peReg = VS ? (() => { const a = new Float32Array(mn); for (let m = 0; m < mn; m++) a[m] = mWater[m] ? 1.2 : peVS(m, mP[m]);
+    const r = Math.max(2, Math.round(1500 / mdx)); return boxBlur(boxBlur(a, M, r), M, r); })() : null;
+  const regRank = VS ? (() => { const v = []; for (let m = 0; m < mn; m += 7) { if (mWater[m] || mMesa[m] > 127) continue; v.push(peReg[m]); }
+    v.sort((a, b) => a - b);
+    return (x) => { let lo = 0, hi = v.length; while (lo < hi) { const md = (lo + hi) >> 1; if (v[md] < x) lo = md + 1; else hi = md; } return lo / Math.max(1, v.length); }; })() : null;
   for (let j = 0; j < M; j++) for (let i = 0; i < M; i++) {
     const m = j * M + i, z = mh[m], p = mP[m] + mRip[m] * Math.max(0, 1.0 - mP[m]), sl = mSlope[m];
     const xk = KM0 + (i + 0.5) / M * KMS, yk = KM0 + (j + 0.5) / M * KMS;
@@ -455,7 +463,7 @@ export async function finishWorld(world, cfg, ROOT, log) {
     // Seeded worlds: tree cover is a continuous spectrum, not forest or no forest. Cover rises steadily with the water
     // plants can get, over a wide range, so the land runs through open grassland, savanna with scattered trees, open
     // woodland and closed forest, each wherever the water puts it.
-    let F = (VS ? sat((peRank(pe) - 0.06) / 0.86) : smoothstep(0.42, 0.95, pe)) * (1 - smoothstep(treeline - 450, treeline + 60, z)) * (1 - smoothstep(0.8, 1.7, sl + 0.3 * fbm(xk / 0.45, yk / 0.45, 2, seed + 75)));
+    let F = (VS ? sat(-0.03 + 1.1 * (0.85 * regRank(peReg[m]) + 0.15 * peRank(pe))) : smoothstep(0.42, 0.95, pe)) * (1 - smoothstep(treeline - 450, treeline + 60, z)) * (1 - smoothstep(0.8, 1.7, sl + 0.3 * fbm(xk / 0.45, yk / 0.45, 2, seed + 75)));
     if (!VS) F *= 0.75 + 0.25 * smoothstep(-0.25, 0.15, fbm(xk / 0.9, yk / 0.9, 3, seed + 72));   // glades and meadows
     F *= 1 - 0.85 * smoothstep(0.75, 1, wet);
     // variant B: the lowland south of the central sea is open prairie; trees keep to the watercourses
