@@ -1,9 +1,9 @@
 // Subsurface material model: the interface between the surface world and mining.
 // The world is NOT stored as voxels. Any 1 m^3 cell (x, y, z) can be classified on demand from
 // the same deterministic fields that built the surface; only player changes are stored.
-import { vnoise3 } from './noise.mjs';
-import { ROCK, ROCK_NAMES } from './geology.mjs';
-import { MAP } from './world.mjs';
+import { vnoise3 } from './noise.mjs?v=e135746';
+import { ROCK, ROCK_NAMES } from './geology.mjs?v=e135746';
+import { MAP } from './world.mjs?v=e135746';
 
 export const MATERIALS = ['air', 'water', 'topsoil', 'subsoil', 'sand', 'gravel', 'clay', 'peat', 'snow',
   'greywacke', 'granite', 'limestone', 'schist', 'basalt', 'sandstone', 'shale',

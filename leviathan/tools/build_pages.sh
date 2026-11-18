@@ -34,6 +34,12 @@ mkdir -p "$OUT/v5"; git -C "$REPO" archive "$V5" leviathan/client leviathan/shar
 page "$OUT/v5/client/index.html" "$OUT/v5" "The Leviathan v5"; rm "$OUT/v5/client/index.html"
 # version 5 looked for its data relative to the page; point it at its own folder
 sed -i "s#const dataUrl = Q.get('data') || '../data/';#const dataUrl = Q.get('data') || new URL('../data/', import.meta.url).href;#" "$OUT/v5/client/main.js"
+# Cache-busting: browsers (Safari especially) keep JavaScript modules cached, so a published update could go unseen.
+# Every script reference and relative import in the site is stamped with this build's commit, so each publish is new.
+V=$(git -C "$REPO" rev-parse --short HEAD)
+find "$OUT" -path "$OUT/v5" -prune -o \( -name "*.js" -o -name "*.mjs" \) -type f -print0 | xargs -0 sed -i -E \
+  -e "s#(from '\.\.?/[^'?]+\.m?js)'#\1?v=$V'#g" -e "s#(new URL\('\./terrainWorker\.js)'#\1?v=$V'#g"
+find "$OUT" -path "$OUT/v5" -prune -o -name index.html -type f -print0 | xargs -0 sed -i -E "s#(src=\"client/main\.js)\"#\1?v=$V\"#"
 cat > "$OUT/index.html" <<'HTML'
 <!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
