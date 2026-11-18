@@ -147,14 +147,22 @@ void main() {
   // ---- herb layer -------------------------------------------------------------------------------
   // one colour ramp shared by grass and woodland, so going from open grassland to closed forest the ground darkens and
   // greens steadily instead of jumping from yellow grass to near-black canopy
-  vec3 lush = S(vec3(0.21, 0.34, 0.10)), mid = S(vec3(0.30, 0.41, 0.15)), dry = S(vec3(0.41, 0.44, 0.20)), steppe = S(vec3(0.53, 0.50, 0.34));
+  // grassland is green: the whole moisture range stays in natural greens (deep meadow, fresh pasture, muted dry sward);
+  // straw and steppe colours belong only to the truly arid badlands country
+  vec3 lush = S(vec3(0.14, 0.25, 0.08)), mid = S(vec3(0.20, 0.30, 0.11)), dry = S(vec3(0.28, 0.33, 0.15)), steppe = S(vec3(0.53, 0.50, 0.34));
   // open grassland is green; only truly dry country (the plateau side) cures to straw and steppe
   // broad, overlapping ramps: steppe, cured grass, green sward and lush growth grade into one another
   // (wide ramps driven by soil moisture: dry steppe, cured grass, green sward and lush growth all appear)
   vec3 grass = mix(dry, mid, smoothstep(0.2, 0.85, m));
   grass = mix(grass, lush, smoothstep(0.85, 1.5, m));
-  grass = mix(steppe, grass, smoothstep(0.05, 0.5, m));
+  grass = mix(steppe, grass, max(smoothstep(0.05, 0.5, m), 1.0 - mesa * smoothstep(0.6, 0.2, precip)));
   grass = mix(grass, mix(steppe, dry, 0.5), mesa * 0.55);          // plateau herbage is always on the dry side
+  // a range of grassland looks, not one colour: fresh pasture on deep valley soils, cooler blue-green sward on uplands
+  // and north slopes, warmer meadow on south slopes, varying over kilometres
+  float upl = smoothstep(150.0, 900.0, hc), lookN = texture2D(uNoise, vWPos.xz / 3700.0 + 0.53).b;
+  grass *= mix(vec3(1.0), vec3(1.06, 1.04, 0.86), smoothstep(0.55, 0.85, lookN) * (1.0 - upl) * 0.8);   // fresh pasture
+  grass *= mix(vec3(1.0), vec3(0.88, 0.98, 1.06), (upl * 0.7 + smoothstep(0.0, -0.4, sunny) * 0.4) * (1.0 - mesa));   // upland and shaded sward
+  grass *= mix(vec3(1.0), vec3(1.07, 1.0, 0.88), smoothstep(0.0, 0.4, sunny) * 0.5 * (1.0 - mesa));   // sunny-slope meadow
   grass = mix(grass, S(vec3(0.38, 0.36, 0.22)), smoothstep(1450.0, 2050.0, hc));
   // variant B prairie: tall green-gold grass with the wind running over it in slow waves
   float prairie = uVariantB * (1.0 - smoothstep(0.2, 0.6, forest)) * smoothstep(0.36, 0.52, precip) * (1.0 - smoothstep(0.85, 1.05, precip)) * (1.0 - mesa) * (1.0 - smoothstep(300.0, 700.0, hc)) * (1.0 - wet);
@@ -166,7 +174,7 @@ void main() {
   vec3 soil = mix(S(vec3(0.38, 0.32, 0.24)), S(vec3(0.52, 0.46, 0.36)), n3.g);
   soil = mix(soil, mix(S(vec3(0.55, 0.40, 0.29)), S(vec3(0.66, 0.56, 0.42)), n3.g), mesa);
   soil *= 0.9 + 0.2 * n1.g;
-  float veg = smoothstep(0.1, 0.62, max(m, precip * 0.85 - 0.3 * mesa) + (n2.r - 0.5) * 0.12 * mix(0.4, 1.0, detailF) + (n1.b - 0.5) * 0.1 * detailF);
+  float veg = smoothstep(0.1, 0.62, max(max(m, precip * 0.85 - 0.3 * mesa), 0.75 * (1.0 - mesa) * smoothstep(0.2, 0.4, precip)) + (n2.r - 0.5) * 0.12 * mix(0.4, 1.0, detailF) + (n1.b - 0.5) * 0.1 * detailF);
   float bare = (1.0 - 0.85 * smoothstep(0.3, 0.6, m)) * mix(0.12, smoothstep(0.62, 0.8, n1.g * 0.45 + n2.b * 0.55 + tanS * 0.22 - curv * 0.12), detailF);  // slips, trails, thin soil on spurs
   vec3 ground = mix(soil, grass, veg * (1.0 - bare * 0.3));
   vec3 litter = mix(S(vec3(0.26, 0.20, 0.12)), S(vec3(0.19, 0.24, 0.10)), n2.b * (0.5 + 0.5 * dark)) * (0.8 + 0.4 * n1.a);
@@ -209,12 +217,12 @@ void main() {
   // rock shows through gradually: thin soils on spurs and steep, high ground, in ragged patches
   float rockArg = tanS + (n2.b - 0.5) * 0.6 + (n3.a - 0.5) * 0.55 + (n4.g - 0.5) * 0.35 - curv * 0.3 + smoothstep(1300.0, 2700.0, hc) * 0.75
     - sand - forest * 1.15 - smoothstep(0.8, 1.6, precip) * 0.12 - 0.35 * (1.0 - smoothstep(1100.0, 2300.0, hc)) * smoothstep(0.45, 0.9, precip);
-  float rockW = smoothstep(1.05, 1.9, rockArg);
+  float rockW = smoothstep(1.05, 1.9, rockArg - 0.45 * veg * (1.0 - smoothstep(1300.0, 2200.0, hc)));   // grassed slopes below the alpine zone keep their turf
   rockW = max(rockW, (1.0 - veg) * smoothstep(0.6, 0.95, tanS + (n2.b - 0.5) * 0.3) * (1.0 - smoothstep(0.2, 0.5, sand)));   // (grassy hills are grass, not grey)
   vec3 col = mix(ground, rc, rockW);
   // scree and debris aprons gather in the hollows below rock; shingle on shores
   float scree = smoothstep(0.6, 1.15, tanS + (n4.b - 0.5) * 0.3 + (n1.r - 0.5) * 0.3 + curv * 0.18 + smoothstep(1700.0, 2300.0, hc) * 0.25) * (1.0 - rockW) * (1.0 - ff * 0.8);
-  col = mix(col, rc * 1.05 * (0.85 + 0.3 * n1.g), scree * 0.7 * (1.0 - 0.85 * veg * smoothstep(0.3, 0.7, m)));   // vegetated slopes are not scree
+  col = mix(col, rc * 1.05 * (0.85 + 0.3 * n1.g), scree * 0.7 * (1.0 - 0.9 * veg * (1.0 - smoothstep(1300.0, 2200.0, hc))));   // vegetated slopes are not scree
   float shore = smoothstep(1.6, 0.15, h + (n2.r - 0.5) * 0.8) * (1.0 - rockW);
   col = mix(col, mix(sandC, S(vec3(0.42, 0.40, 0.37)), n2.g) * 0.85, shore);
   col *= mix(1.0, 0.55, smoothstep(0.3, -2.5, h));
@@ -263,7 +271,7 @@ void main() {
   float back = pow(max(dot(-V, uSunDir), 0.0), 4.0) * smoothstep(-0.05, 0.25, uSunDir.y);
   lit += vegW * sh * uSunCol * (graze * 0.07 * vec3(0.85, 0.95, 0.75) + back * col * vec3(1.1, 1.35, 0.6) * 0.55);
   float lum = dot(lit, vec3(0.2126, 0.7152, 0.0722));
-  lit = max(mix(vec3(lum), lit, 1.06), 0.0);
+  lit = max(mix(vec3(lum), lit, 1.0), 0.0);
   lit += uSunCol * sh * sn * 0.25 * pow(max(dot(N, normalize(V + uSunDir)), 0.0), 40.0);
   gl_FragColor = vec4(applyAtmosphere(lit, vWPos), 1.0);
   #include <tonemapping_fragment>
