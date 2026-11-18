@@ -46,7 +46,7 @@ export class Terrain {
     this.ready = new Promise((res) => {
       let n = 0;
       for (let k = 0; k < workers; k++) {
-        const w = new Worker(new URL('./terrainWorker.js?v=e135746', import.meta.url), { type: 'module' });
+        const w = new Worker(new URL('./terrainWorker.js?v=8fd37cd', import.meta.url), { type: 'module' });
         w.load = 0;
         w.onmessage = (e) => {
           const m = e.data;

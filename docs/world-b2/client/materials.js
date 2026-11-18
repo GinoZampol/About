@@ -178,9 +178,9 @@ void main() {
   float bare = (1.0 - 0.85 * smoothstep(0.3, 0.6, m)) * mix(0.12, smoothstep(0.62, 0.8, n1.g * 0.45 + n2.b * 0.55 + tanS * 0.22 - curv * 0.12), detailF);  // slips, trails, thin soil on spurs
   vec3 ground = mix(soil, grass, veg * (1.0 - bare * 0.3));
   vec3 litter = mix(S(vec3(0.26, 0.20, 0.12)), S(vec3(0.19, 0.24, 0.10)), n2.b * (0.5 + 0.5 * dark)) * (0.8 + 0.4 * n1.a);
-  float ff = smoothstep(0.08, 0.92, forest + (n2.a - 0.5) * 0.12);   // forest floor shows in proportion to cover
+  float ff = clamp(forest + (n2.a - 0.5) * 0.1, 0.0, 1.0);   // forest floor shows in exact proportion to cover
   // brown leaf litter is only seen from among the trees; from any distance the forest floor reads green
-  ground = mix(ground, mix(S(vec3(0.15, 0.26, 0.09)) * (0.88 + 0.24 * n1.a), litter, 1.0 - smoothstep(18.0, 70.0, dist)), ff * 0.85);
+  ground = mix(ground, mix(S(vec3(0.15, 0.26, 0.09)) * (0.88 + 0.24 * n1.a), litter, 1.0 - smoothstep(18.0, 70.0, dist)), ff * 0.6);
   // marsh: a mosaic of reed beds, sedge and dark peaty pools
   vec3 marsh = mix(S(vec3(0.22, 0.27, 0.13)), S(vec3(0.40, 0.41, 0.20)), smoothstep(0.35, 0.65, n2.a)) * (0.8 + 0.4 * n1.r);
   marsh = mix(marsh, S(vec3(0.08, 0.10, 0.09)), smoothstep(0.56, 0.68, n2.b * 0.6 + n3.g * 0.4) * smoothstep(0.45, 0.8, wet));
@@ -243,7 +243,7 @@ void main() {
   // beyond the drawn trees the ground carries the canopy in the same proportion as the trees would cover it: the
   // chance a tree stands at a spot (same curve as the placement in vegPlacement.js), so savanna stays savanna at a distance
   float fc = clamp(forest + (n2.a - 0.5) * 0.12 + (n3.a - 0.5) * 0.1, 0.0, 1.0);
-  float canopyF = smoothstep(uTreeDist * 0.6, uTreeDist, dist) * clamp(fc * (fc + (1.0 - fc) * 0.9) * 1.05, 0.0, 1.0) * (1.0 - sn);
+  float canopyF = smoothstep(uTreeDist * 0.6, uTreeDist, dist) * fc * 0.92 * (1.0 - sn);   // linear in cover: half cover, half canopy
   vec3 canopy = mix(S(vec3(0.17, 0.29, 0.09)), S(vec3(0.11, 0.21, 0.09)), smoothstep(450.0, 1100.0, h));
   canopy = mix(canopy, S(vec3(0.08, 0.16, 0.09)), dark);
   canopy *= (0.72 + 0.56 * n1.g) * (0.88 + 0.24 * n2.r) * (0.92 + 0.16 * n3.a);   // crowns and gaps, not dark blotches
@@ -258,7 +258,7 @@ void main() {
   vec3 dn4 = noTileN(uNoiseN, vWPos.xz / 9.0, 1.0 - tk);
   N = normalize(N + vec3(dn3.x, 0.0, dn3.y) * (0.45 * rockW + 0.18 + 0.3 * sn) + vec3(dn4.x, 0.0, dn4.y) * 0.9 * canopyF);
   float ndl = max(dot(N, uSunDir), 0.0);
-  ndl = mix(ndl, 0.35 + 0.65 * ndl, canopyF * 0.6);
+  ndl = mix(ndl, 0.35 + 0.65 * ndl, canopyF * 0.25);
   float sh = sunShadow(vViewZ, texture2D(uShadowTex, uv).r) * cloudShadow(vWPos);
   float occ = mix(0.3, 1.0, ao) * (1.0 - 0.3 * max(curv, 0.0));
   vec3 V = normalize(cameraPosition - vWPos);
