@@ -1,7 +1,7 @@
 // Ambient life: bird flocks, wind-borne particles (pollen, snow, sand) and procedural sound
 // (wind, running water, birdsong). All of it reads the world around the player.
 import * as THREE from 'three';
-import { MAP } from '../shared/world.mjs?v=e135746';
+import { MAP } from '../shared/world.mjs?v=8fd37cd';
 
 export class Life {
   constructor({ scene, world, camera, shared }) {
