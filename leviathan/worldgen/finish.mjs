@@ -491,6 +491,10 @@ export async function finishWorld(world, cfg, ROOT, log) {
 
   // feather forest edges a little so woodland grades into open ground
   { const fb = boxBlur(Float32Array.from(mForest), M, 1); for (let m = 0; m < mn; m++) mForest[m] = Math.round(0.55 * mForest[m] + 0.45 * fb[m]); }
+  // seeded worlds: cover changes over hundreds of metres, not at a line. Woodland thins out into savanna across a wide
+  // belt around every forest edge (a 300-500 m blend), so even a sharp change in the water supply shows as a gradient.
+  if (VS) { const r = Math.max(2, Math.round(160 / mdx)), fb = boxBlur(boxBlur(Float32Array.from(mForest), M, r), M, r);
+    for (let m = 0; m < mn; m++) if (!mWater[m]) mForest[m] = Math.round(0.35 * mForest[m] + 0.65 * fb[m]); }
 
   // ---- I. export (client convention: x east, z south; row 0 = north) --------------------------
   const out = path.join(ROOT, cfg.outDir || (VB ? 'data_b' : 'data')), tag = (cfg.outDir || (VB ? 'data_b' : 'data')).replace(/^data/, ''); fs.mkdirSync(out, { recursive: true });
