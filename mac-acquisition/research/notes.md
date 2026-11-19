@@ -196,3 +196,10 @@ NL/BE: Leapp (NL, bankrupt — exclude), ReMarkt (NL refurbished IT incl. Apple,
 - ZeroDueMac: Mac Studio M1 Max 24C 64GB/1TB EUR 2,995 (overpriced). ALBI: only M3 Pro 36GB. Assetorb: only an Intel 2019 MBP16 (A2141) lot on Aurena.
 - No: informatik-profi, Smart Generation, NCOM, Vikast. Check-site: MacFaaast, Ricondizionati Pro.
 - industrieauktion sent a newsletter-subscription confirmation email (user/agent did not subscribe; ignore unless wanted).
+
+## 2026-11-19: read-only check (campaign PAUSED; nothing sent)
+- mac-store24: M1 Ultra 48C 128GB/4TB EUR 4,499 (margin scheme, no CH shipping; EUR 4,000 only to EU company w/ VAT ID). M2 Ultra 76C 128GB/1TB EUR 5,700.
+- SYA/SimplyUsed: no Ultras, none in pipeline. Compu-Trade: MacBook intake next week. ALSO/Bechtle: B2B only. MON MAC ECO bounced.
+- RICARDO WARNING: seller "solidtrade" (item 1334141820, MBP16 M1 Max 64GB) says the sale fell through. Their messages hide digits inside words (k0mmt, 7icht, 9icht, 2ahlen, m1r, a6so, 9erde, an8ieten, 7erschicke, 6eldeingang), which spells a Swiss mobile number, and they say "read in order... feel for numbers". That is an attempt to move the deal off Ricardo with payment in advance ("nach Geldeingang"), which Ricardo's terms forbid; it loses buyer protection and is a common scam pattern. Only safe paths: buy through Ricardo if relisted, or pick up in Schaffhausen and pay on inspection.
+- Marketplaces: Amsterdam M1 Ultra 128GB EUR 3,250 listing GONE (HTTP 410). Cheapest now: Kleinanzeigen NRW M1 Ultra 64GB/2TB EUR 2,790 VB (16.11); Plauen M2 Ultra 64GB EUR 2,999; Hamburg M1 Ultra 64C 64GB EUR 3,110 VB; Stuttgart M2 Ultra 64GB w/ warranty to 03/2027 EUR 3,399 VB; 2dehands Brussels M1 Ultra 128GB min bid EUR 6,000.
+- Heads-up for user: spusu (Swiss SIM) emails announce blocking of the line for non-payment; the +41 number is in all outreach signatures.

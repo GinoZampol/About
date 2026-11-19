@@ -1,11 +1,11 @@
 queue_id,company,to,subject,sent_at_utc,gmail_thread_id,status
 Q001,Revendo AG,info@revendo.ch,"Anfrage: MacBook Pro 14"" M3 Max 128 GB und Reservation Mac Studio M2 Ultra",2026-11-09,1a1be5a6e5ddcdba,"REPLIED (Luca): no discounts, no reservations/waitlist; use shop stock alert; no battery info/photos"
 Q002,Gebrauchtmacs.de GmbH (maconline),sales@maconline.de,Kaufanfrage: Apple-Silicon-Mac mit 64 GB+ Unified Memory,2026-11-09,1a1be5a71816a7d3,"REPLIED: new stock daily, check shop; no specifics"
-Q003,Remacs GmbH (mac-store24),support@mac-store24.com,Mac Studio M1 Ultra 128 GB / 4 TB: physisch verfügbar?,2026-11-09,1a1be5a722dec92f,SENT
+Q003,Remacs GmbH (mac-store24),support@mac-store24.com,Mac Studio M1 Ultra 128 GB / 4 TB: physisch verfügbar?,2026-11-09,1a1be5a722dec92f,"REPLIED (Kevin Ludwig): M1 Ultra 48C 128GB/4TB available EUR 4,499 margin-taxed; no shipping to CH; EUR 4,000 VAT-free only for EU company w/ VAT ID. Separate offer: M2 Ultra 76C 128GB/1TB EUR 5,700"
 Q004,Smart Generation srl,info@smartgeneration.it,Richiesta: Mac Studio Ultra o MacBook Pro Max con 64 GB+ di memoria,2026-11-09,1a1be5a742829d4a,REPLIED: nothing available or expected
 Q006,Okamac,contact@okamac.com,Recherche MacBook Pro M2/M3 Max 96-128 Go ou Mac Studio Ultra,2026-11-09,1a1be5a7738f8923,REPLIED (Margaux): nothing now; check back around Black Friday for powerful MBP/Mac Studio
 Q007,AfB social & green IT,sales@afb-group.eu,Einzelkauf aus Firmen-Rückläufern: Apple Mac mit 64 GB+ Unified Memory,2026-11-09,1a1be5a79303d6c8,SENT
-Q008,Creative IT,customerservice@creative-it.ie,Purchase enquiry: Apple Silicon Mac with 64 GB+ unified memory,2026-11-09,1a1be5a7c51852d9,"REPLIED: no Ultra now; offers MBP16 M2 Max 64GB/2TB FR kbd grade B EUR 3,154 and MBP16 M3 Max 128GB/8TB A+ EUR 9,818; will notify if Ultra arrives (Evan)"
+Q008,Creative IT,customerservice@creative-it.ie,Purchase enquiry: Apple Silicon Mac with 64 GB+ unified memory,2026-11-09,1a1be5a7c51852d9,"REPLIED x3: shipping IT/CH EUR 15; both MBPs free of Activation Lock/MDM; (overpriced: M2 Max 64GB 3,154; M3 Max 128GB 9,818)"
 Q012,Compu-Trade,info@compu-trade.ch,Kaufanfrage: Apple-Silicon-Mac mit 64 GB+ Unified Memory,2026-11-09,1a1be5a7cc5e4bc4,SENT
 Q013,ag.pl,sklep@ag.pl,Purchase enquiry: Apple Silicon Mac with 64 GB+ unified memory,2026-11-09,1a1be5a80b47c4e2,SENT
 Q014,2ndMax GmbH,info@2ndmax.de,Kaufanfrage: Apple-Silicon-Mac mit 64 GB+ Unified Memory,2026-11-09,1a1be5a82b38b2b8,SENT
@@ -43,12 +43,12 @@ Q051,Second IT Remarketing,remarketing@second-it.de,Einzelkauf aus Firmen-Rückl
 Q053,Vikast,commerciale@vikast.it,Acquisto singolo da lotti aziendali,2026-11-09,1a1bf0301565d1d1,REPLIED: no 64GB Macs; Apple not core business
 Q054,Cinegrell,zurich@cinegrell.ch,Ausgemusterte Mac-Workstations?,2026-11-09,1a1bf03069ae55f5,SENT
 Q055,Eleven Studio,team@elevenstudio.it,Workstation Mac dismesse?,2026-11-09,1a1bf03d7780a30e,SENT
-Q057,MON MAC ECO,contact@mon-mac-eco.com,Recherche Mac Apple Silicon 64 Go+,2026-11-09,1a1bf03d9188ada8,SENT
+Q057,MON MAC ECO,contact@mon-mac-eco.com,Recherche Mac Apple Silicon 64 Go+,2026-11-09,1a1bf03d9188ada8,BOUNCED
 Q058,MacRepair,info@macrepair.nl,Gezocht: Apple Silicon Mac 64 GB+,2026-11-09,1a1bf03da68607cf,"REPLIED x2: MBP16 M1 Max 64GB/512GB EUR 1,899; 24-core GPU, battery >=85%, NL QWERTY, 12-mo warranty; no answer on price"
 Q059,ORBIS Production,info@orbispro.ch,Ausgemusterte Mac-Workstations?,2026-11-09,1a1bf03dd8e64b55,SENT
 Q060,Vstronik,info@vstronik.com,Suche Apple-Silicon-Mac 64 GB+,2026-11-09,1a1bf03de67c4517,SENT
 Q062,industrieauktion.online,info@industrieauktion.online,Anfrage: Apple Mac (64 GB+) in kommenden Auktionen,2026-11-09,1a1bf03e1881eb2d,REPLIED: no individual alerts; newsletter only (6-9x/yr)
-Q064,ALSO Schweiz,info@also.com,Einzelkauf aus Remarketing / Leasing-Rückläufern,2026-11-09,1a1bf03e45458654,SENT
+Q064,ALSO Schweiz,info@also.com,Einzelkauf aus Remarketing / Leasing-Rückläufern,2026-11-09,1a1bf03e45458654,"REPLIED: distributor, B2B resellers only"
 Q066,ALBI,info@albi.at,Einzelkauf aus Firmen-Rückläufern,2026-11-09,1a1bf03e9d608bb6,REPLIED (David): only MBP14 M3 Pro 36GB/512GB like new (does not qualify)
 Q067,Amac,ecommerce@amac.nl,Koopverzoek: Apple Silicon Mac 64 GB+,2026-11-09,1a1bf03eb84b208c,SENT
 Q068,Armonica Film,info@armonicafilm.ch,Workstation Mac dismesse?,2026-11-09,1a1bf03eee0da000,SENT
@@ -62,7 +62,7 @@ Q085,Mitrade,info@mitrade.it,Acquisto singolo da lotti aziendali,2026-11-09,1a1b
 Q088,e-Recycle,contact@e-recycle.com,Achat à l'unité issu de lots d'entreprise,2026-11-09,1a1bf04c81b66443,SENT
 Q089,identity Lab,mail@identitylab.at,Ausgemusterte Mac-Workstations?,2026-11-09,1a1bf04ca177956a,SENT
 Q100,cerona GmbH,info@cerona.de,Einzelkauf aus Firmen-Rückläufern,2026-11-09,1a1bf04cf58a9547,SENT
-Q102,Bechtle,kontakt@bechtle.com,Kauf von Leasing- / Lifecycle-Rückläufern,2026-11-09,1a1bf04d21c573e9,SENT
+Q102,Bechtle,kontakt@bechtle.com,Kauf von Leasing- / Lifecycle-Rückläufern,2026-11-09,1a1bf04d21c573e9,REPLIED: business customers only
 Q104,European Show Equipment,info@ese-av.com,Buying ex-rental Macs (64 GB+),2026-11-09,1a1bf04d522b2bbc,SENT
 Q110,Riparazione PC Milano,info@riparazionepcmilano.it,Cerco Mac Apple Silicon 64 GB+,2026-11-09,1a1bf04d7510aabb,SENT
 Q111,Roxmir,info@roxmir.it,Cerco Mac Apple Silicon 64 GB+,2026-11-09,1a1bf04d97c22433,SENT
@@ -116,4 +116,4 @@ U012,JUUZ,info@juuz.com,Buying a decommissioned Mac Studio Ultra,2026-11-09,1a1b
 U013,Bohemian Silicon,hello@bohemiansilicon.com,Buying a decommissioned Mac Studio Ultra,2026-11-09,1a1bf128cb52ee40,SENT
 U014,GK Servis,gkservis@gkservis.com,Buying a used Mac Studio Ultra (cluster upgrades),2026-11-09,1a1bf12913d8c93d,SENT
 U015,Staber,info@staber.de,Kaufanfrage: Mac Studio M1/M2 Ultra,2026-11-09,1a1bf12941185fd5,SENT
-U016,SimplyUsed (SYA BE/NL),hello@simplyused.com (cc shop@),Mac Studio M1 Ultra (64-core GPU 128 GB) - nieuwe voorraad?,2026-11-09,1a1bf16e8e15e1f8,SENT
+U016,SimplyUsed (SYA BE/NL),hello@simplyused.com (cc shop@),Mac Studio M1 Ultra (64-core GPU 128 GB) - nieuwe voorraad?,2026-11-09,1a1bf16e8e15e1f8,"REPLIED (Anthony, SYA): only M1 Max & M2 Max 32GB in stock; no Mac Studios in pipeline"
