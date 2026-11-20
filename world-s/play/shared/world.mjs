@@ -2,11 +2,11 @@
 // in every terrain worker (meshing). It turns the generated data set into a continuous, deterministic
 // ground function:   ground(x, z) = eroded base (bicubic) + geology-driven detail + river channels + edits
 // Coordinates: x east, z south, y up, metres. Origin = north-west corner of the world.
-import { noise2, fbm, ridged, smoothstep, sat, hash2 } from './noise.mjs?v=a83ac1b';
-import { ROCK, rockAt } from './geology.mjs?v=a83ac1b';
-import { decodeU16 } from './codec.mjs?v=a83ac1b';
+import { noise2, fbm, ridged, smoothstep, sat, hash2 } from './noise.mjs?v=b6c35b9';
+import { ROCK, rockAt } from './geology.mjs?v=b6c35b9';
+import { decodeU16 } from './codec.mjs?v=b6c35b9';
 
-export const MAP = { ROCK: 0, STRAT: 1, PRECIP: 2, FOREST: 3, DARK: 4, WET: 5, SAND: 6, AO: 7, MESA: 8, FLOW: 9, ICE: 10 };
+export const MAP = { ROCK: 0, STRAT: 1, PRECIP: 2, FOREST: 3, DARK: 4, WET: 5, SAND: 6, AO: 7, MESA: 8, FLOW: 9, ICE: 10, WARM: 11 };
 const RIVER_CELL = 128;
 // value noise with analytic derivatives (for erosion-style fractal relief)
 const _nd = { dx: 0, dz: 0 };
