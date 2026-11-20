@@ -21,8 +21,8 @@
  "hScale": 0.125,
  "seaLevel": 0,
  "maxElevation": 5755,
- "landKm2": 6665,
- "riverKm": 2597,
+ "landKm2": 6662,
+ "riverKm": 2600,
  "mapChannels": [
   "rock",
   "strat",

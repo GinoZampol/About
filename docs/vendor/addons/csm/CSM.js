@@ -7,8 +7,8 @@ import {
 	Matrix4,
 	Box3
 } from 'three';
-import { CSMFrustum } from './CSMFrustum.js?v=da1f6f8';
-import { CSMShader } from './CSMShader.js?v=da1f6f8';
+import { CSMFrustum } from './CSMFrustum.js?v=d285ca7';
+import { CSMShader } from './CSMShader.js?v=d285ca7';
 
 const _cameraToLightMatrix = new Matrix4();
 const _lightSpaceFrustum = new CSMFrustum( { webGL: true } );
