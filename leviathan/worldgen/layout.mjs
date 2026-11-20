@@ -72,7 +72,10 @@ function tect(L, xk, yk) {
   const mt = Math.pow(smoothstep(0.42, 0.85, t), 1.6) * (0.9 + 0.2 * noise2(xk / 2.4, yk / 2.4, s + 23)) * (1 - Math.min(1, gC * 2));   // lesser mountains (0..1)
   const foot = smoothstep(0.22, 0.5, t) * (1 - smoothstep(0.55, 0.8, t));                                       // the rising ground around it
   const hill = sat(smoothstep(0.18, 0.5, fbm(wx / 9.5 + L.o[1], wy / 9.5, 3, s + 25)) * smoothstep(0.95, 1.45, dB) + 0.7 * foot) * (1 - sat(mt * 3));
-  return { wx, wy, dB, reg, t, mt, hill, gC };
+  let gR = 0;
+  if (L.rseg) { const [ax, ay, bx, by] = L.rseg, dx = bx - ax, dy = by - ay; let u = ((wx - ax) * dx + (wy - ay) * dy) / (dx * dx + dy * dy); u = Math.max(0, Math.min(1, u));
+    const d = Math.hypot(ax + dx * u - wx, ay + dy * u - wy); gR = gauss(d, 2.4) * (0.75 + 0.45 * noise2(u * 3.1 + L.o[2], 1.7, s + 27)) * smoothstep(0, 0.15, u) * smoothstep(1, 0.85, u); }
+  return { wx, wy, dB, reg, t, mt, hill, gC: Math.max(gC, 0.38 * gR), gR };
 }
 
 export function getLayout(seed) {
@@ -102,7 +105,11 @@ export function getLayout(seed) {
   { // the thickest point inside the world (kept 9 km in from the border) carries the great massif
     let best = -1e9, bx = 25, by = 25;
     for (let j = 0; j < G; j++) for (let i = 0; i < G; i++) { const x = gridAt(i), y = gridAt(j); if (Math.min(x, y, PW - x, PH - y) < 9) continue; const v = raw0[j * G + i]; if (v > best) { best = v; bx = x; by = y; } }
-    const f = tect(L, bx, by), a = r() * Math.PI; L.mseg = [f.wx - Math.cos(a) * 2, f.wy - Math.sin(a) * 2, f.wx + Math.cos(a) * 2, f.wy + Math.sin(a) * 2]; L.massif = [bx, by]; }
+    const f = tect(L, bx, by), a = r() * Math.PI; L.mseg = [f.wx - Math.cos(a) * 2, f.wy - Math.sin(a) * 2, f.wx + Math.cos(a) * 2, f.wy + Math.sin(a) * 2]; L.massif = [bx, by];
+    // one small mountain range: a short ridge on the next-thickest crust, well away from the great massif
+    let b2 = -1e9, rx = 0, ry = 0;
+    for (let j = 0; j < G; j++) for (let i = 0; i < G; i++) { const x = gridAt(i), y = gridAt(j); if (Math.min(x, y, PW - x, PH - y) < 7 || Math.hypot(x - bx, y - by) < 18) continue; const v = raw0[j * G + i]; if (v > b2) { b2 = v; rx = x; ry = y; } }
+    const f2 = tect(L, rx, ry), a2 = r() * Math.PI, hl = 3.5 + r() * 1.5; L.rseg = [f2.wx - Math.cos(a2) * hl, f2.wy - Math.sin(a2) * hl, f2.wx + Math.cos(a2) * hl, f2.wy + Math.sin(a2) * hl]; }
 
   // 2. volcanic centres in the deep basin, and one limestone block
   const T = new Array(n);
@@ -244,8 +251,8 @@ function forcing(L, xk, yk, f, plateau, withRim = true) {
   const ridg = 1 - Math.abs(fbm(xk / 3.4 + L.o[1], yk / 3.4, 3, s + 85)), roll = 0.5 + 0.5 * fbm(xk / 4.5, yk / 4.5 + L.o[0], 3, s + 86);
   const provU = pw[1] * 0.1 * roll                                   // downs: low, broad, rounded swells
     + pw[2] * (0.11 + 0.03 * roll)                                   // moor: a high, gently domed plateau
-    + pw[3] * 0.32 * Math.pow(ridg, 2.2)                             // karst: rugged limestone hills
-    + pw[4] * 0.26 * Math.pow(ridg, 1.6) * (0.6 + 0.4 * roll)         // dissected hill country: steep ridges and deep valleys
+    + pw[3] * 0.17 * Math.pow(ridg, 2.2)                             // karst: rugged limestone hills
+    + pw[4] * 0.15 * Math.pow(ridg, 1.6) * (0.6 + 0.4 * roll)         // dissected hill country: steep ridges and deep valleys
     - pw[5] * 0.015;                                                 // fen: the ground settles; it stays at sea level
   const hillK = 1 - 0.75 * (pw[1] + pw[2] + pw[3] + pw[5]);         // the generic hill noise yields to the province's own relief
   U += 1.55 * f.gC + 0.3 * hill * hillK * (1 - plateau) + 1.3 * isl + 0.06 * rim * (1 - plateau) + provU * ordinary;

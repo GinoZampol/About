@@ -68,7 +68,7 @@ function placeTrees(world, { key, x0, z0, size, lod }) {
     const slope = world.slope(px, pz); if (slope > 1.35) continue;
     if (slope > 0.28 && world.map(MAP.MESA, px, pz) > 0.5) continue;      // mesa walls stay bare rock
     const cold = world.cold(pz);
-    const tl = 1930 + 90 * noise2(px / 3000, pz / 3000, seed + 70) - world.coldDrop * 0.9 * cold;
+    const tl = 1930 + 90 * noise2(px / 3000, pz / 3000, seed + 70) - world.coldTreeDrop * cold;
     if (h > tl + 320) continue;
     const stunt = 1 - 0.62 * smoothstep(tl - 300, tl + 250, h);
     const r4 = hash2(i, j, seed + 406), r5 = hash2(i, j, seed + 407), rot = hash2(i, j, seed + 408) * 6.283;

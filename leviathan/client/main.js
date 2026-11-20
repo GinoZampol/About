@@ -62,6 +62,7 @@ tex.shadowData = new Uint8Array(tex.hgridRes * tex.hgridRes).fill(255);
 tex.shadow = new THREE.DataTexture(tex.shadowData, tex.hgridRes, tex.hgridRes, THREE.RedFormat, THREE.UnsignedByteType);
 tex.shadow.magFilter = tex.shadow.minFilter = THREE.LinearFilter; tex.shadow.needsUpdate = true;
 const shared = makeShared();
+if (world.coldCfg && world.coldCfg.treeDrop !== undefined) shared.uWinter.value.set(world.coldCfg.z0, world.coldCfg.z1, 1);
 shared.uWorldSize.value = S; shared.uPlay.value.set(P0, P1, Z0, Z1);
 const opts = { variantB: world.meta.variant === 'B', worldSize: S, uTreeDist: { value: quality.farDist }, uSnowLine: { value: num('snow', 2450) }, uCold: { value: world.coldCfg ? new THREE.Vector3(world.coldCfg.z0, world.coldCfg.z1, world.coldCfg.drop) : new THREE.Vector3(0, 0, 0) } };
 shared.uCloud.value = num('cloud', 0.42);

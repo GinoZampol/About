@@ -363,6 +363,7 @@ export class World {
   // 0..1 northward cooling (variant B); effective altitude for snow and tree limits is h + coldDrop * cold
   cold(z) { const c = this.coldCfg; if (!c) return 0; const t = sat((c.z0 - z) / (c.z0 - c.z1)); return t * t * (3 - 2 * t); }
   get coldDrop() { return this.coldCfg ? this.coldCfg.drop : 0; }
+  get coldTreeDrop() { return this.coldCfg ? (this.coldCfg.treeDrop ?? this.coldCfg.drop * 0.9) : 0; }
 
   // ---- ecology at a point (used for vegetation placement and gameplay queries) -----------------
   climate(x, z, h) {
