@@ -89,7 +89,7 @@ function fieldsFor(design, N) {
   const R = design.R;
   const g = {
     land: resample(design.land, R, N), U: resample(design.U, R, N), rock: resample(design.rock, R, N, true),
-    kmod: resample(design.kmod, R, N), strat: resample(design.strat, R, N), h0: resample(design.h0, R, N), gorge: resample(design.gorge, R, N), mesa: resample(design.mesa, R, N), erg: resample(design.erg, R, N),
+    kmod: resample(design.kmod, R, N), strat: resample(design.strat, R, N), h0: resample(design.h0, R, N), gorge: resample(design.gorge, R, N), mesa: resample(design.mesa, R, N), erg: resample(design.erg, R, N), fen: resample(design.fen, R, N), moor: resample(design.moor, R, N),
   };
   const sea = new Uint8Array(N * N);
   // the sea is fixed from the design, as in 1B: clean coasts that erosion shapes but never floods or drains
@@ -123,7 +123,7 @@ function fieldsFor(design, N) {
     tm[j * N + i] = Math.max(0.5, Math.min(1.9, v));
   }
   g.tmod = tm;
-  if (CFG.variant === 'S') { const cq = new Float32Array(N * N); for (let c = 0; c < N * N; c++) cq[c] = g.mesa[c] > 0.5 ? 6e4 : 0; g.cutQ = cq; }
+  if (CFG.variant === 'S') { const cq = new Float32Array(N * N); for (let c = 0; c < N * N; c++) cq[c] = g.mesa[c] > 0.5 ? 3e4 : 0; g.cutQ = cq; }
   return g;
 }
 

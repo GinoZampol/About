@@ -320,7 +320,7 @@ export async function finishWorld(world, cfg, ROOT, log) {
   // ---- H. map-resolution environmental rasters ------------------------------------------------
   const M = Math.min(1024, N), st = N / M, mdx = cfg.sizeM / M, mn = M * M;
   const mh = new Float32Array(mn), mP = new Float32Array(mn), mQ = new Float32Array(mn), mSlope = new Float32Array(mn);
-  const mRock = new Uint8Array(mn), mStrat = new Float32Array(mn), mWater = new Uint8Array(mn), mMesa = new Uint8Array(mn), mFlow = new Uint8Array(mn), mErg = new Float32Array(mn);
+  const mRock = new Uint8Array(mn), mStrat = new Float32Array(mn), mWater = new Uint8Array(mn), mMesa = new Uint8Array(mn), mFlow = new Uint8Array(mn), mErg = new Float32Array(mn), mFen = new Float32Array(mn), mMoor = new Float32Array(mn);
   for (let j = 0; j < M; j++) for (let i = 0; i < M; i++) {
     let sh = 0, sp = 0, q = 0, ss = 0, wat = 0;
     for (let b = 0; b < st; b++) for (let a = 0; a < st; a++) {
@@ -331,7 +331,7 @@ export async function finishWorld(world, cfg, ROOT, log) {
       if (sea[c] || lakeId[c]) wat++;
     }
     const k = st * st, m = j * M + i, cc = Math.floor((j + 0.5) * st) * N + Math.floor((i + 0.5) * st);
-    mh[m] = sh / k; mP[m] = sp / k; mQ[m] = q; mSlope[m] = ss / k; mRock[m] = g.rock[cc]; mStrat[m] = g.strat[cc]; mMesa[m] = Math.round(255 * sat(g.mesa[cc])); mErg[m] = g.erg[cc]; mFlow[m] = Math.round(255 * sat(Math.log10(q / 1e6 + 1) / 3)); mWater[m] = wat * 2 > k ? 1 : 0;
+    mh[m] = sh / k; mP[m] = sp / k; mQ[m] = q; mSlope[m] = ss / k; mRock[m] = g.rock[cc]; mStrat[m] = g.strat[cc]; mMesa[m] = Math.round(255 * sat(g.mesa[cc])); mErg[m] = g.erg[cc]; mFen[m] = g.fen ? g.fen[cc] : 0; mMoor[m] = g.moor ? g.moor[cc] : 0; mFlow[m] = Math.round(255 * sat(Math.log10(q / 1e6 + 1) / 3)); mWater[m] = wat * 2 > k ? 1 : 0;
   }
   // ambient occlusion from horizon angles
   const mAO = new Uint8Array(mn);
@@ -450,6 +450,8 @@ export async function finishWorld(world, cfg, ROOT, log) {
     wet = sat(wet * smoothstep(0.25, 0.6, p) + (z < 2.2 ? 0.5 * flat : 0));
     // variant B: broad tidal marshes and fens on the low shores of the central sea and the deltas
     if (VB && !VS) wet = Math.max(wet, smoothstep(0.05, 0.012, sl) * smoothstep(20, 5, wdist[m]) * smoothstep(9, 2.5, z));
+    // fen provinces: wide reed marsh and wet meadow on the flat, low ground
+    if (VS) wet = Math.max(wet, mFen[m] * smoothstep(0.05, 0.015, sl) * smoothstep(30, 4, z) * 0.95);
     mWet[m] = Math.round(255 * wet);
     // forest canopy cover: moisture, temperature (treeline), slope, with patchiness
     // trees climb higher in sheltered hollows and stop lower on exposed spurs; the limit is a wide, ragged zone
@@ -478,6 +480,7 @@ export async function finishWorld(world, cfg, ROOT, log) {
       F *= 1 - 0.2 * smoothstep(0.3, 0.06, sl) * smoothstep(1100, 300, z) * drained * (1 - smoothstep(3, 0.8, wdist[m])); }
     if (VB && !VS) { const pr = smoothstep(1.05, 0.72, pe) * smoothstep(0.24, 0.1, sl) * smoothstep(360, 200, z) * (1 - smoothstep(0.2, 0.4, coldAt(yk))); F *= 1 - pr * (0.85 - 0.85 * smoothstep(5, 1, wdist[m])); }
     F *= 1 - (mMesa[m] / 255) * smoothstep(0.22, 0.45, sl);                               // no woods on mesa walls and ledges                                           // open marsh
+    if (VS) F *= (1 - 0.65 * mMoor[m] * smoothstep(250, 500, z)) * (1 - 0.5 * mFen[m]);   // moorland is open upland; fens are reed and wet meadow
     if (z < 3) F *= smoothstep(1.0, 3, z);
     mForest[m] = Math.round(255 * sat(F));
     // ancient "dark" forest: very wet, mild, sheltered ground

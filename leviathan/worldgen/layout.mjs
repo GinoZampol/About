@@ -78,7 +78,7 @@ function tect(L, xk, yk) {
 export function getLayout(seed) {
   if (cache && cache.seed === seed) return cache;
   const r = mulberry32((Math.imul(seed | 0, 2654435761) ^ 0x9e3779b9) >>> 0);
-  const L = { seed, o: Array.from({ length: 6 }, () => r() * 97), islands: [], alpsCentre: [0, 0, 0], thMax: 0, th50: 0 };
+  const L = { seed, tilt: [0, 0], o: Array.from({ length: 6 }, () => r() * 97), islands: [], alpsCentre: [0, 0, 0], thMax: 0, th50: 0 };
   L.B = [PW / 2 + (r() - 0.5) * 16 * PW / 50, PH / 2 + (r() - 0.5) * 16 * PH / 50];
   { let a = r() * Math.PI; const el = Math.sqrt(1.1 + r() * 0.5); if (PW !== PH) a = (PW > PH ? 0 : Math.PI / 2) + (a - Math.PI / 2) * 0.25;
     L.e = [Math.cos(a), Math.sin(a), PW !== PH ? Math.sqrt(Math.max(PW, PH) / Math.min(PW, PH)) * el : el]; }
@@ -190,7 +190,14 @@ export function getLayout(seed) {
     }
     for (let pass = 0; pass < 2; pass++) { const t = Float32Array.from(L.table); for (let j = 1; j < G - 1; j++) for (let i = 1; i < G - 1; i++) { const c = j * G + i; L.table[c] = (t[c] * 2 + t[c - 1] + t[c + 1] + t[c - G] + t[c + G]) / 6; } }
   }
-  L.tableC = tn ? [tx / tn, ty / tn] : [25, 25]; L.c = L.B;
+  L.tableC = tn ? [tx / tn, ty / tn] : [25, 25]; L.c = L.B; { const a = r() * Math.PI * 2; L.tilt = [Math.cos(a), Math.sin(a)]; }
+  { // province centres: spread over the world (jittered grid), each with a type; fens only near the sea
+    L.prov = []; const nx = Math.max(3, Math.round(PW / 13)), ny = Math.max(3, Math.round(PH / 13)), kinds = [0, 0, 1, 2, 3, 4, 4, 1, 2];
+    for (let j = 0; j < ny; j++) for (let i = 0; i < nx; i++) {
+      const x = (i + 0.2 + 0.6 * r()) / nx * PW, y = (j + 0.2 + 0.6 * r()) / ny * PH, f = tect(L, x, y);
+      let k = kinds[Math.floor(r() * kinds.length)]; if (f.dB < 1.25 && r() < 0.55) k = PROV.FEN;
+      L.prov.push([x, y, 0.55 * Math.min(PW / nx, PH / ny), k]);
+    } }
   { // within about 5 km of the badlands no lesser mountain rises: undeformed cover country is bordered by low ground
     const w = Math.round(5 / (SIZE / G)), tmp = new Float32Array(n), nb = new Float32Array(n);
     for (let j = 0; j < G; j++) for (let i = 0; i < G; i++) { let a = 0; for (let d = -w; d <= w; d++) a = Math.max(a, L.table[j * G + Math.min(G - 1, Math.max(0, i + d))]); tmp[j * G + i] = a; }
@@ -198,6 +205,22 @@ export function getLayout(seed) {
     L.tableNear = nb; }
   L.seaShare = 0.3 + r() * 0.06;                  // the share of the world the sea covers once it has risen to its present level
   return (cache = L);
+}
+
+// Landscape provinces. Outside the three great features (the sea, the great massif, the badlands) the country is a
+// patchwork of a dozen or so provinces, each with its own geology and so its own look: lowland plains, rolling chalk
+// downs, high moorland plateaus, rugged limestone (karst) hills, steep dissected hill country, and low fens and
+// marshland by the sea. Their boundaries are warped and blended over a few kilometres.
+const PROV = { PLAIN: 0, DOWNS: 1, MOOR: 2, KARST: 3, DISSECT: 4, FEN: 5 };
+function provinces(L, xk, yk) {
+  const w = [0, 0, 0, 0, 0, 0]; if (!L.prov) { w[0] = 1; return w; }
+  const s = L.seed, px = xk + 3.0 * fbm(xk / 9 + L.o[3], yk / 9, 3, s + 81), py = yk + 3.0 * fbm(xk / 9, yk / 9 + L.o[2], 3, s + 82);
+  let tot = 0;
+  for (const q of L.prov) { const d = Math.hypot(px - q[0], py - q[1]), k = Math.exp(-(d * d) / (2 * q[2] * q[2])) ; w[q[3]] += k; tot += k; }
+  for (let k = 0; k < 6; k++) w[k] /= tot || 1;
+  // sharpen a little so each province has a heart of its own, while the edges still blend
+  let t2 = 0; for (let k = 0; k < 6; k++) { w[k] = w[k] * w[k]; t2 += w[k]; } for (let k = 0; k < 6; k++) w[k] /= t2 || 1;
+  return w;
 }
 
 // Uplift rate and starting surface at one point. `plateau` is the sedimentary cover (0 while it is not yet known).
@@ -217,14 +240,26 @@ function forcing(L, xk, yk, f, plateau, withRim = true) {
   let U = reg + 0.006 + 0.02 * smoothstep(0.1, 0.65, fbm(xk / 7.5, yk / 7.5, 3, s + 31));
   const nearT = L.tableNear ? sample(L.tableNear, xk, yk) : 0;
   // (no secondary ranges: they read as a mid grey wall)
-  U += 1.55 * f.gC + 0.3 * hill * (1 - plateau) + 1.3 * isl + 0.06 * rim * (1 - plateau);
+  const pw = provinces(L, xk, yk), ordinary = (1 - plateau) * (1 - sat(f.gC * 2.5));
+  const ridg = 1 - Math.abs(fbm(xk / 3.4 + L.o[1], yk / 3.4, 3, s + 85)), roll = 0.5 + 0.5 * fbm(xk / 4.5, yk / 4.5 + L.o[0], 3, s + 86);
+  const provU = pw[1] * 0.1 * roll                                   // downs: low, broad, rounded swells
+    + pw[2] * (0.11 + 0.03 * roll)                                   // moor: a high, gently domed plateau
+    + pw[3] * 0.32 * Math.pow(ridg, 2.2)                             // karst: rugged limestone hills
+    + pw[4] * 0.26 * Math.pow(ridg, 1.6) * (0.6 + 0.4 * roll)         // dissected hill country: steep ridges and deep valleys
+    - pw[5] * 0.015;                                                 // fen: the ground settles; it stays at sea level
+  const hillK = 1 - 0.75 * (pw[1] + pw[2] + pw[3] + pw[5]);         // the generic hill noise yields to the province's own relief
+  U += 1.55 * f.gC + 0.3 * hill * hillK * (1 - plateau) + 1.3 * isl + 0.06 * rim * (1 - plateau) + provU * ordinary;
   U += 0.012 * (0.5 + 0.5 * noise2(xk / 1.1, yk / 1.1, s + 35)) * (1 - plateau);
   // The block rises steadily from a low start (as the Colorado Plateau did): the rivers already flowing across it keep
   // cutting down as it rises, so canyons run right through its interior instead of only nibbling at its edges.
-  U = U * (1 - plateau) + plateau * 0.3;   // one block rising as a whole: no mountain grows up inside it
+  // The block does not rise evenly: it is tilted, warped into broad swells and basins, and broken by a step or two
+  // (monoclines), so its tops stand at many levels instead of all ending at one height.
+  const warpU = 0.55 + 0.9 * sat(0.5 + 1.2 * fbm(xk / 11 + L.o[4], yk / 11, 3, s + 87)), step = smoothstep(-0.06, 0.06, fbm(xk / 16 + L.o[5], yk / 16 + L.o[1], 2, s + 88));
+  const tilt = 0.12 * ((xk - (L.tableC ? L.tableC[0] : 25)) * L.tilt[0] + (yk - (L.tableC ? L.tableC[1] : 25)) * L.tilt[1]) / 10;
+  U = U * (1 - plateau) + plateau * Math.min(0.5, Math.max(0.1, 0.3 * warpU + 0.12 * step + tilt));   // tops between roughly 700 m and 1,800 m
   // the starting surface: an old lowland, plus the uplift (or sinking) already expressed
   const h0raw = 30 + 25 * fbm(xk / 6, yk / 6, 3, s + 33) + U * 1e-3 * T0 + 400 * f.gC;
-  return { U, h0raw, isl, chalk };
+  return { U, h0raw, isl, chalk, pw };
 }
 
 export function seededDesign(xk, yk, seed) {
@@ -233,7 +268,13 @@ export function seededDesign(xk, yk, seed) {
   let h0 = p.h0raw - L.z0;
   if (p.chalk > 0) h0 = Math.max(h0, 6 + 110 * p.chalk);                                                       // the block stands as a flat-topped island
   const plateau = cover * smoothstep(-40, 40, h0);
-  if (plateau > 0) h0 += plateau * (300 + 14 * Math.min(10, sample(L.tdist, xk, yk)) + 30 * fbm(xk / 5, yk / 5, 3, seed + 34));
+  if (plateau > 0) {
+    h0 += plateau * (300 + 14 * Math.min(10, sample(L.tdist, xk, yk)) + 30 * fbm(xk / 5, yk / 5, 3, seed + 34));
+    // the rivers that already crossed the country before it rose: a branching network of broad valleys that the rising
+    // block carries up and the rivers keep cutting into, so canyons and wide valleys run through its interior
+    const v1 = Math.abs(fbm(xk / 7 + L.o[2], yk / 7, 3, seed + 89)), v2 = Math.abs(fbm(xk / 2.8, yk / 2.8 + L.o[3], 2, seed + 90));
+    h0 -= plateau * (230 * Math.pow(1 - smoothstep(0, 0.16, v1), 1.5) + 90 * Math.pow(1 - smoothstep(0, 0.12, v2), 2));
+  }
   h0 = h0 < 0 ? Math.max(-380, h0) : Math.max(1.5, h0);
   // rock
   let rock = ROCK.ALLUVIUM;
@@ -244,16 +285,22 @@ export function seededDesign(xk, yk, seed) {
   else if (f.gC > 0.1) rock = f.gC > 0.42 + 0.08 * wob ? ROCK.GRANITE : ROCK.SCHIST;    // the great massif: granite core, schist flanks (as 1B's Crown)
   else if (mt > 0.42 + 0.1 * wob) rock = ROCK.GRANITE;
   else if (mt > 0.06) rock = ROCK.SCHIST;
+  else if (p.pw[1] > 0.45) rock = ROCK.LIMESTONE;                                     // chalk downs
+  else if (p.pw[3] > 0.45) rock = ROCK.LIMESTONE;                                     // karst
+  else if (p.pw[2] > 0.45) rock = belt > 0 ? ROCK.SCHIST : ROCK.GRANITE;               // moorland on old hard rock
+  else if (p.pw[4] > 0.45) rock = ROCK.GREYWACKE;                                     // dissected hill country
+  else if (p.pw[5] > 0.45) rock = ROCK.ALLUVIUM;                                      // fen
   else if (hill > 0.2) rock = belt > 0.14 ? ROCK.LIMESTONE : ROCK.GREYWACKE;
   else if (f.dB > 1.5 + 0.2 * wob) rock = belt > 0 ? ROCK.SCHIST : ROCK.GREYWACKE;
-  const badl = plateau > 0.5 && fbm(xk / 2.4 + L.o[5], yk / 2.4, 3, seed + 46) > 0.22;                     // softer shale country inside the tableland
+  const badl = plateau > 0.5 && fbm(xk / 2.4 + L.o[5], yk / 2.4, 3, seed + 46) > 0.08;                     // softer shale country inside the tableland
   if (badl) rock = ROCK.SHALE;
   let kmod = 1;
   if (rock === ROCK.GREYWACKE) kmod = 0.8 + 0.6 * sat(0.5 + 0.9 * noise2(xk / 2.3, yk / 2.3, seed + 47));
   if (rock === ROCK.SCHIST) kmod = 0.85 + 0.4 * sat(0.5 + noise2(xk / 1.7, yk / 1.7, seed + 43));
-  if (rock === ROCK.LIMESTONE) kmod = 0.9;
+  if (rock === ROCK.LIMESTONE) kmod = p.pw[1] > 0.45 ? 0.55 : p.pw[3] > 0.45 ? 0.7 : 0.9;
+  if (rock === ROCK.GRANITE && p.pw[2] > 0.45) kmod = 1.1;
   if (rock === ROCK.SANDSTONE) kmod = 0.3;
   if (badl) kmod = 0.7;
   const strat = 70 * fbm(xk / 8, yk / 8, 2, seed + 44) + 14 * noise2(xk / 1.2, yk / 1.2, seed + 45);
-  return { land: h0 / 40, U: p.U * 1e-3, h0, rock, kmod, strat, gG: 0, plateau, erg: 0 };
+  return { land: h0 / 40, U: p.U * 1e-3, h0, rock, kmod, strat, gG: 0, plateau, erg: 0, fen: p.pw[5] * (1 - plateau), moor: p.pw[2] * (1 - plateau) };
 }
