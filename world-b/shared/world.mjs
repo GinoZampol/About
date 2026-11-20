@@ -2,9 +2,9 @@
 // in every terrain worker (meshing). It turns the generated data set into a continuous, deterministic
 // ground function:   ground(x, z) = eroded base (bicubic) + geology-driven detail + river channels + edits
 // Coordinates: x east, z south, y up, metres. Origin = north-west corner of the world.
-import { noise2, fbm, ridged, smoothstep, sat, hash2 } from './noise.mjs?v=b6c35b9';
-import { ROCK, rockAt } from './geology.mjs?v=b6c35b9';
-import { decodeU16 } from './codec.mjs?v=b6c35b9';
+import { noise2, fbm, ridged, smoothstep, sat, hash2 } from './noise.mjs?v=d232211';
+import { ROCK, rockAt } from './geology.mjs?v=d232211';
+import { decodeU16 } from './codec.mjs?v=d232211';
 
 export const MAP = { ROCK: 0, STRAT: 1, PRECIP: 2, FOREST: 3, DARK: 4, WET: 5, SAND: 6, AO: 7, MESA: 8, FLOW: 9, ICE: 10, WARM: 11 };
 const RIVER_CELL = 128;
@@ -363,6 +363,7 @@ export class World {
   // 0..1 northward cooling (variant B); effective altitude for snow and tree limits is h + coldDrop * cold
   cold(z) { const c = this.coldCfg; if (!c) return 0; const t = sat((c.z0 - z) / (c.z0 - c.z1)); return t * t * (3 - 2 * t); }
   get coldDrop() { return this.coldCfg ? this.coldCfg.drop : 0; }
+  get coldTreeDrop() { return this.coldCfg ? (this.coldCfg.treeDrop ?? this.coldCfg.drop * 0.9) : 0; }
 
   // ---- ecology at a point (used for vegetation placement and gameplay queries) -----------------
   climate(x, z, h) {

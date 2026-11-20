@@ -76,7 +76,7 @@ void main() {
 
 const TERRAIN_FRAG = /* glsl */`
 uniform sampler2D uMapA; uniform sampler2D uMapB; uniform sampler2D uFlow; uniform sampler2D uShadowTex; uniform sampler2D uRock; uniform sampler2D uNormTex; uniform sampler2D uNoise; uniform sampler2D uNoiseN;
-uniform vec3 uCold; uniform float uVariantB; uniform float uCell; uniform float uWorldSize; uniform float uTreeDist; uniform float uSnowLine;
+uniform vec3 uCold; uniform vec3 uWinter; uniform float uVariantB; uniform float uCell; uniform float uWorldSize; uniform float uTreeDist; uniform float uSnowLine;
 varying vec3 vWPos; varying vec3 vN; varying float vViewZ;
 #include <common>
 #include <packing>
@@ -253,10 +253,16 @@ void main() {
   // beyond the drawn trees the ground carries the canopy in the same proportion as the trees would cover it: the
   // chance a tree stands at a spot (same curve as the placement in vegPlacement.js), so savanna stays savanna at a distance
   float fc = clamp(forest + (n2.a - 0.5) * 0.12 + (n3.a - 0.5) * 0.1, 0.0, 1.0);
-  float canopyF = smoothstep(uTreeDist * 0.6, uTreeDist, dist) * fc * 0.92 * (1.0 - sn);   // linear in cover: half cover, half canopy
+  float wintC = uWinter.z * clamp((uWinter.x - vWPos.z) / max(1.0, uWinter.x - uWinter.y), 0.0, 1.0);
+  float canopyF = smoothstep(uTreeDist * 0.6, uTreeDist, dist) * fc * 0.92 * (1.0 - sn * (1.0 - smoothstep(0.2, 0.7, wintC)));   // (snowy taiga stands above the snow on the ground)   // linear in cover: half cover, half canopy
   vec3 canopy = mix(S(vec3(0.17, 0.29, 0.09)), S(vec3(0.11, 0.21, 0.09)), smoothstep(450.0, 1100.0, h));
   canopy = mix(canopy, S(vec3(0.08, 0.16, 0.09)), dark);
+  float wint = uWinter.z * clamp((uWinter.x - vWPos.z) / max(1.0, uWinter.x - uWinter.y), 0.0, 1.0);
+  canopy = mix(canopy, mix(S(vec3(0.07, 0.13, 0.09)), vec3(0.80, 0.84, 0.90), 0.05 + 0.07 * n1.g), smoothstep(0.2, 0.7, wint));   // snow-laden taiga from afar
   canopy *= (0.72 + 0.56 * n1.g) * (0.88 + 0.24 * n2.r) * (0.92 + 0.16 * n3.a);   // crowns and gaps, not dark blotches
+  // (in snow the white ground between trees would outshine the canopy in a linear blend; seen from a distance the
+  // trunks and crowns hide most of it, so snowy taiga reads dark with white flecks)
+  canopyF = mix(canopyF, min(1.0, canopyF * 1.3), smoothstep(0.2, 0.7, wintC));
   col = mix(col, canopy, canopyF);
   col = mix(col, S(vec3(0.16, 0.26, 0.30)), NT.b * smoothstep(300.0, 1200.0, dist) * 0.85);
 
@@ -389,6 +395,7 @@ void main() {
 export function makeShared() {
   return {
     uSunDir: { value: new THREE.Vector3(0.3, 0.8, 0.5).normalize() }, uSunCol: { value: new THREE.Color(3, 3, 3) },
+    uWinter: { value: new THREE.Vector3(0, 0, 0) },   // winter north: z where it begins, z where it is full, 1 = on
     uAmbSky: { value: new THREE.Color(0.4, 0.5, 0.7) }, uAmbGround: { value: new THREE.Color(0.2, 0.18, 0.15) },
     uFogCol: { value: new THREE.Color(0.6, 0.7, 0.85) }, uFogSun: { value: new THREE.Color(1, 0.9, 0.7) }, uZenith: { value: new THREE.Color(0.15, 0.3, 0.65) },
     uFogA: { value: 0.55e-5 }, uFogB: { value: 1 / 1700 }, uSplits: { value: new THREE.Vector3(100, 500, 3000) }, uTime: { value: 0 }, uCloud: { value: 0.42 }, uWorldSize: { value: 50000 }, uPlay: { value: new THREE.Vector4(0, 1e9, 0, 1e9) },
