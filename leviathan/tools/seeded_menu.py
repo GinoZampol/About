@@ -25,7 +25,7 @@ for d in sorted(glob.glob(os.path.join(L, 'data_s*'))):
 def label(s):
     seed, *tags = s.split('-')
     names = ['first', 'second', 'third', 'fourth', 'fifth', 'sixth', 'seventh', 'eighth', 'ninth', 'tenth']
-    lab = lambda t: 'saved V1' if t == 'saved' else t.replace('x', ' × ') + ' km' if 'x' in t and t.replace('x', '').isdigit() else 'open edges' if t == 'open' else (f'{names[int(t[1:]) - 1]} bake' if t[0] == 'v' and t[1:].isdigit() and int(t[1:]) <= 10 else f'bake {t[1:]}' if t[0] == 'v' else t)
+    lab = lambda t: 'biomes V3' if t == 'biomes' else 'saved V1' if t == 'saved' else t.replace('x', ' × ') + ' km' if 'x' in t and t.replace('x', '').isdigit() else 'open edges' if t == 'open' else (f'{names[int(t[1:]) - 1]} bake' if t[0] == 'v' and t[1:].isdigit() and int(t[1:]) <= 10 else f'bake {t[1:]}' if t[0] == 'v' else t)
     return f'World {seed}' + ''.join(f' ({lab(t)})' for t in tags)
 def card(s, h):
     return (f'<a class="card" href="play/?data=../s{s}/"><img src="s{s}/map.jpg" alt="Map of {label(s)}" loading="lazy">'

@@ -21,6 +21,7 @@ export const CFG = {
   // --seed random picks a fresh seed and prints it; the number is stored in world.json so the world can be rebuilt
   seed: arg('seed', 7) === 'random' ? Math.floor(Math.random() * 1e6) : +arg('seed', 7),
   variant: arg('variant', 'A'),
+  biomes: +arg('biomes', 0),            // seeded worlds: 1 = a climate gradient (snowy tundra and taiga one side, savanna and a sand desert the other)
   edges: arg('edges', 'fade'),           // seeded worlds: 'fade' keeps the great massif inside the world, 'open' lets mountains run past the border
   wind: +arg('wind', 0),                 // rain-bearing wind: 0 = from the west, 0.5 = from the south-west
   outDir: arg('out', arg('variant', 'A') === 'B' ? 'data_b' : 'data'),          // 'A' = original; 'B' = central sea, cold north, coastal marshes

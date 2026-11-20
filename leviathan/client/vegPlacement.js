@@ -98,7 +98,11 @@ function placeTrees(world, { key, x0, z0, size, lod }) {
     if (lod === 2) s *= 1.12;
     if (lod === 3) s *= 1.9;
     const lean = (hash2(i, j, seed + 412) - 0.5) * 0.08;
-    bins.add(type, px, h - 0.25, pz, s, rot, tintV * tintH, tintV, tintV * (2 - tintH), s * (0.9 + 0.25 * hash2(i, j, seed + 413)), lean);
+    // savanna trees: broad, low, flat-topped crowns (acacia-like), drier foliage
+    const warm = world.maps.length >= (MAP.WARM + 1) * world.M * world.M ? world.map(MAP.WARM, px, pz) : 0;
+    if (warm > 0.3) { type = T.BROADLEAF; s *= 1 + 0.35 * warm; }
+    const sy = s * (0.9 + 0.25 * hash2(i, j, seed + 413)) * (1 - 0.45 * warm);
+    bins.add(type, px, h - 0.25, pz, s, rot, tintV * tintH * (1 + 0.15 * warm), tintV, tintV * (2 - tintH) * (1 - 0.2 * warm), sy, lean);
     if (lod === 0) { const tr = type === T.GIANT ? 0.95 : type === T.BIRCH ? 0.18 : 0.33; bins.col.push(px, pz, tr * s, h + 30); }
   }
   // loose boulders are switched off for now (set LOOSE_ROCKS to bring them back)

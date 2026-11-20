@@ -22,7 +22,13 @@ export async function finishWorld(world, cfg, ROOT, log) {
   // variant B: a cold north. `cold` rises from 0 at COLD.y0 to 1 at COLD.y1 (design km) and lowers the
   // treeline, the snowline and the glacier line by COLD.drop metres.
   const VB = cfg.variant !== 'A', VC = cfg.variant === 'C', COLD = { y0: 31, y1: 47, drop: 1650 };
-  const coldAt = (yk) => (VB && cfg.variant !== 'S' ? smoothstep(COLD.y0, COLD.y1, yk) : 0);
+  // Seeded worlds with --biomes: a climate gradient across the world from north to south. The north grows cold: taiga,
+  // then open tundra, then snow-covered plains along the far edge. The south grows warm and seasonally dry: savanna of
+  // golden grass with scattered flat-topped trees, and a sand desert of dunes beside the badlands.
+  const BIO = cfg.variant === 'S' && cfg.biomes, PHk = cfg.playH || 50;
+  if (BIO) { COLD.y0 = PHk * 0.52; COLD.y1 = PHk * 1.0; COLD.drop = 2350; }
+  const coldAt = (yk) => (VB && (cfg.variant !== 'S' || BIO) ? smoothstep(COLD.y0, COLD.y1, yk) : 0);
+  const warmAt = (yk) => (BIO ? smoothstep(PHk * 0.5, PHk * 0.12, yk) : 0);
   const ctx = makeCtx(N);
   // wind-blown sand buries the fine drainage of the erg
   {
@@ -364,7 +370,8 @@ export async function finishWorld(world, cfg, ROOT, log) {
     }
   }
   // present-day glaciers: ice accumulates above today's snowline and flows down the valleys until it melts
-  const mIce = new Uint8Array(mn);
+  const mIce = new Uint8Array(mn), mWarm = new Uint8Array(mn);
+  const mBadWide = (() => { const a = new Float32Array(mn); for (let m = 0; m < mn; m++) a[m] = mMesa[m] / 255; const r = Math.max(2, Math.round(4500 / mdx)); return boxBlur(boxBlur(a, M, r), M, r); })();
   {
     const { order, cnt } = ctx, a = dx * dx, ice2 = new Float64Array(n), ELA_NOW0 = 3050, acc = new Float32Array(mn);
     for (let q = cnt - 1; q >= 0; q--) {
@@ -497,6 +504,15 @@ export async function finishWorld(world, cfg, ROOT, log) {
       for (let b = -2; b <= 2; b++) for (let a = -2; a <= 2; a++) { const x = i + a, y = j + b; if (x >= 0 && y >= 0 && x < M && y < M && mSlope[y * M + x] > smax) smax = mSlope[y * M + x]; }
       sand = Math.max(sand, sat(mErg[m] * 1.4) * smoothstep(0.32, 0.1, sl) * smoothstep(0.75, 0.3, smax));
     }
+    if (BIO) {
+      // the warm south: savanna (forest thinned to scattered trees) and, on flat dry ground near the badlands, dune sand
+      const wm = warmAt(yk) * (1 - mMesa[m] / 255);
+      const desert = wm * smoothstep(0.03, 0.22, mBadWide[m]) * smoothstep(0.14, 0.04, sl) * smoothstep(5, 1, qk) * (1 - smoothstep(8, 2, wdist[m]));
+      sand = Math.max(sand, smoothstep(0.25, 0.6, desert + 0.25 * fbm(xk / 2.8, yk / 2.8, 2, seed + 97)));
+      const Fs = mForest[m] / 255, savF = Math.min(Fs, 0.06 + 0.22 * Fs);
+      mForest[m] = Math.round(255 * sat(Fs + (savF - Fs) * wm * (1 - sand)));
+      mWarm[m] = Math.round(255 * sat(wm * smoothstep(0.0, 0.4, 1.0) * (1 - sand)));
+    }
     mSand[m] = Math.round(255 * sat(sand));
   }
 
@@ -524,8 +540,8 @@ export async function finishWorld(world, cfg, ROOT, log) {
     if (id) lvl[j * LN + i] = Math.round(lakes[id - 1].level * 10);
   }
   fs.writeFileSync(path.join(out, 'lakes.bin'), gz(flip(lvl, LN, Int16Array)));
-  const maps = new Uint8Array(mn * 11);
-  [mRock, mStratB, mPrec, mForest, mDark, mWet, mSand, mAO, mMesa, mFlow, mIce].forEach((a, k) => maps.set(flip(a, M, Uint8Array), k * mn));
+  const maps = new Uint8Array(mn * 12);
+  [mRock, mStratB, mPrec, mForest, mDark, mWet, mSand, mAO, mMesa, mFlow, mIce, mWarm].forEach((a, k) => maps.set(flip(a, M, Uint8Array), k * mn));
   fs.writeFileSync(path.join(out, 'maps.bin'), gz(maps));
   // rivers
   const S = cfg.sizeM;
@@ -592,10 +608,10 @@ export async function finishWorld(world, cfg, ROOT, log) {
   }
   let landCells = 0, hmax = 0; for (let c = 0; c < n; c++) { if (!sea[c]) landCells++; if (h[c] > hmax) hmax = h[c]; }
   const meta = {
-    name: 'The Leviathan', version: 2, variant: VB ? 'B' : 'A', layout: cfg.variant, wind: cfg.wind || 0, cold: VB && cfg.variant !== 'S' ? { z0: S - (COLD.y0 - KM0) * 1000, z1: S - (COLD.y1 - KM0) * 1000, drop: COLD.drop } : null, play: { x0: -KM0 * 1000, size: (cfg.playW || WORLD_KM) * 1000, z0: S - ((cfg.playH || WORLD_KM) - KM0) * 1000, sizeZ: (cfg.playH || WORLD_KM) * 1000 }, seed, sizeM: S, heightRes: N, mapRes: M, lakeRes: LN, riverMaskRes: RN,
+    name: 'The Leviathan', version: 2, variant: VB ? 'B' : 'A', layout: cfg.variant, wind: cfg.wind || 0, cold: VB && (cfg.variant !== 'S' || BIO) ? { z0: S - (COLD.y0 - KM0) * 1000, z1: S - (COLD.y1 - KM0) * 1000, drop: COLD.drop } : null, play: { x0: -KM0 * 1000, size: (cfg.playW || WORLD_KM) * 1000, z0: S - ((cfg.playH || WORLD_KM) - KM0) * 1000, sizeZ: (cfg.playH || WORLD_KM) * 1000 }, seed, sizeM: S, heightRes: N, mapRes: M, lakeRes: LN, riverMaskRes: RN,
     hOffset: H_OFFSET, hScale: H_SCALE, seaLevel: 0, maxElevation: Math.round(hmax),
     landKm2: Math.round(landCells * dx * dx / 1e6), riverKm: Math.round(totalLen / 1000),
-    mapChannels: ['rock', 'strat', 'precip', 'forest', 'dark', 'wet', 'sand', 'ao', 'mesa', 'flow', 'ice'],
+    mapChannels: ['rock', 'strat', 'precip', 'forest', 'dark', 'wet', 'sand', 'ao', 'mesa', 'flow', 'ice', 'warm'],
     lakes: lakes.map((l) => ({ level: +l.level.toFixed(2), areaKm2: +l.areaKm2.toFixed(2), x: Math.round(l.x), z: Math.round(S - l.y) })),
     landmarks, config: { K0: cfg.K0, levels: cfg.levels.filter((l) => l[0] <= N), ELA, Q_RIVER },
   };
@@ -610,10 +626,12 @@ export async function finishWorld(world, cfg, ROOT, log) {
     Q, qThr: Q_RIVER * 6, lake: lakeF,
     color: (c, z) => {
       if (z <= 0 && sea[c]) return [40, 78, 120];
-      const m = mi(c), F = mForest[m] / 255, D = mDark[m] / 255, p = mP[m], sn = smoothstep(2350, 2650, z);
+      const m = mi(c), F = mForest[m] / 255, D = mDark[m] / 255, p = mP[m], ykc = KM0 + (((c / N) | 0) + 0.5) / N * KMS, zc = z + COLD.drop * coldAt(ykc), sn = smoothstep(2350, 2650, zc);
+      const wm = mWarm[m] / 255;
       let r = 122 + 88 * sat(1 - p * 1.6), gg = 152 + 8 * sat(p), b = 80;            // grass -> dry steppe
       if (p < 0.4) { const t = smoothstep(0.4, 0.2, p); r += (196 - r) * t; gg += (160 - gg) * t; b += (118 - b) * t; }
-      const rk = z > 1950 ? smoothstep(1950, 2200, z) : 0; r += (140 - r) * rk; gg += (138 - gg) * rk; b += (136 - b) * rk;
+      const rk = zc > 1950 ? smoothstep(1950, 2200, zc) : 0; r += (140 - r) * rk; gg += (138 - gg) * rk; b += (136 - b) * rk;
+      r += (190 - r) * wm * 0.8; gg += (165 - gg) * wm * 0.8; b += (90 - b) * wm * 0.8;   // savanna
       r += (58 - r) * F; gg += (98 - gg) * F; b += (52 - b) * F;
       r += (22 - r) * D; gg += (52 - gg) * D; b += (36 - b) * D;
       const sd = mSand[m] / 255; r += (226 - r) * sd; gg += (206 - gg) * sd; b += (150 - b) * sd;

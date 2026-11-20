@@ -121,7 +121,7 @@ void main() {
   vec4 n1 = noTile(uNoise, vWPos.xz / 5.3, tk);
   vec4 n2 = noTile(uNoise, vWPos.xz / 67.0, 1.0 - tk);
   vec4 A = texture2D(uMapA, uv); vec4 B = texture2D(uMapB, uv);
-  vec2 FI = texture2D(uFlow, uv).rg; float flow = FI.r, ice = FI.g;
+  vec3 FI = texture2D(uFlow, uv).rgb; float flow = FI.r, ice = FI.g, warm = FI.b;
   // rock provinces meet along irregular, blended contacts rather than a pixel line
   vec2 ruv = uv + (n3.rg - 0.5) * 0.007 + (n2.rg - 0.5) * 0.0016;
   int base = int(texture2D(uRock, ruv).r * 255.0 + 0.5);
@@ -163,7 +163,10 @@ void main() {
   vec3 grass = mix(dry, mid, smoothstep(0.2, 0.85, m));
   grass = mix(grass, lush, smoothstep(0.85, 1.5, m));
   grass = mix(steppe, grass, max(smoothstep(0.05, 0.5, m), 1.0 - mesa * smoothstep(0.6, 0.2, precip)));
-  grass = mix(grass, mix(steppe, dry, 0.5), mesa * 0.55 + halo * 0.45);          // plateau herbage is always on the dry side
+  grass = mix(grass, mix(steppe, dry, 0.5), mesa * 0.55 + halo * 0.45);
+  // savanna: tall golden grass, greener where water gathers
+  vec3 sav = mix(S(vec3(0.62, 0.52, 0.27)), S(vec3(0.50, 0.50, 0.24)), smoothstep(0.6, 1.4, m)) * (0.9 + 0.2 * n2.g);
+  grass = mix(grass, sav, warm * 0.85);          // plateau herbage is always on the dry side
   // a range of grassland looks, not one colour: fresh pasture on deep valley soils, cooler blue-green sward on uplands
   // and north slopes, warmer meadow on south slopes, varying over kilometres
   float upl = smoothstep(150.0, 900.0, hc), lookN = texture2D(uNoise, vWPos.xz / 3700.0 + 0.53).b;
