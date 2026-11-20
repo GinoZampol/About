@@ -1,7 +1,7 @@
 // Runtime textures: environmental maps from the data set, a global normal map, and tileable noise.
 import * as THREE from 'three';
-import { hash2 } from '../shared/noise.mjs?v=b6c35b9';
-import { MAP } from '../shared/world.mjs?v=b6c35b9';
+import { hash2 } from '../shared/noise.mjs?v=d232211';
+import { MAP } from '../shared/world.mjs?v=d232211';
 
 function pnoise(x, y, P, seed) {
   const ix = Math.floor(x), iy = Math.floor(y), fx = x - ix, fy = y - iy;

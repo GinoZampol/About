@@ -1,16 +1,16 @@
 // The Leviathan - client entry point.
 import * as THREE from 'three';
 import { CSM } from 'three/addons/csm/CSM.js';
-import { loadWorldData, World, MAP } from '../shared/world.mjs?v=b6c35b9';
-import { materialAt } from '../shared/subsurface.mjs?v=b6c35b9';
-import { ROCK_NAMES } from '../shared/geology.mjs?v=b6c35b9';
-import { buildTextures, terrainShadow, refineNormals } from './textures.js?v=b6c35b9';
-import { makeShared, makeMaterials, setSun } from './materials.js?v=b6c35b9';
-import { Terrain } from './terrain.js?v=b6c35b9';
-import { buildRivers } from './rivers.js?v=b6c35b9';
-import { Vegetation } from './vegetation.js?v=b6c35b9';
-import { Player } from './player.js?v=b6c35b9';
-import { Life } from './life.js?v=b6c35b9';
+import { loadWorldData, World, MAP } from '../shared/world.mjs?v=d232211';
+import { materialAt } from '../shared/subsurface.mjs?v=d232211';
+import { ROCK_NAMES } from '../shared/geology.mjs?v=d232211';
+import { buildTextures, terrainShadow, refineNormals } from './textures.js?v=d232211';
+import { makeShared, makeMaterials, setSun } from './materials.js?v=d232211';
+import { Terrain } from './terrain.js?v=d232211';
+import { buildRivers } from './rivers.js?v=d232211';
+import { Vegetation } from './vegetation.js?v=d232211';
+import { Player } from './player.js?v=d232211';
+import { Life } from './life.js?v=d232211';
 
 const fail = (e) => { const el = document.getElementById('lmsg'); if (el) el.textContent = 'Could not start: ' + (e.reason?.message || e.message || e); };
 addEventListener('error', fail); addEventListener('unhandledrejection', fail);
@@ -62,6 +62,7 @@ tex.shadowData = new Uint8Array(tex.hgridRes * tex.hgridRes).fill(255);
 tex.shadow = new THREE.DataTexture(tex.shadowData, tex.hgridRes, tex.hgridRes, THREE.RedFormat, THREE.UnsignedByteType);
 tex.shadow.magFilter = tex.shadow.minFilter = THREE.LinearFilter; tex.shadow.needsUpdate = true;
 const shared = makeShared();
+if (world.coldCfg && world.coldCfg.treeDrop !== undefined) shared.uWinter.value.set(world.coldCfg.z0, world.coldCfg.z1, 1);
 shared.uWorldSize.value = S; shared.uPlay.value.set(P0, P1, Z0, Z1);
 const opts = { variantB: world.meta.variant === 'B', worldSize: S, uTreeDist: { value: quality.farDist }, uSnowLine: { value: num('snow', 2450) }, uCold: { value: world.coldCfg ? new THREE.Vector3(world.coldCfg.z0, world.coldCfg.z1, world.coldCfg.drop) : new THREE.Vector3(0, 0, 0) } };
 shared.uCloud.value = num('cloud', 0.42);

@@ -639,7 +639,7 @@ export async function finishWorld(world, cfg, ROOT, log) {
       r += (22 - r) * D; gg += (52 - gg) * D; b += (36 - b) * D;
       const sd = mSand[m] / 255; r += (226 - r) * sd; gg += (206 - gg) * sd; b += (150 - b) * sd;
       const w = mWet[m] / 255; r += (92 - r) * w * 0.6; gg += (120 - gg) * w * 0.6; b += (84 - b) * w * 0.6;
-      r += (245 - r) * sn; gg += (247 - gg) * sn; b += (250 - b) * sn;
+      { const snf = sn * (COLD.treeDrop !== undefined ? 1 - 0.6 * F : 1); r += (245 - r) * snf; gg += (247 - gg) * snf; b += (250 - b) * snf; }   // (snowy taiga shows its trees on the map)
       return [r, gg, b];
     },
   });
