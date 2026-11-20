@@ -135,13 +135,20 @@ void main() {
   float tanS = length(N.xz) / max(N.y, 0.05);
   float precip = A.r * 3.0, forest = A.g, dark = A.b, wet = A.a, sand = B.r, ao = B.g, strat = B.b * 510.0 - 100.0;
   float curv = clamp((NT.a - 0.5) * 2.0, -1.0, 1.0);                      // + hollows, - spurs and crests
-  float mesa = smoothstep(0.22, 0.78, B.a + (n2.g - 0.5) * 0.16 + (n3.g - 0.5) * 0.2);        // the layered plateau province, and only it
+  float mesa = smoothstep(0.12, 0.88, B.a + (n2.g - 0.5) * 0.22 + (n3.g - 0.5) * 0.3);
+  // the dry country around the badlands: within a few hundred metres of them the grass thins and cures and bare
+  // ground shows through, so they fade into the grassland instead of starting at an edge
+  float halo = 0.0; for (int ring = 0; ring < 2; ring++) { vec2 o = vec2(ring == 0 ? 400.0 : 950.0) / uWorldSize; float hr;
+    hr = max(max(texture2D(uMapB, uv + vec2(o.x, 0.0)).a, texture2D(uMapB, uv - vec2(o.x, 0.0)).a), max(texture2D(uMapB, uv + vec2(0.0, o.y)).a, texture2D(uMapB, uv - vec2(0.0, o.y)).a));
+    hr = max(hr, 0.7 * max(max(texture2D(uMapB, uv + o).a, texture2D(uMapB, uv - o).a), max(texture2D(uMapB, uv + vec2(o.x, -o.y)).a, texture2D(uMapB, uv + vec2(-o.x, o.y)).a)));
+    halo = max(halo, hr * (ring == 0 ? 1.0 : 0.6)); }
+  halo = smoothstep(0.05, 0.85, halo + (n3.b - 0.5) * 0.4) * (1.0 - mesa);        // the layered plateau province, and only it
   float sunny = N.z * min(tanS, 1.0);                                    // + on south-facing slopes
 
   // ---- soil moisture: climate, then where water actually collects on the landform ------------
   // (the grass greens with the same water spectrum that sets the tree cover, so its colour runs the whole range too)
   float m = precip * (1.0 + 0.08 * curv + 0.15 * flow - 0.14 * sunny + (n3.r - 0.5) * 0.16 + (n2.r - 0.5) * 0.1) + 0.35 * wet + 0.75 * (forest - 0.4) * (1.0 - mesa);
-  m -= 0.3 * mesa * (1.0 - 0.7 * smoothstep(0.25, 0.55, flow));            // the plateau is dry steppe; only its watercourses stay green
+  m -= (0.3 * mesa + 0.35 * halo) * (1.0 - 0.7 * smoothstep(0.25, 0.55, flow));            // the plateau is dry steppe; only its watercourses stay green
   float detailF = 1.0 - smoothstep(120.0, 700.0, dist);                   // fine speckle only where it can be resolved
 
   // ---- herb layer -------------------------------------------------------------------------------
@@ -156,7 +163,7 @@ void main() {
   vec3 grass = mix(dry, mid, smoothstep(0.2, 0.85, m));
   grass = mix(grass, lush, smoothstep(0.85, 1.5, m));
   grass = mix(steppe, grass, max(smoothstep(0.05, 0.5, m), 1.0 - mesa * smoothstep(0.6, 0.2, precip)));
-  grass = mix(grass, mix(steppe, dry, 0.5), mesa * 0.55);          // plateau herbage is always on the dry side
+  grass = mix(grass, mix(steppe, dry, 0.5), mesa * 0.55 + halo * 0.45);          // plateau herbage is always on the dry side
   // a range of grassland looks, not one colour: fresh pasture on deep valley soils, cooler blue-green sward on uplands
   // and north slopes, warmer meadow on south slopes, varying over kilometres
   float upl = smoothstep(150.0, 900.0, hc), lookN = texture2D(uNoise, vWPos.xz / 3700.0 + 0.53).b;
@@ -172,9 +179,9 @@ void main() {
   grass = mix(grass, grass * vec3(1.08, 1.04, 0.9), n3.b * 0.18);                    // cured, seeding patches
   grass = mix(grass, grass * vec3(0.86, 0.96, 0.86), smoothstep(0.55, 0.8, n2.a) * 0.3); // rank, darker swards
   vec3 soil = mix(S(vec3(0.38, 0.32, 0.24)), S(vec3(0.52, 0.46, 0.36)), n3.g);
-  soil = mix(soil, mix(S(vec3(0.55, 0.40, 0.29)), S(vec3(0.66, 0.56, 0.42)), n3.g), mesa);
+  soil = mix(soil, mix(S(vec3(0.55, 0.40, 0.29)), S(vec3(0.66, 0.56, 0.42)), n3.g), max(mesa, halo));
   soil *= 0.9 + 0.2 * n1.g;
-  float veg = smoothstep(0.1, 0.62, max(max(m, precip * 0.85 - 0.3 * mesa), 0.75 * (1.0 - mesa) * smoothstep(0.2, 0.4, precip)) + (n2.r - 0.5) * 0.12 * mix(0.4, 1.0, detailF) + (n1.b - 0.5) * 0.1 * detailF);
+  float veg = smoothstep(0.1, 0.62, max(max(m, precip * 0.85 - 0.3 * mesa), 0.75 * (1.0 - mesa) * (1.0 - 0.6 * halo) * smoothstep(0.2, 0.4, precip)) + (n2.r - 0.5) * 0.12 * mix(0.4, 1.0, detailF) + (n1.b - 0.5) * 0.1 * detailF);
   float bare = (1.0 - 0.85 * smoothstep(0.3, 0.6, m)) * mix(0.12, smoothstep(0.62, 0.8, n1.g * 0.45 + n2.b * 0.55 + tanS * 0.22 - curv * 0.12), detailF);  // slips, trails, thin soil on spurs
   vec3 ground = mix(soil, grass, veg * (1.0 - bare * 0.3));
   vec3 litter = mix(S(vec3(0.26, 0.20, 0.12)), S(vec3(0.19, 0.24, 0.10)), n2.b * (0.5 + 0.5 * dark)) * (0.8 + 0.4 * n1.a);
@@ -197,9 +204,9 @@ void main() {
   ground = mix(ground, sandC, smoothstep(0.06, 0.72, sand + ((n2.r - 0.5) * 0.25 + (n3.r - 0.5) * 0.35 + curv * 0.18) * smoothstep(0.0, 0.25, sand)) * (1.0 - smoothstep(0.4, 0.8, tanS)));
 
   // ---- bedrock -------------------------------------------------------------------------------
-  float hz = h + (n2.r - 0.5) * 9.0 + (n3.g - 0.5) * 22.0;
-  vec3 st = mix(strataColor(rockAt(6, hz + (n1.r - 0.5) * 5.0, strat)), strataColor(rockAt(6, hz - 6.0 + (n1.g - 0.5) * 5.0, strat)), 0.5);
-  float bands = sin((h + strat * 0.15) * 0.7 + n3.r * 5.0) * 0.5 + sin(h * 2.3 + n2.g * 4.0) * 0.5;
+  float hz = h + (n2.r - 0.5) * 22.0 + (n3.g - 0.5) * 46.0 + (n1.b - 0.5) * 6.0;
+  vec3 st = (strataColor(rockAt(6, hz + 9.0, strat)) + strataColor(rockAt(6, hz, strat)) * 2.0 + strataColor(rockAt(6, hz - 9.0, strat))) * 0.25;   // soft layer boundaries
+  float bands = (n2.b - 0.5) * 1.2 + (n1.g - 0.5) * 0.6;   // weathering varies in patches, not in fine horizontal lines
   // plateau stratigraphy: colour bands follow the beds; outside the plateau mask it is plain grey rock
   vec3 mesaC = mix(rockColor(4), st * (1.0 + 0.12 * bands), mesa);
   vec2 rs = vec2(textureSize(uRock, 0)), tc = ruv * rs - 0.5, tf = floor(tc), fr = tc - tf;
