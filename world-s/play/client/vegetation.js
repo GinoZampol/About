@@ -1,9 +1,9 @@
 // Vegetation and rock rendering: a small library of procedurally modelled 3D assets (real trunks,
 // branches, fronds, leaf clusters, boulders), drawn with GPU instancing in three LOD rings.
 import * as THREE from 'three';
-import { ATMO, SHADOW_FRAG } from './materials.js?v=da1f6f8';
-import { T, TYPE_COUNT } from './vegPlacement.js?v=da1f6f8';
-import { mulberry32, hash2 } from '../shared/noise.mjs?v=da1f6f8';
+import { ATMO, SHADOW_FRAG } from './materials.js?v=d285ca7';
+import { T, TYPE_COUNT } from './vegPlacement.js?v=d285ca7';
+import { mulberry32, hash2 } from '../shared/noise.mjs?v=d285ca7';
 
 // ---------------------------------------------------------------------------------------------
 // geometry builder. vertex colour: r = occlusion, g = wind weight, b = 0 bark | 0.5 solid foliage | 1 card foliage

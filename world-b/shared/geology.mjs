@@ -20,7 +20,7 @@ export const ROCK_K = [2.2, 1.3, 0.32, 0.55, 0.8, 0.6, 0.8, 2.3];
 // Tangent of the steepest slope the rock holds at ~10 m scale.
 export const ROCK_TALUS = [0.45, 0.5, 1.1, 1.45, 0.78, 0.72, 1.6, 0.5];
 // Hillslope diffusion strength (soil creep), 0..0.2.
-export const ROCK_DIFF = [0.16, 0.15, 0.03, 0.03, 0.09, 0.04, 0.015, 0.06];
+export const ROCK_DIFF = [0.16, 0.15, 0.03, 0.03, 0.09, 0.04, 0.015, 0.02];   // (shale: badlands are densely gullied, not smoothed)
 // Linear albedo-ish colours used by the renderer (sRGB 0..255).
 export const ROCK_COLOR = [
   [128, 116, 96], [98, 96, 92], [150, 148, 146], [198, 190, 172],
