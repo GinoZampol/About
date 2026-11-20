@@ -256,7 +256,7 @@ function forcing(L, xk, yk, f, plateau, withRim = true) {
   // (monoclines), so its tops stand at many levels instead of all ending at one height.
   const warpU = 0.55 + 0.9 * sat(0.5 + 1.2 * fbm(xk / 11 + L.o[4], yk / 11, 3, s + 87)), step = smoothstep(-0.06, 0.06, fbm(xk / 16 + L.o[5], yk / 16 + L.o[1], 2, s + 88));
   const tilt = 0.12 * ((xk - (L.tableC ? L.tableC[0] : 25)) * L.tilt[0] + (yk - (L.tableC ? L.tableC[1] : 25)) * L.tilt[1]) / 10;
-  U = U * (1 - plateau) + plateau * Math.min(0.5, Math.max(0.1, 0.3 * warpU + 0.12 * step + tilt));   // tops between roughly 700 m and 1,800 m
+  U = U * (1 - plateau) + plateau * Math.min(0.42, Math.max(0.1, 0.3 * warpU + 0.12 * step + tilt));   // tops between roughly 700 m and 1,800 m
   // the starting surface: an old lowland, plus the uplift (or sinking) already expressed
   const h0raw = 30 + 25 * fbm(xk / 6, yk / 6, 3, s + 33) + U * 1e-3 * T0 + 400 * f.gC;
   return { U, h0raw, isl, chalk, pw };
@@ -273,7 +273,8 @@ export function seededDesign(xk, yk, seed) {
     // the rivers that already crossed the country before it rose: a branching network of broad valleys that the rising
     // block carries up and the rivers keep cutting into, so canyons and wide valleys run through its interior
     const v1 = Math.abs(fbm(xk / 7 + L.o[2], yk / 7, 3, seed + 89)), v2 = Math.abs(fbm(xk / 2.8, yk / 2.8 + L.o[3], 2, seed + 90));
-    h0 -= plateau * (230 * Math.pow(1 - smoothstep(0, 0.16, v1), 1.5) + 90 * Math.pow(1 - smoothstep(0, 0.12, v2), 2));
+    const v3 = Math.abs(fbm(xk / 1.4 + L.o[0], yk / 1.4, 2, seed + 91));
+    h0 -= plateau * (420 * Math.pow(1 - smoothstep(0, 0.2, v1), 1.4) + 200 * Math.pow(1 - smoothstep(0, 0.15, v2), 1.6) + 70 * Math.pow(1 - smoothstep(0, 0.12, v3), 2));
   }
   h0 = h0 < 0 ? Math.max(-380, h0) : Math.max(1.5, h0);
   // rock

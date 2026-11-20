@@ -20,9 +20,9 @@
  "hOffset": 300,
  "hScale": 0.125,
  "seaLevel": 0,
- "maxElevation": 5768,
- "landKm2": 6643,
- "riverKm": 2505,
+ "maxElevation": 5755,
+ "landKm2": 6665,
+ "riverKm": 2597,
  "mapChannels": [
   "rock",
   "strat",
@@ -42,14 +42,14 @@
    "name": "Central Valley (ocean shore)",
    "x": 39987,
    "z": 53949,
-   "h": 7,
+   "h": 8,
    "note": "low ground on the shore of the central ocean"
   },
   {
    "name": "The Crown",
-   "x": 52837,
-   "z": 80048,
-   "h": 5768,
+   "x": 52606,
+   "z": 78956,
+   "h": 5755,
    "note": "the highest summit of the great range"
   },
   {

@@ -123,7 +123,7 @@ function fieldsFor(design, N) {
     tm[j * N + i] = Math.max(0.5, Math.min(1.9, v));
   }
   g.tmod = tm;
-  if (CFG.variant === 'S') { const cq = new Float32Array(N * N); for (let c = 0; c < N * N; c++) cq[c] = g.mesa[c] > 0.5 ? 3e4 : 0; g.cutQ = cq; }
+  if (CFG.variant === 'S') { const cq = new Float32Array(N * N); for (let c = 0; c < N * N; c++) cq[c] = g.mesa[c] > 0.5 && g.rock[c] === ROCK.SANDSTONE ? 1e4 : 0; g.cutQ = cq; }   // (only the hard caprock resists; soft shale gullies everywhere)
   return g;
 }
 
