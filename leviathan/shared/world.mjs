@@ -204,7 +204,7 @@ export class World {
           let t = (h + this.stratOffset(x, z) * 0.15 + 4 * noise2(x / 110, z / 110, seed + 206)) / T;
           t += 0.38 * Math.sin(t * 2.3 + 1.7) + 0.2 * Math.sin(t * 5.1);
           const g = t - Math.floor(t);
-          d += bt * T * 0.6 * (smoothstep(0.5, 1.0, g) - g);
+          d += bt * T * 0.28 * (smoothstep(0.5, 1.0, g) - g);   // (subtle: big ledges come from the eroded terrain itself)
         }
       }
     }

@@ -2,9 +2,9 @@
 // Everything is a pure function of world position and the world seed, so every client and the
 // server agree on where each tree stands. Positions come from global jittered lattices, which
 // keeps instances stable when a tile changes level of detail.
-import { hash2, noise2, smoothstep } from '../shared/noise.mjs?v=d285ca7';
-import { MAP } from '../shared/world.mjs?v=d285ca7';
-import { ROCK, ROCK_COLOR } from '../shared/geology.mjs?v=d285ca7';
+import { hash2, noise2, smoothstep } from '../shared/noise.mjs?v=a83ac1b';
+import { MAP } from '../shared/world.mjs?v=a83ac1b';
+import { ROCK, ROCK_COLOR } from '../shared/geology.mjs?v=a83ac1b';
 
 export const T = { BROADLEAF: 0, CONIFER: 1, GIANT: 2, PINE: 3, BIRCH: 4, SNAG: 5, BUSH: 6, SAGE: 7, ROCK_ROUND: 8, ROCK_SLAB: 9, LOG: 10, FERN: 11, GRASS: 12 };
 export const TYPE_COUNT = 13;
