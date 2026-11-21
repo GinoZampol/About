@@ -101,3 +101,21 @@ Private (Kleinanzeigen):
 Private (Marktplaats NL):
 - MBP14 M1 Max 32C 64GB/1TB, bids from €1,496, Amsterdam.
 - MBP16 M2 Max 64GB/1TB with warranty, €2,449 fixed, Roosendaal.
+
+## Deep scan 2026-11-21 (64 GB+, Max/Ultra; 71 Kleinanzeigen listings opened; full data in research/kleinanzeigen_64gb_scan_2026-11-21.json)
+Best value (Germany, shipping possible):
+- MBP14 M2 Max 38C 64GB/1TB, €2,000 VB, Hamburg, 20.11: https://www.kleinanzeigen.de/s-anzeige/macbook-pro-m2-max-mit-magsafe-ladekabel/3577159221-278-24588
+- MBP16 M1 Max 24C 64GB/512GB, battery 98%, €1,600 VB, Direkt kaufen, Potsdam, 21.11.
+- MBP16 M1 Max 32C 64GB/2TB, €1,650 VB, Aschaffenburg, 21.11.
+- MBP16 M1 Max 64GB/1TB, 26 cycles, 98%, €1,890, NRW, 14.09.
+- MBP16 M1 Max 32C 64GB/4TB, €1,999, Berlin, 20.11.
+- MBP16 M2 Max 64GB/1TB, 161 cycles, 91%, €2,400, Direkt kaufen, BW, 21.11.
+- MBP16 M3 Max 40C 64GB/2TB, 371 cycles, 100%, €2,890, Direkt kaufen, Berlin, 29.10.
+- Mac Studio M1 Ultra 64C 64GB/1TB, €2,995 VB, dealer, Hamburg, 19.11. Mac Studio M2 Ultra 60C 64GB/1TB, €2,999, Plauen.
+- RED FLAG: "MacBook Pro M2 Max 96GB RAM 38 Core GPU 2TB SSD OVP" at €3,199 VB posted 16.11 three times in three cities (Köln, Aachen, NRW 53894). Duplicate cross-city listings are a classic scam pattern; avoid.
+Italy:
+- MacFaaast (Meda MB), buy online: MBP14 M1 Max 32C 64GB/2TB, grade Buono, €1,990, in stock: https://store.macfaaast.it/prodotto/apple-macbook-pro-retina-14-m1-max-silver-ram-64-ssd-2tb-gpu-32-2021-buono/
+- Subito (search snippets only; Subito blocks automated access):
+  - Milano Mac Studio M1 Ultra 48C 64GB/1TB, dated 16.11.2026, pickup or Subito shipping, price not shown.
+  - Roma MBP16 M1 Max 32C 64GB/4TB, €2,190, 47 cycles (~55 days old).
+  - Torino MBP16 M1 Max 24C 64GB/512GB, €1,949 (~185 days old).
