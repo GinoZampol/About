@@ -88,3 +88,16 @@ Status key:
 - M1 Ultra 64C, 128 GB / 1 TB, "bid from €2,295". Marktplaats, Sijbekarspel. Bids already at €3,000 (2026-11-13 09:59); page now shows OutOfStock (probably sold or reserved). https://www.marktplaats.nl/v/computers-en-software/apple-desktops/m2464993955-mac-studio-m1-ultra-128-gb-ram-1-tb-64-core-gpu
 - M1 Ultra 64C, 128 GB, €4,490. Kleinanzeigen, Augsburg (posted 11.11).
 - Unchanged: Hamburg M1 Ultra 64 GB €2,650 VB (still live); Bayern-Schweinfurt M2 Ultra dropped to €3,550 VB.
+
+## Buy-now scan 2026-11-21 (64 GB+, Max or Ultra; read-only)
+Dealers (buy-now, warranty):
+- Revendo CH: MBP16 M1 Max 32C 64GB/1TB "Very good" CHF 1,986. MBP14 M1 Max 32C 64GB/2TB CHF 2,148. MBP16 M3 Max 40C 64GB/1TB CHF 2,616.
+- mac-store24 DE (no CH shipping): Mac Studio M1 Ultra 48C 64GB/1TB €2,999; M2 Ultra 64GB/1TB €3,999.
+Private (Kleinanzeigen):
+- MBP16 M1 Max 24C 64GB/512GB, €1,600 VB, "Direkt kaufen" (buyer protection), Brandenburg, posted 21.11: https://www.kleinanzeigen.de/s-anzeige/macbook-pro-16-2021-m1-max-24-gpu-64-gb-ram-512-gb/3578444945-278-7963
+- MBP16 M1 Max 32C 64GB/2TB, €1,650 VB, Aschaffenburg, posted 21.11: https://www.kleinanzeigen.de/s-anzeige/apple-macbook-pro-16-m1-max-32c-64gb-2tb/3577847851-278-7437
+- MBP14 M1 Max 64GB/1TB, €1,599 VB, Bielefeld, posted 20.11.
+- MBP M1 Max 32C 64GB/4TB, €1,999, Berlin, posted 20.11.
+Private (Marktplaats NL):
+- MBP14 M1 Max 32C 64GB/1TB, bids from €1,496, Amsterdam.
+- MBP16 M2 Max 64GB/1TB with warranty, €2,449 fixed, Roosendaal.
