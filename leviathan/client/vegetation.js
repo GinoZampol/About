@@ -306,8 +306,9 @@ void main() {
 const lin = (r, g, b) => new THREE.Color().setRGB(r, g, b, THREE.SRGBColorSpace);
 
 export class Vegetation {
-  constructor({ scene, world, terrain, shared, mats, tex, csm, treeDist, farDist, grassDist }) {
+  constructor({ scene, world, terrain, shared, mats, tex, csm, treeDist, farDist, ultraDist, grassDist }) {
     this.farDist = farDist || treeDist;       // beyond treeDist, a thinned ring of 3-4 triangle trees out to farDist
+    this.ultraDist = ultraDist || this.farDist; // beyond farDist, sparse large clumps on 2 km tiles out to ultraDist
     this.world = world; this.terrain = terrain; this.treeDist = treeDist; this.grassDist = grassDist;
     this.group = new THREE.Group(); scene.add(this.group);
     this.tiles = new Map(); this.pending = 0; this.stats = { instances: 0, tiles: 0 }; this.lastPos = new THREE.Vector3(1e9, 0, 0);
@@ -360,10 +361,15 @@ export class Vegetation {
     const dist = (x0, z0, s) => Math.hypot(Math.max(x0 - pos.x, 0, pos.x - x0 - s), Math.max(z0 - pos.z, 0, pos.z - z0 - s));
     const yPen = Math.max(0, pos.y - this.world.ground(pos.x, pos.z) - 150);   // high above the ground the near rings are pointless
     const R = this.farDist;
+    { const U = this.ultraDist, BU = 2048; if (U > R) for (let j = Math.max(0, Math.floor((pos.z - U) / BU)); j <= Math.min(Math.ceil(S / BU) - 1, Math.floor((pos.z + U) / BU)); j++) for (let i = Math.max(0, Math.floor((pos.x - U) / BU)); i <= Math.min(Math.ceil(S / BU) - 1, Math.floor((pos.x + U) / BU)); i++) {
+      // a 2 km tile takes over once its nearest edge lies well past the tree ring; inside it the 512 m tiles step aside
+      const x0 = i * BU, z0 = j * BU, d = dist(x0, z0, BU);
+      if (d <= U && d > Math.max(R * 0.7, this.treeDist + 600)) want.set(`4:${x0}:${z0}`, { x0, z0, size: BU, lod: 4 }); } }
     const i0 = Math.max(0, Math.floor((pos.x - R) / B)), i1 = Math.min(Math.ceil(S / B) - 1, Math.floor((pos.x + R) / B));
     const j0 = Math.max(0, Math.floor((pos.z - R) / B)), j1 = Math.min(Math.ceil(S / B) - 1, Math.floor((pos.z + R) / B));
     for (let j = j0; j <= j1; j++) for (let i = i0; i <= i1; i++) {
       const x0 = i * B, z0 = j * B, d = dist(x0, z0, B); if (d > R) continue;
+      if (want.has(`4:${Math.floor(x0 / 2048) * 2048}:${Math.floor(z0 / 2048) * 2048}`)) continue;   // covered by a far 2 km tile
       if (d > this.treeDist) { want.set(`3:${x0}:${z0}`, { x0, z0, size: B, lod: 3 }); continue; }
       if (d + yPen > this.midDist) { want.set(`2:${x0}:${z0}`, { x0, z0, size: B, lod: 2 }); continue; }
       for (let b = 0; b < 2; b++) for (let a = 0; a < 2; a++) {
@@ -421,7 +427,7 @@ export class Vegetation {
       let minY = 1e9, maxY = -1e9; for (let k = 13; k < g.mats.length; k += 16) { if (g.mats[k] < minY) minY = g.mats[k]; if (g.mats[k] > maxY) maxY = g.mats[k]; }
       mesh.boundingSphere = new THREE.Sphere(new THREE.Vector3(cx, (minY + maxY) / 2 + 12, cz), Math.hypot(t.size * 0.75, (maxY - minY) / 2 + 40));
       mesh.frustumCulled = true; mesh.matrixAutoUpdate = false;
-      mesh.castShadow = a.shadow && t.lod < 2; if (t.lod === 3) mesh.receiveShadow = false; mesh.receiveShadow = true; if (a.depth) mesh.customDepthMaterial = a.depth;
+      mesh.castShadow = a.shadow && t.lod < 2; mesh.frustumCulled = true; if (t.lod === 3) mesh.receiveShadow = false; mesh.receiveShadow = true; if (a.depth) mesh.customDepthMaterial = a.depth;
       this.group.add(mesh); t.meshes.push(mesh); this.stats.instances += n;
     }
     if (m.colliders.length) this.colliderTiles.set(m.key, m.colliders);

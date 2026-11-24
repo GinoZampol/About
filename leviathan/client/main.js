@@ -17,9 +17,9 @@ addEventListener('error', fail); addEventListener('unhandledrejection', fail);
 const Q = new URLSearchParams(location.search);
 const num = (k, d) => (Q.has(k) ? +Q.get(k) : d);
 const QUALITY = {
-  low:    { maxLevel: 9,  shadows: 0,    treeDist: 500,  farDist: 2400, grassDist: 0,  pr: 1 },
-  medium: { maxLevel: 10, shadows: 1024, treeDist: 900,  farDist: 4200, grassDist: 45, pr: 1 },
-  high:   { maxLevel: 11, shadows: 2048, treeDist: 1500, farDist: 7000, grassDist: 70, pr: Math.min(devicePixelRatio, 2) },
+  low:    { maxLevel: 9,  shadows: 0,    treeDist: 500,  farDist: 2400, ultraDist: 6000, grassDist: 0,  pr: 1 },
+  medium: { maxLevel: 10, shadows: 1024, treeDist: 900,  farDist: 4200, ultraDist: 11000, grassDist: 45, pr: 1 },
+  high:   { maxLevel: 11, shadows: 2048, treeDist: 1500, farDist: 7000, ultraDist: 18000, grassDist: 70, pr: Math.min(devicePixelRatio, 2) },
 };
 const quality = QUALITY[Q.get('quality') || (Math.min(innerWidth, innerHeight) < 600 ? 'low' : 'medium')];
 const SHOT = Q.has('shot');
@@ -112,7 +112,7 @@ let hgLeft = 0, normalsReady = false; const hgNew = new Float32Array(tex.hgridRe
 function onHgrid(m) { hgNew.set(m.out, m.j0 * tex.hgridRes); if (--hgLeft === 0) { refineNormals(tex, hgNew); updateSun(); normalsReady = true; } }
 { const T = tex.hgridRes, STRIP = 64; for (let j = 0; j < T; j += STRIP) { hgLeft++; terrain.extraQueue.push({ type: 'hgrid', T, j0: j, j1: Math.min(T, j + STRIP) }); } }
 const rivers = buildRivers(world, mats.river, scene);
-vegetation = new Vegetation({ scene, world, terrain, shared, mats, tex, csm, treeDist: quality.treeDist, farDist: quality.farDist, grassDist: num('grass', quality.grassDist) });
+vegetation = new Vegetation({ scene, world, terrain, shared, mats, tex, csm, treeDist: quality.treeDist, farDist: quality.farDist, ultraDist: num('ultra', quality.ultraDist), grassDist: num('grass', quality.grassDist) });
 await terrain.ready;
 
 const player = new Player(camera, world, canvas);
