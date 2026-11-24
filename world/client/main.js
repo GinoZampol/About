@@ -1,25 +1,25 @@
 // The Leviathan - client entry point.
 import * as THREE from 'three';
 import { CSM } from 'three/addons/csm/CSM.js';
-import { loadWorldData, World, MAP } from '../shared/world.mjs?v=d232211';
-import { materialAt } from '../shared/subsurface.mjs?v=d232211';
-import { ROCK_NAMES } from '../shared/geology.mjs?v=d232211';
-import { buildTextures, terrainShadow, refineNormals } from './textures.js?v=d232211';
-import { makeShared, makeMaterials, setSun } from './materials.js?v=d232211';
-import { Terrain } from './terrain.js?v=d232211';
-import { buildRivers } from './rivers.js?v=d232211';
-import { Vegetation } from './vegetation.js?v=d232211';
-import { Player } from './player.js?v=d232211';
-import { Life } from './life.js?v=d232211';
+import { loadWorldData, World, MAP } from '../shared/world.mjs?v=76d17a5';
+import { materialAt } from '../shared/subsurface.mjs?v=76d17a5';
+import { ROCK_NAMES } from '../shared/geology.mjs?v=76d17a5';
+import { buildTextures, terrainShadow, refineNormals } from './textures.js?v=76d17a5';
+import { makeShared, makeMaterials, setSun } from './materials.js?v=76d17a5';
+import { Terrain } from './terrain.js?v=76d17a5';
+import { buildRivers } from './rivers.js?v=76d17a5';
+import { Vegetation } from './vegetation.js?v=76d17a5';
+import { Player } from './player.js?v=76d17a5';
+import { Life } from './life.js?v=76d17a5';
 
 const fail = (e) => { const el = document.getElementById('lmsg'); if (el) el.textContent = 'Could not start: ' + (e.reason?.message || e.message || e); };
 addEventListener('error', fail); addEventListener('unhandledrejection', fail);
 const Q = new URLSearchParams(location.search);
 const num = (k, d) => (Q.has(k) ? +Q.get(k) : d);
 const QUALITY = {
-  low:    { maxLevel: 9,  shadows: 0,    treeDist: 500,  farDist: 1600, grassDist: 0,  pr: 1 },
-  medium: { maxLevel: 10, shadows: 1024, treeDist: 900,  farDist: 2800, grassDist: 45, pr: 1 },
-  high:   { maxLevel: 11, shadows: 2048, treeDist: 1500, farDist: 4500, grassDist: 70, pr: Math.min(devicePixelRatio, 2) },
+  low:    { maxLevel: 9,  shadows: 0,    treeDist: 500,  farDist: 2400, grassDist: 0,  pr: 1 },
+  medium: { maxLevel: 10, shadows: 1024, treeDist: 900,  farDist: 4200, grassDist: 45, pr: 1 },
+  high:   { maxLevel: 11, shadows: 2048, treeDist: 1500, farDist: 7000, grassDist: 70, pr: Math.min(devicePixelRatio, 2) },
 };
 const quality = QUALITY[Q.get('quality') || (Math.min(innerWidth, innerHeight) < 600 ? 'low' : 'medium')];
 const SHOT = Q.has('shot');
@@ -62,7 +62,7 @@ tex.shadowData = new Uint8Array(tex.hgridRes * tex.hgridRes).fill(255);
 tex.shadow = new THREE.DataTexture(tex.shadowData, tex.hgridRes, tex.hgridRes, THREE.RedFormat, THREE.UnsignedByteType);
 tex.shadow.magFilter = tex.shadow.minFilter = THREE.LinearFilter; tex.shadow.needsUpdate = true;
 const shared = makeShared();
-if (world.coldCfg && world.coldCfg.treeDrop !== undefined) shared.uWinter.value.set(world.coldCfg.z0, world.coldCfg.z1, 1);
+if (world.coldCfg && world.coldCfg.map) shared.uWinter.value.set(0, 0, 1);   // winter: the cold comes from the map (flow texture alpha)
 shared.uWorldSize.value = S; shared.uPlay.value.set(P0, P1, Z0, Z1);
 const opts = { variantB: world.meta.variant === 'B', worldSize: S, uTreeDist: { value: quality.farDist }, uSnowLine: { value: num('snow', 2450) }, uCold: { value: world.coldCfg ? new THREE.Vector3(world.coldCfg.z0, world.coldCfg.z1, world.coldCfg.drop) : new THREE.Vector3(0, 0, 0) } };
 shared.uCloud.value = num('cloud', 0.42);
@@ -204,8 +204,8 @@ addEventListener('resize', () => { renderer.setSize(innerWidth, innerHeight, fal
 
 function regionName(x, z, h) {
   const xk = (x - P0) / 1000, yk = (Z1 - z) / 1000, p = world.map(MAP.PRECIP, x, z) * 3, F = world.map(MAP.FOREST, x, z), D = world.map(MAP.DARK, x, z);
-  const hcl = h + world.coldDrop * world.cold(z), wetl = world.map(MAP.WET, x, z);
-  let land = h < 0.3 ? 'open water' : wetl > 0.5 ? 'marsh' : world.map(MAP.SAND, x, z) > 0.5 && h > 50 ? 'sand sea' : world.cold(z) > 0.45 && hcl < 2450 ? (F > 0.4 ? 'taiga' : 'tundra') : D > 0.5 ? 'ancient dark forest' : F > 0.55 ? (h > 1000 ? 'montane conifer forest' : 'temperate forest') : h > 2450 ? 'snowfields' : h > 1950 ? 'alpine zone' : p < 0.3 ? 'desert' : p < 0.5 ? 'dry steppe' : F > 0.2 ? 'parkland' : 'grassland';
+  const hcl = h + world.coldDrop * world.cold(x, z), wetl = world.map(MAP.WET, x, z);
+  let land = h < 0.3 ? 'open water' : wetl > 0.5 ? 'marsh' : world.map(MAP.SAND, x, z) > 0.5 && h > 50 ? 'sand sea' : world.cold(x, z) > 0.45 && hcl < 2450 ? (F > 0.4 ? 'taiga' : 'tundra') : D > 0.5 ? 'ancient dark forest' : F > 0.55 ? (h > 1000 ? 'montane conifer forest' : 'temperate forest') : h > 2450 ? 'snowfields' : h > 1950 ? 'alpine zone' : p < 0.3 ? 'desert' : p < 0.5 ? 'dry steppe' : F > 0.2 ? 'parkland' : 'grassland';
   // region names belong to the fixed layouts; a seeded world is described by its land cover alone
   if (world.meta.layout === 'S') return land + (world.map(MAP.MESA, x, z) > 0.5 ? ' - badlands' : '');
   const reg = xk > 41 ? 'High Desert plateau' : xk > 38 ? 'the Trench' : (xk > 27 && yk < 40) || (xk > 30) ? 'the Spine' : yk > 43 ? 'Northern Highlands' : yk > 33 && xk < 23 ? 'the Sound' : xk < 14 ? 'Coast Range' : 'Central Valley';

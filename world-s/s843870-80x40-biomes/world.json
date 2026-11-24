@@ -5,10 +5,11 @@
  "layout": "S",
  "wind": 0,
  "cold": {
-  "z0": 63000,
-  "z1": 50200,
+  "map": true,
   "drop": 2900,
-  "treeDrop": 250
+  "treeDrop": 250,
+  "z0": 0,
+  "z1": 0
  },
  "play": {
   "x0": 3000,
@@ -40,7 +41,8 @@
   "mesa",
   "flow",
   "ice",
-  "warm"
+  "warm",
+  "cold"
  ],
  "lakes": [],
  "landmarks": [

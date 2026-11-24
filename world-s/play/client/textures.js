@@ -1,7 +1,7 @@
 // Runtime textures: environmental maps from the data set, a global normal map, and tileable noise.
 import * as THREE from 'three';
-import { hash2 } from '../shared/noise.mjs?v=d232211';
-import { MAP } from '../shared/world.mjs?v=d232211';
+import { hash2 } from '../shared/noise.mjs?v=76d17a5';
+import { MAP } from '../shared/world.mjs?v=76d17a5';
 
 function pnoise(x, y, P, seed) {
   const ix = Math.floor(x), iy = Math.floor(y), fx = x - ix, fy = y - iy;
@@ -77,7 +77,7 @@ export function buildTextures(data, aniso) {
   const meta = data.meta, M = meta.mapRes, mn = M * M, maps = data.maps;
   const A = new Uint8Array(mn * 4), B = new Uint8Array(mn * 4), R = new Uint8Array(mn);
   const FL = new Uint8Array(mn * 4), hasWarm = maps.length >= (MAP.WARM + 1) * mn;   // (older worlds have no warm channel)
-  for (let k = 0; k < mn; k++) { FL[k * 4] = maps[MAP.FLOW * mn + k]; FL[k * 4 + 1] = maps[MAP.ICE * mn + k]; FL[k * 4 + 2] = hasWarm ? maps[MAP.WARM * mn + k] : 0; FL[k * 4 + 3] = 255; }
+  for (let k = 0; k < mn; k++) { FL[k * 4] = maps[MAP.FLOW * mn + k]; FL[k * 4 + 1] = maps[MAP.ICE * mn + k]; FL[k * 4 + 2] = hasWarm ? maps[MAP.WARM * mn + k] : 0; FL[k * 4 + 3] = maps.length >= (MAP.COLD + 1) * mn ? maps[MAP.COLD * mn + k] : 0; }
   for (let k = 0; k < mn; k++) {
     A[k * 4] = maps[MAP.PRECIP * mn + k]; A[k * 4 + 1] = maps[MAP.FOREST * mn + k]; A[k * 4 + 2] = maps[MAP.DARK * mn + k]; A[k * 4 + 3] = maps[MAP.WET * mn + k];
     B[k * 4] = maps[MAP.SAND * mn + k]; B[k * 4 + 1] = maps[MAP.AO * mn + k]; B[k * 4 + 2] = maps[MAP.STRAT * mn + k]; B[k * 4 + 3] = maps[MAP.MESA * mn + k];

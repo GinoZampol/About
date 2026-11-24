@@ -56,7 +56,7 @@ float sunShadow(float viewZ, float far) {
 
 const TERRAIN_VERT = /* glsl */`
 attribute float aMorph;
-uniform float uSize;
+uniform float uSize; uniform sampler2D uMapA; uniform float uWorldSize; uniform float uTreeDist; uniform vec4 uPlay;
 varying vec3 vWPos; varying vec3 vN; varying float vViewZ;
 #include <common>
 #include <shadowmap_pars_vertex>
@@ -65,6 +65,11 @@ void main() {
   vec4 wp0 = modelMatrix * vec4(p, 1.0);
   float d = distance(wp0.xyz, cameraPosition);
   p.y -= aMorph * clamp((d - 3.3 * uSize) / (0.7 * uSize), 0.0, 1.0);
+  // Far forest has volume: beyond the drawn trees the ground surface is lifted by the canopy height (up to ~18 m, in
+  // proportion to tree cover), so woods stand above clearings and fields, their edges make steps and they break the
+  // skyline along ridges, as real tree cover does from far away.
+  { vec2 fuv = clamp(wp0.xz / uWorldSize, 0.0005, 0.9995); float fc = texture2D(uMapA, fuv).g;
+    p.y += 18.0 * smoothstep(0.08, 0.7, fc) * smoothstep(uTreeDist * 0.75, uTreeDist * 1.1, d); }
   vec4 worldPosition = modelMatrix * vec4(p, 1.0);
   vWPos = worldPosition.xyz; vN = normal;
   vec4 mv = viewMatrix * worldPosition; vViewZ = -mv.z;
@@ -121,7 +126,7 @@ void main() {
   vec4 n1 = noTile(uNoise, vWPos.xz / 5.3, tk);
   vec4 n2 = noTile(uNoise, vWPos.xz / 67.0, 1.0 - tk);
   vec4 A = texture2D(uMapA, uv); vec4 B = texture2D(uMapB, uv);
-  vec3 FI = texture2D(uFlow, uv).rgb; float flow = FI.r, ice = FI.g, warm = FI.b;
+  vec4 FI4 = texture2D(uFlow, uv); vec3 FI = FI4.rgb; float flow = FI.r, ice = FI.g, warm = FI.b, FIA = FI4.a;
   // rock provinces meet along irregular, blended contacts rather than a pixel line
   vec2 ruv = uv + (n3.rg - 0.5) * 0.007 + (n2.rg - 0.5) * 0.0016;
   int base = int(texture2D(uRock, ruv).r * 255.0 + 0.5);
@@ -130,8 +135,8 @@ void main() {
   float outside = step(0.5, step(vWPos.x, 0.0) + step(uWorldSize, vWPos.x) + step(vWPos.z, 0.0) + step(uWorldSize, vWPos.z));
   vec3 N = normalize(mix(normalize(vN), nTex, smoothstep(9.0, 24.0, uCell) * (1.0 - outside)));
   float h = vWPos.y;
-  float coldT = uCold.x > uCold.y ? clamp((uCold.x - vWPos.z) / (uCold.x - uCold.y), 0.0, 1.0) : 0.0;
-  float hc = h + uCold.z * coldT * coldT * (3.0 - 2.0 * coldT);        // altitude as the climate sees it (cold north, variant B)
+  float coldT = uWinter.z > 0.5 ? texture2D(uFlow, uv).a : uCold.x > uCold.y ? clamp((uCold.x - vWPos.z) / (uCold.x - uCold.y), 0.0, 1.0) : 0.0;
+  float hc = h + uCold.z * coldT * coldT * (3.0 - 2.0 * coldT) * (uWinter.z > 0.5 ? 0.35 : 1.0);        // altitude as the climate sees it (cold north, variant B)
   float tanS = length(N.xz) / max(N.y, 0.05);
   float precip = A.r * 3.0, forest = A.g, dark = A.b, wet = A.a, sand = B.r, ao = B.g, strat = B.b * 510.0 - 100.0;
   float curv = clamp((NT.a - 0.5) * 2.0, -1.0, 1.0);                      // + hollows, - spurs and crests
@@ -240,6 +245,8 @@ void main() {
   // ---- snow: lingers in shaded hollows, strips from spurs and steep faces ---------------------
   float sn = smoothstep(-110.0, 110.0, hc - uSnowLine + (n3.b - 0.5) * 280.0 + (n2.r - 0.5) * 70.0 - N.z * 160.0 + curv * 260.0) * mix(smoothstep(2.1, 1.2, tanS), smoothstep(5.0, 3.0, tanS), smoothstep(250.0, 800.0, h - uSnowLine));
   sn = max(sn, smoothstep(300.0, 750.0, hc - uSnowLine + (n2.r - 0.5) * 120.0) * smoothstep(6.0, 3.5, tanS));   // summits are white
+  // winter corner: the snow lets in gradually, first in shaded hollows and patches, then over everything
+  if (uWinter.z > 0.5) sn = max(sn, smoothstep(0.4, 0.8, coldT + (n3.b - 0.5) * 0.1 + curv * 0.06 - N.z * 0.05) * smoothstep(1.6, 0.9, tanS));   // (an even let-in, lightly shaped by the landform)
   col = mix(col, vec3(0.86, 0.90, 0.95), sn);
 
   // ---- glaciers: snow-covered above the snowline, bare blue-grey ice with moraine stripes below ---
@@ -253,13 +260,23 @@ void main() {
   // beyond the drawn trees the ground carries the canopy in the same proportion as the trees would cover it: the
   // chance a tree stands at a spot (same curve as the placement in vegPlacement.js), so savanna stays savanna at a distance
   float fc = clamp(forest + (n2.a - 0.5) * 0.12 + (n3.a - 0.5) * 0.1, 0.0, 1.0);
-  float wintC = uWinter.z * clamp((uWinter.x - vWPos.z) / max(1.0, uWinter.x - uWinter.y), 0.0, 1.0);
+  float wintC = uWinter.z * FIA;
   float canopyF = smoothstep(uTreeDist * 0.6, uTreeDist, dist) * fc * 0.92 * (1.0 - sn * (1.0 - smoothstep(0.2, 0.7, wintC)));   // (snowy taiga stands above the snow on the ground)   // linear in cover: half cover, half canopy
   vec3 canopy = mix(S(vec3(0.17, 0.29, 0.09)), S(vec3(0.11, 0.21, 0.09)), smoothstep(450.0, 1100.0, h));
   canopy = mix(canopy, S(vec3(0.08, 0.16, 0.09)), dark);
-  float wint = uWinter.z * clamp((uWinter.x - vWPos.z) / max(1.0, uWinter.x - uWinter.y), 0.0, 1.0);
+  float wint = uWinter.z * FIA;
   canopy = mix(canopy, mix(S(vec3(0.07, 0.13, 0.09)), vec3(0.80, 0.84, 0.90), 0.05 + 0.07 * n1.g), smoothstep(0.2, 0.7, wint));   // snow-laden taiga from afar
   canopy *= (0.72 + 0.56 * n1.g) * (0.88 + 0.24 * n2.r) * (0.92 + 0.16 * n3.a);   // crowns and gaps, not dark blotches
+  // Individual crowns (about 7 m) as lit domes with a shaded side, cast shadow between them and gaps of darker
+  // ground; they average out smoothly with distance into the darker, grainier tone real forest has from afar.
+  { vec2 q = vWPos.xz / 7.0, ci = floor(q); float best = 9.0; vec2 off = vec2(0.0);
+    for (int j = -1; j <= 1; j++) for (int i = -1; i <= 1; i++) { vec2 c = ci + vec2(float(i), float(j)); vec2 r = texture2D(uNoise, (c + 0.5) / 256.0).rg;
+      vec2 dv = c + 0.15 + 0.7 * r - q; float dd = dot(dv, dv); if (dd < best) { best = dd; off = dv; } }
+    float rad = sqrt(best), dome = 1.0 - smoothstep(0.35, 0.62, rad);
+    vec3 cn = normalize(vec3(-off.x, 0.55, -off.y)); float lit = max(dot(cn, uSunDir), 0.0);
+    float crown = mix(0.45, 0.75 + 0.6 * lit, dome);                                   // gaps are dark, domes lit on the sun side
+    float fade = 1.0 - smoothstep(uTreeDist * 2.2, uTreeDist * 4.5, dist);              // beyond a few km it averages to its mean
+    canopy *= mix(0.82, crown, fade * 0.85); }
   // (in snow the white ground between trees would outshine the canopy in a linear blend; seen from a distance the
   // trunks and crowns hide most of it, so snowy taiga reads dark with white flecks)
   canopyF = mix(canopyF, min(1.0, canopyF * 1.3), smoothstep(0.2, 0.7, wintC));
