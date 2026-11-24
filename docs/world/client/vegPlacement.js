@@ -2,9 +2,9 @@
 // Everything is a pure function of world position and the world seed, so every client and the
 // server agree on where each tree stands. Positions come from global jittered lattices, which
 // keeps instances stable when a tile changes level of detail.
-import { hash2, noise2, smoothstep } from '../shared/noise.mjs?v=d232211';
-import { MAP } from '../shared/world.mjs?v=d232211';
-import { ROCK, ROCK_COLOR } from '../shared/geology.mjs?v=d232211';
+import { hash2, noise2, smoothstep } from '../shared/noise.mjs?v=76d17a5';
+import { MAP } from '../shared/world.mjs?v=76d17a5';
+import { ROCK, ROCK_COLOR } from '../shared/geology.mjs?v=76d17a5';
 
 export const T = { BROADLEAF: 0, CONIFER: 1, GIANT: 2, PINE: 3, BIRCH: 4, SNAG: 5, BUSH: 6, SAGE: 7, ROCK_ROUND: 8, ROCK_SLAB: 9, LOG: 10, FERN: 11, GRASS: 12 };
 export const TYPE_COUNT = 13;
@@ -67,7 +67,7 @@ function placeTrees(world, { key, x0, z0, size, lod }) {
     const rv = world.riverAt(px, pz, rq); if (rv && rv.edge < 1.5 + (isTree ? 1 : 0)) continue;
     const slope = world.slope(px, pz); if (slope > 1.35) continue;
     if (slope > 0.28 && world.map(MAP.MESA, px, pz) > 0.5) continue;      // mesa walls stay bare rock
-    const cold = world.cold(pz);
+    const cold = world.cold(px, pz);
     const tl = 1930 + 90 * noise2(px / 3000, pz / 3000, seed + 70) - world.coldTreeDrop * cold;
     if (h > tl + 320) continue;
     const stunt = 1 - 0.62 * smoothstep(tl - 300, tl + 250, h);
@@ -158,7 +158,7 @@ function placeGrass(world, { key, x0, z0, size }) {
     const px = (i + hash2(i, j, seed + 472)) * GRASS_G, pz = (j + hash2(i, j, seed + 473)) * GRASS_G;
     if (px < x0 || px >= x0 + size || pz < z0 || pz >= z0 + size) continue;
     const h = world.ground(px, pz, 0.6);
-    const hc = h + world.coldDrop * world.cold(pz);
+    const hc = h + world.coldDrop * world.cold(px, pz);
     if (h < 0.9 || hc > 2300 || h < world.stillLevel(px, pz) + 0.25) continue;
     if (world.slope(px, pz) > 0.85) continue;
     const rv = world.riverAt(px, pz, rq); if (rv && rv.edge < 0.6) continue;

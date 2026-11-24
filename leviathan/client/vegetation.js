@@ -261,7 +261,7 @@ void main() {
 `;
 const VEG_FRAG = /* glsl */`
 uniform sampler2D uLeaf; uniform sampler2D uBark; uniform sampler2D uNoise;
-uniform vec3 uLeafCol; uniform vec3 uBarkCol; uniform float uTrans; uniform float uRockMode; uniform vec3 uWinter;
+uniform vec3 uLeafCol; uniform vec3 uBarkCol; uniform float uTrans; uniform float uRockMode; uniform vec3 uWinter; uniform sampler2D uFlowV; uniform float uWorldSize;
 varying vec2 vUv; varying vec3 vCol; varying vec3 vTint; varying vec3 vWPos; varying vec3 vN; varying float vViewZ;
 #include <common>
 #include <packing>
@@ -288,7 +288,7 @@ void main() {
     alb = mix(alb, alb * vec3(0.72, 0.82, 0.62), uRockMode * smoothstep(0.3, 0.9, N.y) * texture2D(uNoise, vWPos.xz * 0.11).b * 0.8);
   }
   // winter: snow lies on the upper faces of boughs and rocks
-  float wint = uWinter.z * clamp((uWinter.x - vWPos.z) / max(1.0, uWinter.x - uWinter.y), 0.0, 1.0);
+  float wint = uWinter.z * texture2D(uFlowV, vWPos.xz / uWorldSize).a;
   alb = mix(alb, vec3(0.86, 0.89, 0.94), smoothstep(0.2, 0.7, wint) * smoothstep(0.35, 0.9, N.y + (texture2D(uNoise, vWPos.xz * 0.37).r - 0.5) * 0.6) * (vCol.b > 0.25 ? 0.13 : 0.3));   // (dark needles still show between the snow)
   float ao = vCol.r;
   float ndl = max(dot(N, uSunDir), 0.0);
@@ -315,7 +315,7 @@ export class Vegetation {
     const tx = makeTextures();
     const mat = (leafTex, leafCol, barkCol, o = {}) => {
       const m = new THREE.ShaderMaterial({
-        uniforms: { ...mats.base(), uLeaf: { value: leafTex }, uBark: { value: tx.bark }, uNoise: { value: tex.noise }, uLeafCol: { value: leafCol }, uBarkCol: { value: barkCol }, uTrans: { value: o.trans ?? 0.6 }, uRockMode: { value: o.rock ? 1 : 0 }, uFade: { value: o.fade ?? (farDist || treeDist) }, uWind: { value: o.wind ?? 1 } },
+        uniforms: { ...mats.base(), uFlowV: { value: tex.flow }, uLeaf: { value: leafTex }, uBark: { value: tx.bark }, uNoise: { value: tex.noise }, uLeafCol: { value: leafCol }, uBarkCol: { value: barkCol }, uTrans: { value: o.trans ?? 0.6 }, uRockMode: { value: o.rock ? 1 : 0 }, uFade: { value: o.fade ?? (farDist || treeDist) }, uWind: { value: o.wind ?? 1 } },
         vertexShader: VEG_VERT, fragmentShader: VEG_FRAG, lights: true, vertexColors: true, side: o.rock ? THREE.FrontSide : THREE.DoubleSide,
       });
       m.userData.leafTex = leafTex; return m;

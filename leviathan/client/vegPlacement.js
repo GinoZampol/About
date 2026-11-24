@@ -67,7 +67,7 @@ function placeTrees(world, { key, x0, z0, size, lod }) {
     const rv = world.riverAt(px, pz, rq); if (rv && rv.edge < 1.5 + (isTree ? 1 : 0)) continue;
     const slope = world.slope(px, pz); if (slope > 1.35) continue;
     if (slope > 0.28 && world.map(MAP.MESA, px, pz) > 0.5) continue;      // mesa walls stay bare rock
-    const cold = world.cold(pz);
+    const cold = world.cold(px, pz);
     const tl = 1930 + 90 * noise2(px / 3000, pz / 3000, seed + 70) - world.coldTreeDrop * cold;
     if (h > tl + 320) continue;
     const stunt = 1 - 0.62 * smoothstep(tl - 300, tl + 250, h);
@@ -158,7 +158,7 @@ function placeGrass(world, { key, x0, z0, size }) {
     const px = (i + hash2(i, j, seed + 472)) * GRASS_G, pz = (j + hash2(i, j, seed + 473)) * GRASS_G;
     if (px < x0 || px >= x0 + size || pz < z0 || pz >= z0 + size) continue;
     const h = world.ground(px, pz, 0.6);
-    const hc = h + world.coldDrop * world.cold(pz);
+    const hc = h + world.coldDrop * world.cold(px, pz);
     if (h < 0.9 || hc > 2300 || h < world.stillLevel(px, pz) + 0.25) continue;
     if (world.slope(px, pz) > 0.85) continue;
     const rv = world.riverAt(px, pz, rq); if (rv && rv.edge < 0.6) continue;

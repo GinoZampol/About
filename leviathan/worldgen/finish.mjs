@@ -29,8 +29,12 @@ export async function finishWorld(world, cfg, ROOT, log) {
   // (winter: the cold north is snow-covered right down to the plains, but its conifer forest keeps growing: the tree
   // limit falls by treeDrop only, so the plains carry dense snowy taiga)
   if (BIO) { COLD.y0 = PHk * 0.5; COLD.y1 = PHk * 0.82; COLD.drop = 2900; COLD.treeDrop = 250; }
-  const coldAt = (yk) => (VB && (cfg.variant !== 'S' || BIO) ? smoothstep(COLD.y0, COLD.y1, yk) : 0);
-  const warmAt = (yk) => (BIO ? smoothstep(PHk * 0.5, PHk * 0.12, yk) : 0);
+  // Biome worlds: the cold lies in one corner on the west side (the north-west), and fades out over some 25 km in
+  // a wide, irregular let-in, never along a line. Everywhere else the climate is as before.
+  const coldBio = (xk, yk) => { const d = Math.hypot(xk / 1.15, (PHk - yk) / 0.85) + 3 * fbm(xk / 14, yk / 14, 3, seed + 98);
+    return smoothstep(22, 9, d); };   // (a corner about 15 km across, fading over some 12 km)
+  const coldAt = (yk, xk) => (BIO ? coldBio(xk ?? 25, yk) : VB && cfg.variant !== 'S' ? smoothstep(COLD.y0, COLD.y1, yk) : 0);
+  const warmAt = (yk, xk) => (BIO ? smoothstep(PHk * 0.5, PHk * 0.1, yk + 5 * fbm((xk ?? 0) / 11, yk / 11, 3, seed + 96)) * (1 - coldBio(xk ?? 25, yk)) : 0);
   const ctx = makeCtx(N);
   // wind-blown sand buries the fine drainage of the erg
   {
@@ -372,13 +376,13 @@ export async function finishWorld(world, cfg, ROOT, log) {
     }
   }
   // present-day glaciers: ice accumulates above today's snowline and flows down the valleys until it melts
-  const mIce = new Uint8Array(mn), mWarm = new Uint8Array(mn);
+  const mIce = new Uint8Array(mn), mWarm = new Uint8Array(mn), mColdC = new Uint8Array(mn);
   const mBadWide = (() => { const a = new Float32Array(mn); for (let m = 0; m < mn; m++) a[m] = mMesa[m] / 255; const r = Math.max(2, Math.round(4500 / mdx)); return boxBlur(boxBlur(a, M, r), M, r); })();
   {
     const { order, cnt } = ctx, a = dx * dx, ice2 = new Float64Array(n), ELA_NOW0 = 3050, acc = new Float32Array(mn);
     for (let q = cnt - 1; q >= 0; q--) {
       const c = order[q];
-      const ELA_NOW = ELA_NOW0 - (COLD.treeDrop !== undefined ? 0 : COLD.drop) * coldAt(KM0 + ((c / N) | 0) / N * KMS);
+      const ELA_NOW = ELA_NOW0 - (COLD.treeDrop !== undefined ? 0 : COLD.drop) * coldAt(KM0 + ((c / N) | 0) / N * KMS, KM0 + (c % N) / N * KMS);
       let bal = 0.004 * (h[c] - ELA_NOW) * (0.4 + P[c]) * a;
       if (bal < 0) bal *= Math.max(1, 2 * 70 * Math.pow(Math.max(ice2[c], 1) / 1e6, 0.3) / dx);
       const v = Math.max(0, ice2[c] + bal); ice2[c] = v;
@@ -464,7 +468,7 @@ export async function finishWorld(world, cfg, ROOT, log) {
     mWet[m] = Math.round(255 * wet);
     // forest canopy cover: moisture, temperature (treeline), slope, with patchiness
     // trees climb higher in sheltered hollows and stop lower on exposed spurs; the limit is a wide, ragged zone
-    const treeline = -(COLD.treeDrop ?? COLD.drop * 0.9) * coldAt(yk) + 1930 + 90 * noise2(xk / 3, yk / 3, seed + 70) + Math.max(-220, Math.min(260, (hBlur[m] - z) * 3)) + 170 * fbm(xk / 0.6, yk / 0.6, 3, seed + 74);
+    const treeline = -(COLD.treeDrop ?? COLD.drop * 0.9) * coldAt(yk, xk) + 1930 + 90 * noise2(xk / 3, yk / 3, seed + 70) + Math.max(-220, Math.min(260, (hBlur[m] - z) * 3)) + 170 * fbm(xk / 0.6, yk / 0.6, 3, seed + 74);
     // (rain on flat ground varies only west to east in the model; break that up so no boundary runs straight)
     // water available to plants. Seeded worlds use no noise here: rain, plus water gathered from upslope (hollows and
     // valley floors hold it, spurs and crests shed it), plus groundwater beside rivers and the sea
@@ -490,7 +494,7 @@ export async function finishWorld(world, cfg, ROOT, log) {
     if (VB && !VS) { const pr = smoothstep(1.05, 0.72, pe) * smoothstep(0.24, 0.1, sl) * smoothstep(360, 200, z) * (1 - smoothstep(0.2, 0.4, coldAt(yk))); F *= 1 - pr * (0.85 - 0.85 * smoothstep(5, 1, wdist[m])); }
     F *= 1 - (mMesa[m] / 255) * smoothstep(0.22, 0.45, sl);                               // no woods on mesa walls and ledges                                           // open marsh
     if (VS) F *= (1 - 0.65 * mMoor[m] * smoothstep(250, 500, z)) * (1 - 0.5 * mFen[m]);
-    if (BIO) { const ck = coldAt(yk); F = F + (Math.max(F, 0.55 + 0.4 * F) - F) * smoothstep(0.15, 0.6, ck) * smoothstep(0.6, 0.25, sl); }   // taiga: dense conifers over the cold plains   // moorland is open upland; fens are reed and wet meadow
+    if (BIO) { const ck = coldAt(yk, xk); F = F + (Math.max(F, 0.55 + 0.4 * F) - F) * smoothstep(0.15, 0.6, ck) * smoothstep(0.6, 0.25, sl); }   // taiga: dense conifers over the cold plains   // moorland is open upland; fens are reed and wet meadow
     if (z < 3) F *= smoothstep(1.0, 3, z);
     mForest[m] = Math.round(255 * sat(F));
     // ancient "dark" forest: very wet, mild, sheltered ground
@@ -509,7 +513,8 @@ export async function finishWorld(world, cfg, ROOT, log) {
     }
     if (BIO) {
       // the warm south: savanna (forest thinned to scattered trees) and, on flat dry ground near the badlands, dune sand
-      const wm = warmAt(yk) * (1 - mMesa[m] / 255);
+      const wm = warmAt(yk, xk) * (1 - mMesa[m] / 255);
+      mColdC[m] = Math.round(255 * coldAt(yk, xk));
       const desert = wm * smoothstep(0.03, 0.22, mBadWide[m]) * smoothstep(0.14, 0.04, sl) * smoothstep(5, 1, qk) * (1 - smoothstep(8, 2, wdist[m]));
       sand = Math.max(sand, smoothstep(0.25, 0.6, desert + 0.25 * fbm(xk / 2.8, yk / 2.8, 2, seed + 97)));
       const Fs = mForest[m] / 255, savF = Math.min(Fs, 0.06 + 0.22 * Fs);
@@ -543,8 +548,8 @@ export async function finishWorld(world, cfg, ROOT, log) {
     if (id) lvl[j * LN + i] = Math.round(lakes[id - 1].level * 10);
   }
   fs.writeFileSync(path.join(out, 'lakes.bin'), gz(flip(lvl, LN, Int16Array)));
-  const maps = new Uint8Array(mn * 12);
-  [mRock, mStratB, mPrec, mForest, mDark, mWet, mSand, mAO, mMesa, mFlow, mIce, mWarm].forEach((a, k) => maps.set(flip(a, M, Uint8Array), k * mn));
+  const maps = new Uint8Array(mn * 13);
+  [mRock, mStratB, mPrec, mForest, mDark, mWet, mSand, mAO, mMesa, mFlow, mIce, mWarm, mColdC].forEach((a, k) => maps.set(flip(a, M, Uint8Array), k * mn));
   fs.writeFileSync(path.join(out, 'maps.bin'), gz(maps));
   // rivers
   const S = cfg.sizeM;
@@ -611,10 +616,10 @@ export async function finishWorld(world, cfg, ROOT, log) {
   }
   let landCells = 0, hmax = 0; for (let c = 0; c < n; c++) { if (!sea[c]) landCells++; if (h[c] > hmax) hmax = h[c]; }
   const meta = {
-    name: 'The Leviathan', version: 2, variant: VB ? 'B' : 'A', layout: cfg.variant, wind: cfg.wind || 0, cold: VB && (cfg.variant !== 'S' || BIO) ? { z0: S - (COLD.y0 - KM0) * 1000, z1: S - (COLD.y1 - KM0) * 1000, drop: COLD.drop, treeDrop: COLD.treeDrop } : null, play: { x0: -KM0 * 1000, size: (cfg.playW || WORLD_KM) * 1000, z0: S - ((cfg.playH || WORLD_KM) - KM0) * 1000, sizeZ: (cfg.playH || WORLD_KM) * 1000 }, seed, sizeM: S, heightRes: N, mapRes: M, lakeRes: LN, riverMaskRes: RN,
+    name: 'The Leviathan', version: 2, variant: VB ? 'B' : 'A', layout: cfg.variant, wind: cfg.wind || 0, cold: BIO ? { map: true, drop: COLD.drop, treeDrop: COLD.treeDrop, z0: 0, z1: 0 } : VB && cfg.variant !== 'S' ? { z0: S - (COLD.y0 - KM0) * 1000, z1: S - (COLD.y1 - KM0) * 1000, drop: COLD.drop, treeDrop: COLD.treeDrop } : null, play: { x0: -KM0 * 1000, size: (cfg.playW || WORLD_KM) * 1000, z0: S - ((cfg.playH || WORLD_KM) - KM0) * 1000, sizeZ: (cfg.playH || WORLD_KM) * 1000 }, seed, sizeM: S, heightRes: N, mapRes: M, lakeRes: LN, riverMaskRes: RN,
     hOffset: H_OFFSET, hScale: H_SCALE, seaLevel: 0, maxElevation: Math.round(hmax),
     landKm2: Math.round(landCells * dx * dx / 1e6), riverKm: Math.round(totalLen / 1000),
-    mapChannels: ['rock', 'strat', 'precip', 'forest', 'dark', 'wet', 'sand', 'ao', 'mesa', 'flow', 'ice', 'warm'],
+    mapChannels: ['rock', 'strat', 'precip', 'forest', 'dark', 'wet', 'sand', 'ao', 'mesa', 'flow', 'ice', 'warm', 'cold'],
     lakes: lakes.map((l) => ({ level: +l.level.toFixed(2), areaKm2: +l.areaKm2.toFixed(2), x: Math.round(l.x), z: Math.round(S - l.y) })),
     landmarks, config: { K0: cfg.K0, levels: cfg.levels.filter((l) => l[0] <= N), ELA, Q_RIVER },
   };
@@ -629,7 +634,7 @@ export async function finishWorld(world, cfg, ROOT, log) {
     Q, qThr: Q_RIVER * 6, lake: lakeF,
     color: (c, z) => {
       if (z <= 0 && sea[c]) return [40, 78, 120];
-      const m = mi(c), F = mForest[m] / 255, D = mDark[m] / 255, p = mP[m], ykc = KM0 + (((c / N) | 0) + 0.5) / N * KMS, zc = z + COLD.drop * coldAt(ykc), sn = smoothstep(2350, 2650, zc);
+      const m = mi(c), F = mForest[m] / 255, D = mDark[m] / 255, p = mP[m], ykc = KM0 + (((c / N) | 0) + 0.5) / N * KMS, zc = z + COLD.drop * coldAt(ykc, KM0 + ((c % N) + 0.5) / N * KMS), sn = smoothstep(2350, 2650, zc);
       const wm = mWarm[m] / 255;
       let r = 122 + 88 * sat(1 - p * 1.6), gg = 152 + 8 * sat(p), b = 80;            // grass -> dry steppe
       if (p < 0.4) { const t = smoothstep(0.4, 0.2, p); r += (196 - r) * t; gg += (160 - gg) * t; b += (118 - b) * t; }
@@ -639,7 +644,7 @@ export async function finishWorld(world, cfg, ROOT, log) {
       r += (22 - r) * D; gg += (52 - gg) * D; b += (36 - b) * D;
       const sd = mSand[m] / 255; r += (226 - r) * sd; gg += (206 - gg) * sd; b += (150 - b) * sd;
       const w = mWet[m] / 255; r += (92 - r) * w * 0.6; gg += (120 - gg) * w * 0.6; b += (84 - b) * w * 0.6;
-      { const snf = sn * (COLD.treeDrop !== undefined ? 1 - 0.6 * F : 1); r += (245 - r) * snf; gg += (247 - gg) * snf; b += (250 - b) * snf; }   // (snowy taiga shows its trees on the map)
+      { const ckc = BIO ? coldAt(ykc, KM0 + ((c % N) + 0.5) / N * KMS) : 0, snf = Math.max(BIO ? smoothstep(2900, 3300, z) : sn, BIO ? smoothstep(0.4, 0.8, ckc) : 0) * (COLD.treeDrop !== undefined ? 1 - 0.6 * F : 1); r += (245 - r) * snf; gg += (247 - gg) * snf; b += (250 - b) * snf; }   // (snowy taiga shows its trees on the map)
       return [r, gg, b];
     },
   });

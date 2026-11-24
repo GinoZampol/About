@@ -6,7 +6,7 @@ import { noise2, fbm, ridged, smoothstep, sat, hash2 } from './noise.mjs';
 import { ROCK, rockAt } from './geology.mjs';
 import { decodeU16 } from './codec.mjs';
 
-export const MAP = { ROCK: 0, STRAT: 1, PRECIP: 2, FOREST: 3, DARK: 4, WET: 5, SAND: 6, AO: 7, MESA: 8, FLOW: 9, ICE: 10, WARM: 11 };
+export const MAP = { ROCK: 0, STRAT: 1, PRECIP: 2, FOREST: 3, DARK: 4, WET: 5, SAND: 6, AO: 7, MESA: 8, FLOW: 9, ICE: 10, WARM: 11, COLD: 12 };
 const RIVER_CELL = 128;
 // value noise with analytic derivatives (for erosion-style fractal relief)
 const _nd = { dx: 0, dz: 0 };
@@ -361,7 +361,9 @@ export class World {
   }
 
   // 0..1 northward cooling (variant B); effective altitude for snow and tree limits is h + coldDrop * cold
-  cold(z) { const c = this.coldCfg; if (!c) return 0; const t = sat((c.z0 - z) / (c.z0 - c.z1)); return t * t * (3 - 2 * t); }
+  // cold(x, z), or cold(z) for the older north-south worlds; biome worlds store the cold as a map channel
+  cold(a, b) { const c = this.coldCfg; if (!c) return 0; if (c.map) return b === undefined ? 0 : this.map(MAP.COLD, a, b);
+    const z = b === undefined ? a : b, t = sat((c.z0 - z) / (c.z0 - c.z1)); return t * t * (3 - 2 * t); }
   get coldDrop() { return this.coldCfg ? this.coldCfg.drop : 0; }
   get coldTreeDrop() { return this.coldCfg ? (this.coldCfg.treeDrop ?? this.coldCfg.drop * 0.9) : 0; }
 
