@@ -2,9 +2,9 @@
 // Everything is a pure function of world position and the world seed, so every client and the
 // server agree on where each tree stands. Positions come from global jittered lattices, which
 // keeps instances stable when a tile changes level of detail.
-import { hash2, noise2, smoothstep } from '../shared/noise.mjs?v=76d17a5';
-import { MAP } from '../shared/world.mjs?v=76d17a5';
-import { ROCK, ROCK_COLOR } from '../shared/geology.mjs?v=76d17a5';
+import { hash2, noise2, smoothstep } from '../shared/noise.mjs?v=74dedcc';
+import { MAP } from '../shared/world.mjs?v=74dedcc';
+import { ROCK, ROCK_COLOR } from '../shared/geology.mjs?v=74dedcc';
 
 export const T = { BROADLEAF: 0, CONIFER: 1, GIANT: 2, PINE: 3, BIRCH: 4, SNAG: 5, BUSH: 6, SAGE: 7, ROCK_ROUND: 8, ROCK_SLAB: 9, LOG: 10, FERN: 11, GRASS: 12 };
 export const TYPE_COUNT = 13;
@@ -38,7 +38,9 @@ export function placeVegetation(world, m) {
 function placeTrees(world, { key, x0, z0, size, lod }) {
   const seed = world.seed, bins = new Bins(), S = world.S;
   const i0 = Math.floor(x0 / TREE_G), i1 = Math.ceil((x0 + size) / TREE_G), j0 = Math.floor(z0 / TREE_G), j1 = Math.ceil((z0 + size) / TREE_G);
-  for (let j = j0; j < j1; j++) for (let i = i0; i < i1; i++) {
+  // lod 4 (the farthest ring) samples every 6th lattice point and draws each as a large clump of trees
+  const stp = lod === 4 ? 6 : 1;
+  for (let j = Math.ceil(j0 / stp) * stp; j < j1; j += stp) for (let i = Math.ceil(i0 / stp) * stp; i < i1; i += stp) {
     const px = (i + hash2(i, j, seed + 401)) * TREE_G, pz = (j + hash2(i, j, seed + 402)) * TREE_G;
     if (px < x0 || px >= x0 + size || pz < z0 || pz >= z0 + size || px < 2 || pz < 2 || px > S - 2 || pz > S - 2) continue;
     const F = world.map(MAP.FOREST, px, pz), precip = world.map(MAP.PRECIP, px, pz) * 3;
@@ -51,7 +53,8 @@ function placeTrees(world, { key, x0, z0, size, lod }) {
     let pTree = Math.min(0.92, F * (F + (1 - F) * (0.25 + 1.6 * g01)) * (0.8 + 0.4 * c01));
     let isTree = r3 < pTree;
     if (lod === 2 && isTree && hash2(i, j, seed + 404) > 0.62) continue;
-    if (lod === 3 && (!isTree || hash2(i, j, seed + 404) > 0.16)) continue;   // far ring: one tree in six, drawn larger
+    if (lod === 3 && (!isTree || hash2(i, j, seed + 404) > 0.16)) continue;
+    if (lod === 4 && !isTree) continue;   // far ring: one tree in six, drawn larger
     let shrub = -1;
     if (!isTree && lod < 2) {
       const r6 = hash2(i, j, seed + 405);
@@ -97,6 +100,7 @@ function placeTrees(world, { key, x0, z0, size, lod }) {
     s *= 1 + 0.15 * (1 - F);                 // open-grown trees are broader and bigger
     if (lod === 2) s *= 1.12;
     if (lod === 3) s *= 1.9;
+    if (lod === 4) s *= 3.3;
     const lean = (hash2(i, j, seed + 412) - 0.5) * 0.08;
     // savanna trees: broad, low, flat-topped crowns (acacia-like), drier foliage
     const warm = world.maps.length >= (MAP.WARM + 1) * world.M * world.M ? world.map(MAP.WARM, px, pz) : 0;
