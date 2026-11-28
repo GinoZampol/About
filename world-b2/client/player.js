@@ -7,7 +7,7 @@ export class Player {
   constructor(camera, world, dom) {
     this.cam = camera; this.world = world; this.dom = dom;
     this.pos = new THREE.Vector3(); this.vel = new THREE.Vector3();
-    this.yaw = 0; this.pitch = 0; this.fly = true; this.flySpeed = 120; this.mount = false;
+    this.yaw = 0; this.pitch = 0; this.fly = true; this.flySpeed = 40; this.mount = false;
     this.onGround = false; this.swimming = false; this.eye = 1.7; this.keys = {};
     this.colliders = null;   // optional: (x, z, radius) => iterable of {x, z, r}
     addEventListener('keydown', (e) => { this.keys[e.code] = true; if (e.code === 'KeyF') this.toggleFly(); if (e.code === 'KeyH') this.mount = !this.mount; });
@@ -34,7 +34,7 @@ export class Player {
     // mouse drag also looks around where pointer lock is unavailable
     let drag = false; dom.addEventListener('mousedown', () => { drag = true; }); addEventListener('mouseup', () => { drag = false; });
     addEventListener('mousemove', (e) => { if (drag && document.pointerLockElement !== dom) { this.yaw -= e.movementX * 0.004; this.pitch = Math.max(-1.55, Math.min(1.55, this.pitch - e.movementY * 0.004)); } });
-    addEventListener('wheel', (e) => { if (this.fly) this.flySpeed = Math.max(4, Math.min(3000, this.flySpeed * (e.deltaY < 0 ? 1.25 : 0.8))); });
+    addEventListener('wheel', (e) => { if (this.fly) this.flySpeed = Math.max(4, Math.min(600, this.flySpeed * (e.deltaY < 0 ? 1.25 : 0.8))); });
   }
   toggleFly() { this.fly = !this.fly; this.vel.set(0, 0, 0); }
   teleport(x, z, y) { const g = this.world.ground(x, z); this.pos.set(x, y !== undefined ? Math.max(y, g + this.eye) : g + this.eye, z); this.vel.set(0, 0, 0); }
@@ -46,8 +46,8 @@ export class Player {
     if (this.fly) {
       // the higher above the ground, the faster: slow and precise near terrain, quick for crossing the map
       const agl0 = this.pos.y - w.ground(this.pos.x, this.pos.z);
-      this.altBoost = Math.max(1, Math.min(30, agl0 / 70));
-      const sp = this.flySpeed * this.altBoost * (k.ShiftLeft ? 4 : 1), cp = Math.cos(this.pitch);
+      this.altBoost = Math.max(1, Math.min(6, Math.sqrt(Math.max(0, agl0) / 120)));   // gentle: about 3x at 1 km up, at most 6x
+      const sp = this.flySpeed * this.altBoost * (k.ShiftLeft ? 3 : 1), cp = Math.cos(this.pitch);
       this.pos.x += (fx * cp * f + rx * r) * sp * dt; this.pos.z += (fz * cp * f + rz * r) * sp * dt;
       this.pos.y += (Math.sin(this.pitch) * f + (k.Space ? 1 : 0) - (k.KeyC ? 1 : 0)) * sp * dt;
       const g = w.ground(this.pos.x, this.pos.z);
