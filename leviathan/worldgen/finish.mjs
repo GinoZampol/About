@@ -33,8 +33,13 @@ export async function finishWorld(world, cfg, ROOT, log) {
   // a wide, irregular let-in, never along a line. Everywhere else the climate is as before.
   const coldBio = (xk, yk) => { const d = Math.hypot(xk / 1.15, (PHk - yk) / 0.85) + 3 * fbm(xk / 14, yk / 14, 3, seed + 98);
     return smoothstep(22, 9, d); };   // (a corner about 15 km across, fading over some 12 km)
-  const coldAt = (yk, xk) => (BIO ? coldBio(xk ?? 25, yk) : VB && cfg.variant !== 'S' ? smoothstep(COLD.y0, COLD.y1, yk) : 0);
-  const warmAt = (yk, xk) => (BIO ? smoothstep(PHk * 0.5, PHk * 0.1, yk + 5 * fbm((xk ?? 0) / 11, yk / 11, 3, seed + 96)) * (1 - coldBio(xk ?? 25, yk)) : 0);
+  // --biomes 2: the cold is a whole side of the world, the one away from the badlands, letting in over a third of
+  // its length (wide and irregular, never a line)
+  const PWk = cfg.playW || 50, tC = getLayout(seed).tableC || [PWk / 2, PHk / 2], coldWest = tC[0] > PWk / 2;
+  const coldSide = (xk, yk) => { const u = (coldWest ? xk : PWk - xk) + 0.06 * PWk * fbm(xk / 17, yk / 17, 3, seed + 98) + 0.02 * PWk * fbm(xk / 5, yk / 5, 2, seed + 99);
+    return smoothstep(0.4 * PWk, 0.1 * PWk, u); };
+  const coldAt = (yk, xk) => (BIO === 2 ? coldSide(xk ?? 0, yk) : BIO ? coldBio(xk ?? 25, yk) : VB && cfg.variant !== 'S' ? smoothstep(COLD.y0, COLD.y1, yk) : 0);
+  const warmAt = (yk, xk) => (BIO ? smoothstep(PHk * 0.5, PHk * 0.1, yk + 5 * fbm((xk ?? 0) / 11, yk / 11, 3, seed + 96)) * (1 - coldAt(yk, xk ?? 25)) * (BIO === 2 ? 0.6 : 1) : 0);
   const ctx = makeCtx(N);
   // wind-blown sand buries the fine drainage of the erg
   {
