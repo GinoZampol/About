@@ -1,6 +1,6 @@
 // Terrain worker: builds chunk meshes (ground + still water) and vegetation placements off the main thread.
-import { World } from '../shared/world.mjs?v=74dedcc';
-import { placeVegetation } from './vegPlacement.js?v=74dedcc';
+import { World } from '../shared/world.mjs?v=b1f7a0c';
+import { placeVegetation } from './vegPlacement.js?v=b1f7a0c';
 
 let world = null;
 export const C = 64;          // cells per chunk edge

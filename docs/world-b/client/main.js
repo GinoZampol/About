@@ -1,16 +1,16 @@
 // The Leviathan - client entry point.
 import * as THREE from 'three';
 import { CSM } from 'three/addons/csm/CSM.js';
-import { loadWorldData, World, MAP } from '../shared/world.mjs?v=74dedcc';
-import { materialAt } from '../shared/subsurface.mjs?v=74dedcc';
-import { ROCK_NAMES } from '../shared/geology.mjs?v=74dedcc';
-import { buildTextures, terrainShadow, refineNormals } from './textures.js?v=74dedcc';
-import { makeShared, makeMaterials, setSun } from './materials.js?v=74dedcc';
-import { Terrain } from './terrain.js?v=74dedcc';
-import { buildRivers } from './rivers.js?v=74dedcc';
-import { Vegetation } from './vegetation.js?v=74dedcc';
-import { Player } from './player.js?v=74dedcc';
-import { Life } from './life.js?v=74dedcc';
+import { loadWorldData, World, MAP } from '../shared/world.mjs?v=b1f7a0c';
+import { materialAt } from '../shared/subsurface.mjs?v=b1f7a0c';
+import { ROCK_NAMES } from '../shared/geology.mjs?v=b1f7a0c';
+import { buildTextures, terrainShadow, refineNormals } from './textures.js?v=b1f7a0c';
+import { makeShared, makeMaterials, setSun } from './materials.js?v=b1f7a0c';
+import { Terrain } from './terrain.js?v=b1f7a0c';
+import { buildRivers } from './rivers.js?v=b1f7a0c';
+import { Vegetation } from './vegetation.js?v=b1f7a0c';
+import { Player } from './player.js?v=b1f7a0c';
+import { Life } from './life.js?v=b1f7a0c';
 
 const fail = (e) => { const el = document.getElementById('lmsg'); if (el) el.textContent = 'Could not start: ' + (e.reason?.message || e.message || e); };
 addEventListener('error', fail); addEventListener('unhandledrejection', fail);
